@@ -13,12 +13,24 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Pretendard', 'Noto Sans KR', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        
+        // PIA 브랜드 컬러
+        pia: {
+          primary: "hsl(var(--pia-primary))",
+          "primary-light": "hsl(var(--pia-primary-light))",
+          secondary: "hsl(var(--pia-secondary))",
+          "secondary-light": "hsl(var(--pia-secondary-light))",
+        },
+        
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -57,6 +69,20 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      boxShadow: {
+        'pia-card': 'var(--shadow-card)',
+        'pia-hover': 'var(--shadow-hover)',
+        'pia-focus': 'var(--shadow-focus)',
+      },
+      backgroundImage: {
+        'pia-primary': 'var(--gradient-primary)',
+        'pia-secondary': 'var(--gradient-secondary)', 
+        'pia-hero': 'var(--gradient-hero)',
+      },
+      transitionProperty: {
+        'pia': 'var(--transition-smooth)',
+        'pia-fast': 'var(--transition-fast)',
       },
       borderRadius: {
         lg: "var(--radius)",

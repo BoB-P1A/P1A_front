@@ -1,96 +1,81 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* PIA 관리 플랫폼 디자인 시스템 - 보라색/청록색 테마 */
 
 @layer base {
   :root {
+    /* PIA 브랜드 컬러 시스템 */
+    --pia-primary: 275 79% 26%;        /* #49176d 보라색 - 메인 브랜드 */
+    --pia-primary-light: 275 79% 35%;   /* 밝은 보라색 */
+    --pia-secondary: 185 100% 34%;      /* #00a0af 청록색 - 액센트 */
+    --pia-secondary-light: 185 100% 45%; /* 밝은 청록색 */
+    
+    /* 기본 컬러 */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 220 13% 18%;          /* 다크 그레이 텍스트 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 13% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 13% 18%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* 시맨틱 컬러 - PIA 브랜드 기반 */
+    --primary: 275 79% 26%;             /* PIA 보라색 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 185 100% 34%;          /* PIA 청록색 */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 185 100% 45%;             /* 밝은 청록색 */
+    --accent-foreground: 0 0% 100%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --muted: 220 13% 96%;               /* 연한 회색 배경 */
+    --muted-foreground: 220 13% 46%;    /* 회색 텍스트 */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 275 79% 26%;                /* PIA 보라색 포커스 */
 
-    --radius: 0.5rem;
+    --radius: 12px;                     /* 12px 라운드 */
 
-    --sidebar-background: 0 0% 98%;
+    /* PIA 사이드바 테마 */
+    --sidebar-background: 275 79% 26%;          /* 보라색 배경 */
+    --sidebar-foreground: 0 0% 100%;            /* 화이트 텍스트 */
+    --sidebar-primary: 0 0% 100%;               /* 화이트 */
+    --sidebar-primary-foreground: 275 79% 26%;  /* 보라색 텍스트 */
+    --sidebar-accent: 185 100% 34%;             /* 청록색 액티브 */
+    --sidebar-accent-foreground: 0 0% 100%;     /* 화이트 텍스트 */
+    --sidebar-border: 275 79% 35%;              /* 밝은 보라색 보더 */
+    --sidebar-ring: 185 100% 34%;               /* 청록색 포커스 */
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* PIA 그라데이션 */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--pia-primary)), hsl(var(--pia-primary-light)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--pia-secondary)), hsl(var(--pia-secondary-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--pia-primary)), hsl(var(--pia-secondary)));
+    
+    /* PIA 그림자 */
+    --shadow-card: 0 4px 6px -1px hsl(var(--pia-primary) / 0.1);
+    --shadow-hover: 0 8px 25px -8px hsl(var(--pia-primary) / 0.2);
+    --shadow-focus: 0 0 0 3px hsl(var(--pia-secondary) / 0.3);
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* 애니메이션 */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 220 13% 9%;
+    --foreground: 0 0% 98%;
+    --card: 220 13% 9%;
+    --card-foreground: 0 0% 98%;
+    --sidebar-background: 275 79% 18%;
   }
 }
 
