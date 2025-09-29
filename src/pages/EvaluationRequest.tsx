@@ -110,7 +110,7 @@ export default function EvaluationRequest() {
       id: newId,
       title: newRequest.title,
       requestBy: user?.name || '사용자',
-      department: user?.role === 'developer' ? '개발팀' : '기타',
+      department: user?.role === 'developer' ? '개발팀' : user?.role === 'planning-team' ? '기획팀' : user?.role === 'privacy-team' ? '개인정보팀' : '기타',
       status: 'pending',
       priority: newRequest.priority,
       createdAt: new Date().toISOString().split('T')[0],
