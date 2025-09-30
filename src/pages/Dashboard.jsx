@@ -14,11 +14,12 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function Dashboard() {
   const { user } = useAuth();
 
-  const getRoleDisplayName = (role: string) => {
+  const getRoleDisplayName = (role) => {
     switch (role) {
       case 'admin': return '관리자';
       case 'developer': return '개발팀';
       case 'privacy-team': return '개인정보팀';
+      case 'planning-team': return '기획팀';
       default: return role;
     }
   };

@@ -89,7 +89,8 @@ export function DashboardHeader() {
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
                 <Badge variant="outline" className="mt-1">
                   {user?.role === 'admin' ? '관리자' : 
-                   user?.role === 'developer' ? '개발팀' : '개인정보팀'}
+                   user?.role === 'developer' ? '개발팀' : 
+                   user?.role === 'privacy-team' ? '개인정보팀' : '기획팀'}
                 </Badge>
               </div>
             </DropdownMenuLabel>
@@ -117,7 +118,8 @@ export function DashboardHeader() {
                         <label className="text-sm font-medium">역할</label>
                         <Badge variant="outline">
                           {user?.role === 'admin' ? '관리자' : 
-                           user?.role === 'developer' ? '개발팀' : '개인정보팀'}
+                           user?.role === 'developer' ? '개발팀' : 
+                           user?.role === 'privacy-team' ? '개인정보팀' : '기획팀'}
                         </Badge>
                       </div>
                       <div>

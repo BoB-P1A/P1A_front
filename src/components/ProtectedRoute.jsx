@@ -1,13 +1,7 @@
-import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface ProtectedRouteProps {
-  children: ReactNode;
-  requiredRole?: UserRole;
-}
-
-export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiredRole }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {

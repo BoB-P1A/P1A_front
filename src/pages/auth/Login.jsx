@@ -17,7 +17,7 @@ export default function Login() {
     return <Navigate to="/" replace />;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -103,6 +103,7 @@ export default function Login() {
               <p>관리자: admin / admin123</p>
               <p>개발팀: developer / dev123</p>
               <p>개인정보팀: privacy / privacy123</p>
+              <p>기획팀: planning / plan123</p>
             </div>
           </div>
         </CardContent>
