@@ -28,9 +28,34 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Crown, Users, Building, Plus, Edit, UserCheck, BarChart3 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 
-const mockUsers = [
+interface UserAccount {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  company: string;
+  status: 'active' | 'inactive' | 'pending';
+  lastLogin: string;
+  permissions: {
+    read: boolean;
+    write: boolean;
+    execute: boolean;
+  };
+}
+
+interface CompanyInfo {
+  id: string;
+  name: string;
+  industry: string;
+  userCount: number;
+  assessmentCount: number;
+  status: 'active' | 'trial' | 'expired';
+  lastActivity: string;
+}
+
+const mockUsers: UserAccount[] = [
   {
     id: '1',
     name: '김개발',
@@ -63,7 +88,7 @@ const mockUsers = [
   }
 ];
 
-const mockCompanies = [
+const mockCompanies: CompanyInfo[] = [
   {
     id: '1',
     name: 'PIA Corp',
@@ -95,19 +120,19 @@ const mockCompanies = [
 
 export default function AdminPage() {
   const { user } = useAuth();
-  const [users, setUsers] = useState(mockUsers);
-  const [companies] = useState(mockCompanies);
+  const [users, setUsers] = useState<UserAccount[]>(mockUsers);
+  const [companies] = useState<CompanyInfo[]>(mockCompanies);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
-    role: 'developer',
+    role: 'developer' as UserRole,
     company: '',
     permissions: { read: true, write: false, execute: false }
   });
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
         return <Badge variant="secondary">활성</Badge>;
@@ -124,18 +149,17 @@ export default function AdminPage() {
     }
   };
 
-  const getRoleDisplayName = (role) => {
+  const getRoleDisplayName = (role: UserRole) => {
     switch (role) {
       case 'admin': return '관리자';
       case 'developer': return '개발팀';
       case 'privacy-team': return '개인정보팀';
-      case 'planning-team': return '기획팀';
       default: return role;
     }
   };
 
   const handleCreateUser = () => {
-    const user = {
+    const user: UserAccount = {
       id: Date.now().toString(),
       name: newUser.name,
       email: newUser.email,
@@ -157,13 +181,13 @@ export default function AdminPage() {
     setIsCreateUserOpen(false);
   };
 
-  const handleUpdateUser = (userId, field, value) => {
+  const handleUpdateUser = (userId: string, field: keyof UserAccount, value: any) => {
     setUsers(prev => prev.map(user => 
       user.id === userId ? { ...user, [field]: value } : user
     ));
   };
 
-  const handleUpdatePermissions = (userId, permission, value) => {
+  const handleUpdatePermissions = (userId: string, permission: keyof UserAccount['permissions'], value: boolean) => {
     setUsers(prev => prev.map(user => 
       user.id === userId 
         ? { ...user, permissions: { ...user.permissions, [permission]: value } }
@@ -284,14 +308,13 @@ export default function AdminPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="role">역할</Label>
-                        <Select value={newUser.role} onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value }))}>
+                        <Select value={newUser.role} onValueChange={(value: UserRole) => setNewUser(prev => ({ ...prev, role: value }))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="developer">개발팀</SelectItem>
                             <SelectItem value="privacy-team">개인정보팀</SelectItem>
-                            <SelectItem value="planning-team">기획팀</SelectItem>
                             <SelectItem value="admin">관리자</SelectItem>
                           </SelectContent>
                         </Select>

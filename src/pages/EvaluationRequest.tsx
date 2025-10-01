@@ -24,7 +24,18 @@ import {
 import { Plus, Eye, Edit } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const mockRequests = [
+interface EvaluationRequestData {
+  id: string;
+  title: string;
+  requestBy: string;
+  department: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  priority: 'high' | 'medium' | 'low';
+  createdAt: string;
+  description: string;
+}
+
+const mockRequests: EvaluationRequestData[] = [
   {
     id: 'REQ-001',
     title: '회원가입 시스템 개인정보 영향평가',
@@ -59,15 +70,15 @@ const mockRequests = [
 
 export default function EvaluationRequest() {
   const { user } = useAuth();
-  const [requests, setRequests] = useState(mockRequests);
+  const [requests, setRequests] = useState<EvaluationRequestData[]>(mockRequests);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newRequest, setNewRequest] = useState({
     title: '',
     description: '',
-    priority: 'medium'
+    priority: 'medium' as const
   });
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
         return <Badge variant="outline">대기</Badge>;
@@ -80,7 +91,7 @@ export default function EvaluationRequest() {
     }
   };
 
-  const getPriorityBadge = (priority) => {
+  const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'high':
         return <Badge variant="destructive">높음</Badge>;
@@ -95,7 +106,7 @@ export default function EvaluationRequest() {
 
   const handleCreateRequest = () => {
     const newId = `REQ-${String(requests.length + 1).padStart(3, '0')}`;
-    const createdRequest = {
+    const createdRequest: EvaluationRequestData = {
       id: newId,
       title: newRequest.title,
       requestBy: user?.name || '사용자',
@@ -161,7 +172,7 @@ export default function EvaluationRequest() {
                   id="priority"
                   className="w-full p-2 border rounded-md"
                   value={newRequest.priority}
-                  onChange={(e) => setNewRequest(prev => ({ ...prev, priority: e.target.value }))}
+                  onChange={(e) => setNewRequest(prev => ({ ...prev, priority: e.target.value as any }))}
                 >
                   <option value="low">낮음</option>
                   <option value="medium">보통</option>

@@ -76,9 +76,9 @@ export function DashboardSidebar() {
   const collapsed = state === 'collapsed';
   const location = useLocation();
   const { user } = useAuth();
-  const [openGroups, setOpenGroups] = useState([]);
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
 
-  const toggleGroup = (title) => {
+  const toggleGroup = (title: string) => {
     setOpenGroups(prev => 
       prev.includes(title) 
         ? prev.filter(item => item !== title)
@@ -86,8 +86,8 @@ export function DashboardSidebar() {
     );
   };
 
-  const isActive = (path) => location.pathname === path;
-  const isGroupActive = (items) => items.some(item => isActive(item.url));
+  const isActive = (path: string) => location.pathname === path;
+  const isGroupActive = (items: any[]) => items.some(item => isActive(item.url));
 
   return (
     <Sidebar className="border-r border-sidebar-border">

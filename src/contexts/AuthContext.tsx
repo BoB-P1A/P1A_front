@@ -1,9 +1,31 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-const AuthContext = createContext(undefined);
+export type UserRole = 'admin' | 'developer' | 'privacy-team' | 'planning-team';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  company?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  login: (credentials: LoginCredentials) => Promise<boolean>;
+  logout: () => void;
+  isLoading: boolean;
+}
+
+interface LoginCredentials {
+  id: string;
+  password: string;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock users for development
-const mockUsers = {
+const mockUsers: Record<string, { password: string; user: User }> = {
   'admin': {
     password: 'admin123',
     user: {
@@ -46,8 +68,8 @@ const mockUsers = {
   }
 };
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -64,7 +86,7 @@ export function AuthProvider({ children }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (credentials) => {
+  const login = async (credentials: LoginCredentials): Promise<boolean> => {
     setIsLoading(true);
     
     // Simulate API call delay
