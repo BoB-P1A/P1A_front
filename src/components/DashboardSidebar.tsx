@@ -3,14 +3,16 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   FileText,
   CheckSquare,
-  TrendingUp,
-  Users,
   Shield,
   GitBranch,
   PieChart,
-  AlertCircle,
+  AlertTriangle,
   Settings,
-  Crown
+  Crown,
+  ListChecks,
+  Table,
+  Users,
+  Building2
 } from 'lucide-react';
 import {
   Sidebar,
@@ -43,22 +45,19 @@ const menuItems = [
     icon: FileText,
   },
   {
-    title: '평가 기준 관리',
-    icon: CheckSquare,
-    items: [
-      { title: '처리업무표', url: '/criteria/tasks', icon: CheckSquare },
-      { title: '영향도 등급표', url: '/criteria/impact', icon: TrendingUp },
-      { title: '개인정보건수 등급표', url: '/criteria/personal-data', icon: Users },
-    ],
+    title: '영향평가 관리 페이지',
+    url: '/evaluation-management',
+    icon: ListChecks,
   },
   {
     title: '개인정보 처리단계별 보호조치',
     icon: Shield,
     items: [
+      { title: '처리업무표 입력', url: '/protection/task-table', icon: Table },
       { title: 'Lifecycle Checklist', url: '/protection/lifecycle', icon: CheckSquare },
       { title: '개인정보 흐름표', url: '/protection/flow-table', icon: GitBranch },
       { title: '개인정보 흐름도', url: '/protection/flow-chart', icon: PieChart },
-      { title: '위험도 산정', url: '/protection/risk', icon: AlertCircle },
+      { title: '침해요인별 개선방안', url: '/protection/improvement-plan', icon: AlertTriangle },
     ],
   },
   {
@@ -66,7 +65,7 @@ const menuItems = [
     icon: Settings,
     items: [
       { title: 'Admin Checklist', url: '/technical/admin-checklist', icon: CheckSquare },
-      { title: '위험도 산정', url: '/technical/risk', icon: AlertCircle },
+      { title: '침해요인별 개선방안', url: '/technical/improvement-plan', icon: AlertTriangle },
     ],
   },
 ];
@@ -187,20 +186,67 @@ export function DashboardSidebar() {
             
             {/* Admin Page - 관리자만 보이도록 */}
             {user?.role === 'admin' && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink 
-                    to="/adminpage"
-                    className={({ isActive }) => cn(
-                      "flex items-center gap-2",
-                      isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    )}
-                  >
-                    <Crown className="h-4 w-4" />
-                    {!collapsed && <span>관리자 페이지</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <Collapsible 
+                open={openGroups.includes('관리자 페이지')} 
+                onOpenChange={() => toggleGroup('관리자 페이지')}
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                      className={cn(
+                        "w-full justify-between",
+                        (isActive('/admin/accounts') || isActive('/admin/companies')) && "bg-sidebar-accent text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Crown className="h-4 w-4" />
+                        {!collapsed && <span>관리자 페이지</span>}
+                      </div>
+                      {!collapsed && (
+                        <ChevronRight className={cn(
+                          "h-4 w-4 transition-transform duration-200",
+                          openGroups.includes('관리자 페이지') && "rotate-90"
+                        )} />
+                      )}
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  
+                  {!collapsed && (
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink 
+                              to="/admin/accounts"
+                              className={({ isActive }) => cn(
+                                "flex items-center gap-2",
+                                isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                              )}
+                            >
+                              <Users className="h-4 w-4" />
+                              <span>계정 및 권한 관리</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink 
+                              to="/admin/companies"
+                              className={({ isActive }) => cn(
+                                "flex items-center gap-2",
+                                isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                              )}
+                            >
+                              <Building2 className="h-4 w-4" />
+                              <span>기업 관리</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  )}
+                </SidebarMenuItem>
+              </Collapsible>
             )}
           </SidebarMenu>
         </SidebarGroup>

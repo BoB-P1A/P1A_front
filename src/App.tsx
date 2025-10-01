@@ -16,16 +16,16 @@ import { DashboardLayout } from "./layouts/DashboardLayout";
 
 // Main Pages
 import EvaluationRequest from "./pages/EvaluationRequest";
-import CriteriaTasks from "./pages/criteria/CriteriaTasks";
-import CriteriaImpact from "./pages/criteria/CriteriaImpact";
-import CriteriaPersonalData from "./pages/criteria/CriteriaPersonalData";
+import EvaluationManagement from "./pages/EvaluationManagement";
+import TaskTable from "./pages/protection/TaskTable";
 import ProtectionLifecycle from "./pages/protection/ProtectionLifecycle";
 import ProtectionFlowTable from "./pages/protection/ProtectionFlowTable";
 import ProtectionFlowChart from "./pages/protection/ProtectionFlowChart";
-import ProtectionRisk from "./pages/protection/ProtectionRisk";
+import ProtectionImprovementPlan from "./pages/protection/ImprovementPlan";
 import TechnicalAdminChecklist from "./pages/technical/TechnicalAdminChecklist";
-import TechnicalRisk from "./pages/technical/TechnicalRisk";
-import AdminPage from "./pages/AdminPage";
+import TechnicalImprovementPlan from "./pages/technical/ImprovementPlan";
+import AccountManagement from "./pages/admin/AccountManagement";
+import CompanyManagement from "./pages/admin/CompanyManagement";
 import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
@@ -54,25 +54,29 @@ const App = () => (
               {/* 영향평가 요청 */}
               <Route path="evaluation-request" element={<EvaluationRequest />} />
               
-              {/* 평가 기준 관리 */}
-              <Route path="criteria/tasks" element={<CriteriaTasks />} />
-              <Route path="criteria/impact" element={<CriteriaImpact />} />
-              <Route path="criteria/personal-data" element={<CriteriaPersonalData />} />
+              {/* 영향평가 관리 페이지 */}
+              <Route path="evaluation-management" element={<EvaluationManagement />} />
               
               {/* 개인정보 처리단계별 보호조치 */}
+              <Route path="protection/task-table" element={<TaskTable />} />
               <Route path="protection/lifecycle" element={<ProtectionLifecycle />} />
               <Route path="protection/flow-table" element={<ProtectionFlowTable />} />
               <Route path="protection/flow-chart" element={<ProtectionFlowChart />} />
-              <Route path="protection/risk" element={<ProtectionRisk />} />
+              <Route path="protection/improvement-plan" element={<ProtectionImprovementPlan />} />
               
               {/* 기술적 보호조치 */}
               <Route path="technical/admin-checklist" element={<TechnicalAdminChecklist />} />
-              <Route path="technical/risk" element={<TechnicalRisk />} />
+              <Route path="technical/improvement-plan" element={<TechnicalImprovementPlan />} />
               
               {/* 관리자 페이지 (관리자만 접근 가능) */}
-              <Route path="adminpage" element={
+              <Route path="admin/accounts" element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminPage />
+                  <AccountManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="admin/companies" element={
+                <ProtectedRoute requiredRole="admin">
+                  <CompanyManagement />
                 </ProtectedRoute>
               } />
             </Route>
