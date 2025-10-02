@@ -14,41 +14,37 @@ import { Save, Plus, Trash2 } from 'lucide-react';
 
 interface TaskRow {
   id: number;
-  task: string;
+  taskName: string;
   purpose: string;
   personalInfo: string;
-  retentionPeriod: string;
-  responsible: string;
+  department: string;
 }
 
 export default function TaskTable() {
   const [tasks, setTasks] = useState<TaskRow[]>([
     {
       id: 1,
-      task: '회원가입',
+      taskName: '회원가입',
       purpose: '서비스 이용을 위한 회원 식별',
       personalInfo: '이름, 이메일, 전화번호',
-      retentionPeriod: '회원 탈퇴 시까지',
-      responsible: '개발팀',
+      department: '개발팀',
     },
     {
       id: 2,
-      task: '고객상담',
+      taskName: '고객상담',
       purpose: '고객 문의 응대 및 서비스 개선',
       personalInfo: '이름, 연락처, 상담내용',
-      retentionPeriod: '상담 종료 후 3년',
-      responsible: 'CS팀',
+      department: 'CS팀',
     },
   ]);
 
   const handleAddRow = () => {
     const newTask: TaskRow = {
       id: Date.now(),
-      task: '',
+      taskName: '',
       purpose: '',
       personalInfo: '',
-      retentionPeriod: '',
-      responsible: '',
+      department: '',
     };
     setTasks([...tasks, newTask]);
   };
@@ -58,8 +54,14 @@ export default function TaskTable() {
   };
 
   const handleSave = () => {
-    // 저장 로직
     console.log('Saving tasks:', tasks);
+  };
+
+  const handleUpdateTask = (id: number, field: keyof TaskRow, value: string) => {
+    const updated = tasks.map(t => 
+      t.id === id ? { ...t, [field]: value } : t
+    );
+    setTasks(updated);
   };
 
   return (
@@ -87,7 +89,7 @@ export default function TaskTable() {
         <CardHeader>
           <CardTitle>개인정보 처리업무표</CardTitle>
           <CardDescription>
-            각 처리업무별 개인정보 항목과 보유기간을 입력하세요
+            각 처리업무별 개인정보 항목과 담당부서를 입력하세요
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,11 +97,10 @@ export default function TaskTable() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[150px]">처리업무</TableHead>
-                  <TableHead className="min-w-[200px]">수집목적</TableHead>
-                  <TableHead className="min-w-[200px]">개인정보 항목</TableHead>
-                  <TableHead className="min-w-[150px]">보유기간</TableHead>
-                  <TableHead className="min-w-[120px]">담당부서</TableHead>
+                  <TableHead className="min-w-[150px]">평가업무명</TableHead>
+                  <TableHead className="min-w-[200px]">처리 목적</TableHead>
+                  <TableHead className="min-w-[200px]">처리 개인정보</TableHead>
+                  <TableHead className="min-w-[120px]">주관부서</TableHead>
                   <TableHead className="w-[80px]">작업</TableHead>
                 </TableRow>
               </TableHeader>
@@ -108,62 +109,30 @@ export default function TaskTable() {
                   <TableRow key={task.id}>
                     <TableCell>
                       <Input 
-                        value={task.task}
-                        onChange={(e) => {
-                          const updated = tasks.map(t => 
-                            t.id === task.id ? { ...t, task: e.target.value } : t
-                          );
-                          setTasks(updated);
-                        }}
-                        placeholder="처리업무 입력"
+                        value={task.taskName}
+                        onChange={(e) => handleUpdateTask(task.id, 'taskName', e.target.value)}
+                        placeholder="평가업무명 입력"
                       />
                     </TableCell>
                     <TableCell>
                       <Input 
                         value={task.purpose}
-                        onChange={(e) => {
-                          const updated = tasks.map(t => 
-                            t.id === task.id ? { ...t, purpose: e.target.value } : t
-                          );
-                          setTasks(updated);
-                        }}
-                        placeholder="수집목적 입력"
+                        onChange={(e) => handleUpdateTask(task.id, 'purpose', e.target.value)}
+                        placeholder="처리 목적 입력"
                       />
                     </TableCell>
                     <TableCell>
                       <Input 
                         value={task.personalInfo}
-                        onChange={(e) => {
-                          const updated = tasks.map(t => 
-                            t.id === task.id ? { ...t, personalInfo: e.target.value } : t
-                          );
-                          setTasks(updated);
-                        }}
-                        placeholder="개인정보 항목 입력"
+                        onChange={(e) => handleUpdateTask(task.id, 'personalInfo', e.target.value)}
+                        placeholder="처리 개인정보 입력"
                       />
                     </TableCell>
                     <TableCell>
                       <Input 
-                        value={task.retentionPeriod}
-                        onChange={(e) => {
-                          const updated = tasks.map(t => 
-                            t.id === task.id ? { ...t, retentionPeriod: e.target.value } : t
-                          );
-                          setTasks(updated);
-                        }}
-                        placeholder="보유기간 입력"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input 
-                        value={task.responsible}
-                        onChange={(e) => {
-                          const updated = tasks.map(t => 
-                            t.id === task.id ? { ...t, responsible: e.target.value } : t
-                          );
-                          setTasks(updated);
-                        }}
-                        placeholder="담당부서 입력"
+                        value={task.department}
+                        onChange={(e) => handleUpdateTask(task.id, 'department', e.target.value)}
+                        placeholder="주관부서 입력"
                       />
                     </TableCell>
                     <TableCell>

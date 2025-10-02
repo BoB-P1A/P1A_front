@@ -1,86 +1,75 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Save, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import { Save, RotateCcw } from 'lucide-react';
 
 interface LifecycleItem {
   id: string;
   phase: string;
   category: string;
-  item: string;
+  no: string;
   description: string;
   mandatory: boolean;
-  checked: boolean;
+  status: '이행' | '부분이행' | '미이행' | '해당없음' | null;
+  comment: string;
+  evidence: string;
 }
 
 const lifecycleData: LifecycleItem[] = [
-  // 수집 단계
-  { id: '1', phase: '수집', category: '동의', item: '개인정보 수집·이용 동의 획득', description: '명시적이고 구체적인 동의 절차 구현', mandatory: true, checked: false },
-  { id: '2', phase: '수집', category: '고지', item: '개인정보 처리방침 고지', description: '수집 시점에 처리방침 안내', mandatory: true, checked: false },
-  { id: '3', phase: '수집', category: '최소화', item: '최소한의 개인정보만 수집', description: '목적에 필요한 최소한의 정보만 수집', mandatory: true, checked: false },
-  { id: '4', phase: '수집', category: '검증', item: '수집 정보의 정확성 검증', description: '수집된 개인정보의 정확성 확인', mandatory: false, checked: false },
-
-  // 이용 단계
-  { id: '5', phase: '이용', category: '목적제한', item: '수집 목적 범위 내에서만 이용', description: '명시된 목적 외 이용 금지', mandatory: true, checked: false },
-  { id: '6', phase: '이용', category: '접근제어', item: '개인정보 접근권한 관리', description: '최소권한 원칙에 따른 접근제어', mandatory: true, checked: false },
-  { id: '7', phase: '이용', category: '암호화', item: '개인정보 암호화 처리', description: '민감정보 및 고유식별정보 암호화', mandatory: true, checked: false },
-  { id: '8', phase: '이용', category: '로그관리', item: '개인정보 처리 로그 기록', description: '처리 이력 추적 가능하도록 로그 관리', mandatory: false, checked: false },
-
-  // 제공 단계
-  { id: '9', phase: '제공', category: '동의', item: '제3자 제공 동의 획득', description: '제3자 제공 시 별도 동의 획득', mandatory: true, checked: false },
-  { id: '10', phase: '제공', category: '계약', item: '개인정보 처리 위탁계약 체결', description: '위탁업체와의 개인정보 보호 계약', mandatory: true, checked: false },
-  { id: '11', phase: '제공', category: '관리감독', item: '수탁업체 관리·감독', description: '위탁업체의 개인정보 처리 현황 점검', mandatory: true, checked: false },
-
-  // 보관 단계
-  { id: '12', phase: '보관', category: '기간관리', item: '보유기간 준수', description: '법정 보유기간 또는 동의한 기간 준수', mandatory: true, checked: false },
-  { id: '13', phase: '보관', category: '분리보관', item: '보관 개인정보 분리 저장', description: '이용중인 정보와 분리하여 보관', mandatory: true, checked: false },
-  { id: '14', phase: '보관', category: '백업관리', item: '개인정보 백업 관리', description: '백업 데이터의 보안 관리', mandatory: false, checked: false },
-
-  // 파기 단계
-  { id: '15', phase: '파기', category: '파기시점', item: '보유기간 경과 시 즉시 파기', description: '보유기간 만료 즉시 파기 실행', mandatory: true, checked: false },
-  { id: '16', phase: '파기', category: '파기방법', item: '복구 불가능한 방법으로 파기', description: '완전삭제 또는 물리적 파기', mandatory: true, checked: false },
-  { id: '17', phase: '파기', category: '파기확인', item: '파기 완료 확인 및 기록', description: '파기 완료 여부 확인 및 기록 보존', mandatory: true, checked: false }
+  {
+    id: '1',
+    phase: '수집',
+    category: '적법한 수집 근거 관리',
+    no: '1.2.2',
+    description: '개인정보 보호책임자는 침묵 권한 관리, 접속기록 관리 및 접속 조치 등 내부 관리계획의 이행 실태를 연 1회 이상 점검·관리하고 있습니까?',
+    mandatory: true,
+    status: null,
+    comment: '',
+    evidence: '',
+  },
 ];
 
 export default function ProtectionLifecycle() {
   const [items, setItems] = useState<LifecycleItem[]>(lifecycleData);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const handleCheck = (id: string, checked: boolean) => {
-    setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, checked } : item
+  const handleStatusChange = (id: string, status: LifecycleItem['status']) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, status } : item
+    ));
+    setHasChanges(true);
+  };
+
+  const handleCommentChange = (id: string, comment: string) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, comment } : item
+    ));
+    setHasChanges(true);
+  };
+
+  const handleEvidenceChange = (id: string, evidence: string) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, evidence } : item
     ));
     setHasChanges(true);
   };
 
   const handleSave = () => {
+    console.log('Saving lifecycle data:', items);
     setHasChanges(false);
-    // TODO: API 호출로 저장
-    console.log('Saving lifecycle checklist:', items);
   };
 
   const handleReset = () => {
-    setItems(prev => prev.map(item => ({ ...item, checked: false })));
+    setItems(items.map(item => ({ ...item, status: null, comment: '', evidence: '' })));
     setHasChanges(true);
   };
 
-  const getPhaseStats = (phase: string) => {
-    const phaseItems = items.filter(item => item.phase === phase);
-    const checkedItems = phaseItems.filter(item => item.checked);
-    return {
-      total: phaseItems.length,
-      completed: checkedItems.length,
-      percentage: Math.round((checkedItems.length / phaseItems.length) * 100)
-    };
-  };
-
-  const phases = ['수집', '이용', '제공', '보관', '파기'];
-  const totalItems = items.length;
-  const completedItems = items.filter(item => item.checked).length;
-  const overallProgress = Math.round((completedItems / totalItems) * 100);
+  const phases = Array.from(new Set(items.map(item => item.phase)));
 
   return (
     <div className="space-y-6">
@@ -88,101 +77,93 @@ export default function ProtectionLifecycle() {
         <div>
           <h1 className="text-3xl font-bold text-primary">Lifecycle Checklist</h1>
           <p className="text-muted-foreground mt-2">
-            개인정보 생명주기별 보호조치 체크리스트입니다
+            개인정보 생명주기 단계별 보호조치를 확인하고 기록합니다
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleReset} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={handleReset}>
+            <RotateCcw className="mr-2 h-4 w-4" />
             초기화
           </Button>
-          <Button 
-            onClick={handleSave} 
-            className="bg-pia-secondary hover:bg-pia-secondary-light"
-            disabled={!hasChanges}
-          >
-            <Save className="h-4 w-4 mr-2" />
+          <Button onClick={handleSave} disabled={!hasChanges}>
+            <Save className="mr-2 h-4 w-4" />
             저장
           </Button>
         </div>
       </div>
 
-      {/* 전체 진행률 */}
-      <Card className="shadow-pia-card">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>전체 진행 현황</span>
-            <Badge variant="outline">{completedItems}/{totalItems} 완료</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>완료율</span>
-              <span>{overallProgress}%</span>
-            </div>
-            <Progress value={overallProgress} className="h-2" />
-          </div>
-        </CardContent>
-      </Card>
+      {phases.map(phase => (
+        <Card key={phase}>
+          <CardHeader>
+            <CardTitle>{phase} 단계</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {items.filter(item => item.phase === phase).map(item => (
+              <div key={item.id} className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{item.no}</Badge>
+                      {item.mandatory && <Badge variant="default">필수</Badge>}
+                      <span className="text-sm font-medium">{item.category}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                </div>
 
-      {/* 단계별 체크리스트 */}
-      {phases.map(phase => {
-        const phaseItems = items.filter(item => item.phase === phase);
-        const stats = getPhaseStats(phase);
-        
-        return (
-          <Card key={phase} className="shadow-pia-card">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3">
-                  <span>{phase} 단계</span>
-                  <Badge variant={stats.percentage === 100 ? "secondary" : "outline"}>
-                    {stats.completed}/{stats.total}
-                  </Badge>
-                </CardTitle>
-                <div className="text-sm text-muted-foreground">
-                  {stats.percentage}% 완료
+                <div className="space-y-3 bg-muted/30 p-4 rounded-md">
+                  <Label>이행 상태</Label>
+                  <RadioGroup
+                    value={item.status || ''}
+                    onValueChange={(value) => handleStatusChange(item.id, value as LifecycleItem['status'])}
+                  >
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="이행" id={`${item.id}-이행`} />
+                        <Label htmlFor={`${item.id}-이행`} className="cursor-pointer">이행</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="부분이행" id={`${item.id}-부분이행`} />
+                        <Label htmlFor={`${item.id}-부분이행`} className="cursor-pointer">부분이행</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="미이행" id={`${item.id}-미이행`} />
+                        <Label htmlFor={`${item.id}-미이행`} className="cursor-pointer">미이행</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="해당없음" id={`${item.id}-해당없음`} />
+                        <Label htmlFor={`${item.id}-해당없음`} className="cursor-pointer">해당없음</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`comment-${item.id}`}>평가 근거 및 의견</Label>
+                  <Textarea
+                    id={`comment-${item.id}`}
+                    placeholder="평가 근거나 의견을 입력하세요"
+                    value={item.comment}
+                    onChange={(e) => handleCommentChange(item.id, e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`evidence-${item.id}`}>증빙 자료</Label>
+                  <Textarea
+                    id={`evidence-${item.id}`}
+                    placeholder="증빙 자료 정보를 입력하세요"
+                    value={item.evidence}
+                    onChange={(e) => handleEvidenceChange(item.id, e.target.value)}
+                    className="min-h-[60px]"
+                  />
                 </div>
               </div>
-              <Progress value={stats.percentage} className="h-1" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {phaseItems.map(item => (
-                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/5">
-                    <Checkbox
-                      id={item.id}
-                      checked={item.checked}
-                      onCheckedChange={(checked) => handleCheck(item.id, checked as boolean)}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <label 
-                          htmlFor={item.id} 
-                          className="font-medium cursor-pointer"
-                        >
-                          {item.item}
-                        </label>
-                        {item.mandatory && (
-                          <Badge variant="destructive" className="text-xs">필수</Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs">
-                          {item.category}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+            ))}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
