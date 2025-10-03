@@ -54,7 +54,8 @@ export default function TaskTable() {
   };
 
   const handleSave = () => {
-    console.log('Saving tasks:', tasks);
+    localStorage.setItem('processingTasks', JSON.stringify(tasks));
+    alert('저장되었습니다. 개인정보 흐름표 페이지에서 업무별 탭이 업데이트됩니다.');
   };
 
   const handleUpdateTask = (id: number, field: keyof TaskRow, value: string) => {
