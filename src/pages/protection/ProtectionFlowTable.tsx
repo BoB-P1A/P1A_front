@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import { Save, Plus, Trash2, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import * as XLSX from 'xlsx';
 
 // 수집 단계 데이터
 interface CollectionData {
@@ -161,14 +162,60 @@ export default function ProtectionFlowTable() {
     alert('저장되었습니다.');
   };
 
+  const handleExcelDownload = () => {
+    const workbook = XLSX.utils.book_new();
+
+    taskNames.forEach(taskName => {
+      const taskData = flowDataByTask[taskName];
+      
+      ['collection', 'storage', 'provision', 'disposal'].forEach(phase => {
+        const phaseLabels: Record<string, string> = {
+          collection: '수집',
+          storage: '보유이용',
+          provision: '제공',
+          disposal: '파기',
+        };
+
+        const rows = taskData[phase as keyof TaskFlowData];
+        let headers: string[] = [];
+        
+        if (phase === 'collection') {
+          headers = ['평가업무명', '수집 항목', '수집 경로', '수집 대상', '수집 주기', '수집 담당자', '수집 근거'];
+        } else if (phase === 'storage') {
+          headers = ['평가업무명', '보유 형태', '암호화 항목', '이용 목적', '이용 항목', '개인정보취급자', '이용 방법'];
+        } else if (phase === 'provision') {
+          headers = ['평가업무명', '제공 목적', '제공자', '수신자', '제공 정보', '제공 방법', '제공 주기', '암호화 여부', '제공근거'];
+        } else {
+          headers = ['평가업무명', '보관 기간', '파기 담당자', '파기 절차', '분리보관 여부'];
+        }
+
+        const data = [
+          headers,
+          ...rows.map((row: any) => [taskName, ...Object.values(row).slice(1)])
+        ];
+        
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(workbook, worksheet, `${taskName}_${phaseLabels[phase]}`);
+      });
+    });
+
+    XLSX.writeFile(workbook, '개인정보_흐름표.xlsx');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
-        <Button onClick={handleSave}>
-          <Save className="mr-2 h-4 w-4" />
-          전체 저장
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleExcelDownload} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            엑셀 다운로드
+          </Button>
+          <Button onClick={handleSave}>
+            <Save className="mr-2 h-4 w-4" />
+            전체 저장
+          </Button>
+        </div>
       </div>
 
       <Tabs value={selectedTask} onValueChange={setSelectedTask}>

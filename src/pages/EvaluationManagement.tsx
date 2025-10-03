@@ -32,24 +32,30 @@ interface EvaluationItem {
 }
 
 export default function EvaluationManagement() {
-  const [items, setItems] = useState<EvaluationItem[]>([
-    {
-      id: 1,
-      area: '개인정보 처리단계별 보호조치',
-      field: '개인정보 수집',
-      subField: '개인정보보안관리 등록',
-      no: '2.2.2',
-      item: '대상시스템에서 개인정보보안관리를 진행할 보유하거나 기초입력을 받았다는 점검 개인정보보안관리의 이행 확보하도록 계획하고 있습니까?',
-    },
-    {
-      id: 2,
-      area: '개인정보 처리단계별 보호조치',
-      field: '개인정보 처리방침의 공개',
-      subField: '개인정보 처리방침의 공개',
-      no: '2.3.1',
-      item: '대상시스템에 대한 개인정보 처리방침을 수립하거나 변경하는 경우에는 인터넷 홈페이지 관리 등에 접촉 주제가 잘게 확고하면 수 있도록 게시하고 있습니까?',
-    },
-  ]);
+  const [items, setItems] = useState<EvaluationItem[]>(() => {
+    const saved = localStorage.getItem('evaluationItems');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [
+      {
+        id: 1,
+        area: '3. 개인정보 처리단계별 보호조치',
+        field: '3.1 수집',
+        subField: '개인정보 수집의 적합성',
+        no: '3.1.1',
+        item: '개인정보를 수집하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 수집하도록 계획하고 있습니까?',
+      },
+      {
+        id: 2,
+        area: '4. 대상시스템의 기술적 보호조치',
+        field: '4.1 접근권한 관리',
+        subField: '계정관리',
+        no: '4.1.1',
+        item: '개인정보취급자별로 책임추적성이 확보될 수 있도록 개별 계정을 부여하도록 계획하고 있습니까?',
+      },
+    ];
+  });
 
   const [editingItem, setEditingItem] = useState<EvaluationItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,12 +73,13 @@ export default function EvaluationManagement() {
   };
 
   const handleSave = () => {
+    let updatedItems;
     if (editingItem) {
-      setItems(items.map(item => 
+      updatedItems = items.map(item => 
         item.id === editingItem.id 
           ? { ...item, ...formData } as EvaluationItem
           : item
-      ));
+      );
     } else {
       const newItem: EvaluationItem = {
         id: Date.now(),
@@ -82,15 +89,19 @@ export default function EvaluationManagement() {
         no: formData.no || '',
         item: formData.item || '',
       };
-      setItems([...items, newItem]);
+      updatedItems = [...items, newItem];
     }
+    setItems(updatedItems);
+    localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
     setIsDialogOpen(false);
     setEditingItem(null);
     setFormData({});
   };
 
   const handleDelete = (id: number) => {
-    setItems(items.filter(item => item.id !== id));
+    const updatedItems = items.filter(item => item.id !== id);
+    setItems(updatedItems);
+    localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
   };
 
   return (
