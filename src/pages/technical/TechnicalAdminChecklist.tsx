@@ -21,6 +21,7 @@ interface EvaluationItem {
 interface TechnicalItem {
   id: number;
   systemName: string;
+  field: string;
   subField: string;
   no: string;
   item: string;
@@ -66,6 +67,7 @@ export default function TechnicalAdminChecklist() {
         return {
           id: item.id,
           systemName: saved?.systemName || (systems.length > 0 ? systems[0].name : ''),
+          field: item.field,
           subField: item.subField,
           no: item.no,
           item: item.item,
@@ -243,12 +245,24 @@ export default function TechnicalAdminChecklist() {
           {systems.map(system => (
             <TabsContent key={system.id} value={system.name}>
               <div className="space-y-6">
-                {getItemsForSystem(system.name).map(item => (
-                  <Card key={item.id}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{item.no} - {item.subField}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                {getItemsForSystem(system.name).map((item, index, array) => {
+                  const prevItem = index > 0 ? array[index - 1] : null;
+                  const showFieldHeader = !prevItem || prevItem.field !== item.field;
+                  
+                  return (
+                    <div key={item.id}>
+                      {showFieldHeader && (
+                        <div className="mb-4 mt-6 first:mt-0">
+                          <h2 className="text-xl font-semibold text-primary border-b pb-2">
+                            {item.field}
+                          </h2>
+                        </div>
+                      )}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{item.no} - {item.subField}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                       <div>
                         <Label className="font-semibold">평가항목</Label>
                         <p className="mt-1 text-sm">{item.item}</p>
@@ -305,8 +319,10 @@ export default function TechnicalAdminChecklist() {
                         />
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                      </Card>
+                    </div>
+                  );
+                })}
 
                 {getItemsForSystem(system.name).length === 0 && (
                   <Card>

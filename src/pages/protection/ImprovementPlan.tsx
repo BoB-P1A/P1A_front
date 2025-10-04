@@ -133,10 +133,7 @@ export default function ImprovementPlan() {
           <div className="space-y-6">
             {items.map((item) => (
               <Card key={item.id}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{item.taskName} - {item.code}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-6">
                   <div>
                     <Label className="font-semibold">개인정보 처리업무명</Label>
                     <Input value={item.taskName} disabled className="mt-1" />
