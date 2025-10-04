@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { 
   Table,
   TableBody,
@@ -9,68 +12,90 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Download, AlertTriangle } from 'lucide-react';
+import { Download, AlertTriangle, Save } from 'lucide-react';
 
-interface TechnicalRisk {
+interface TechnicalItem {
   id: number;
-  category: string;
-  risk: string;
-  level: 'high' | 'medium' | 'low';
-  currentStatus: string;
+  systemName: string;
+  subField: string;
+  no: string;
+  item: string;
+  status: '이행' | '부분이행' | '미이행' | '해당없음' | null;
+  evidence: string;
+  relatedLaw: string;
+}
+
+interface ImprovementItem {
+  id: string;
+  systemName: string;
+  code: string;
+  question: string;
+  evidence: string;
+  riskFactor: string;
   improvementPlan: string;
-  responsible: string;
-  deadline: string;
 }
 
 export default function TechnicalImprovementPlan() {
-  const technicalRisks: TechnicalRisk[] = [
-    {
-      id: 1,
-      category: '네트워크 보안',
-      risk: '방화벽 설정 미흡',
-      level: 'high',
-      currentStatus: '일부 포트 개방 상태',
-      improvementPlan: '불필요한 포트 차단 및 방화벽 규칙 강화',
-      responsible: '인프라팀',
-      deadline: '2024-02-15',
-    },
-    {
-      id: 2,
-      category: '시스템 보안',
-      risk: '취약점 패치 지연',
-      level: 'medium',
-      currentStatus: '일부 서버 패치 미적용',
-      improvementPlan: '자동 패치 시스템 도입 및 정기 점검',
-      responsible: '시스템팀',
-      deadline: '2024-03-15',
-    },
-    {
-      id: 3,
-      category: '애플리케이션 보안',
-      risk: 'SQL Injection 취약점',
-      level: 'high',
-      currentStatus: '입력값 검증 불충분',
-      improvementPlan: 'Prepared Statement 적용 및 입력값 검증 강화',
-      responsible: '개발팀',
-      deadline: '2024-02-28',
-    },
-  ];
+  const [items, setItems] = useState<ImprovementItem[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    const technicalData = localStorage.getItem('technicalData');
+    if (technicalData) {
+      const parsed: TechnicalItem[] = JSON.parse(technicalData);
+      const filtered = parsed.filter(item => 
+        item.status === '부분이행' || item.status === '미이행'
+      );
+
+      const savedImprovements = localStorage.getItem('technicalImprovements');
+      const saved = savedImprovements ? JSON.parse(savedImprovements) : {};
+
+      const improvementItems: ImprovementItem[] = filtered.map(item => {
+        const itemId = `${item.systemName}-${item.no}`;
+        const savedItem = saved[itemId];
+        return {
+          id: itemId,
+          systemName: item.systemName,
+          code: item.no,
+          question: item.item,
+          evidence: item.evidence,
+          riskFactor: savedItem?.riskFactor || '',
+          improvementPlan: savedItem?.improvementPlan || '',
+        };
+      });
+
+      setItems(improvementItems);
+    }
+  }, []);
+
+  const handleRiskFactorChange = (id: string, value: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === id ? { ...item, riskFactor: value } : item
+    ));
+    setHasChanges(true);
+  };
+
+  const handleImprovementPlanChange = (id: string, value: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === id ? { ...item, improvementPlan: value } : item
+    ));
+    setHasChanges(true);
+  };
+
+  const handleSave = () => {
+    const improvements: { [key: string]: { riskFactor: string; improvementPlan: string } } = {};
+    items.forEach(item => {
+      improvements[item.id] = {
+        riskFactor: item.riskFactor,
+        improvementPlan: item.improvementPlan,
+      };
+    });
+    localStorage.setItem('technicalImprovements', JSON.stringify(improvements));
+    setHasChanges(false);
+  };
 
   const handleExportToExcel = () => {
     console.log('Exporting technical risks to Excel...');
-  };
-
-  const getRiskLevelBadge = (level: string) => {
-    switch (level) {
-      case 'high':
-        return <Badge variant="destructive">높음</Badge>;
-      case 'medium':
-        return <Badge variant="secondary">중간</Badge>;
-      case 'low':
-        return <Badge variant="outline">낮음</Badge>;
-      default:
-        return <Badge>{level}</Badge>;
-    }
   };
 
   return (
@@ -82,10 +107,16 @@ export default function TechnicalImprovementPlan() {
             기술적 보호조치의 침해요인과 개선방안을 관리합니다
           </p>
         </div>
-        <Button onClick={handleExportToExcel}>
-          <Download className="mr-2 h-4 w-4" />
-          엑셀 다운로드
-        </Button>
+        <div className="space-x-2">
+          <Button variant="outline" onClick={handleExportToExcel}>
+            <Download className="mr-2 h-4 w-4" />
+            엑셀 다운로드
+          </Button>
+          <Button onClick={handleSave} disabled={!hasChanges}>
+            <Save className="mr-2 h-4 w-4" />
+            저장
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -99,61 +130,69 @@ export default function TechnicalImprovementPlan() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>카테고리</TableHead>
-                <TableHead>침해요인</TableHead>
-                <TableHead>위험도</TableHead>
-                <TableHead>현황</TableHead>
-                <TableHead>개선방안</TableHead>
-                <TableHead>담당부서</TableHead>
-                <TableHead>완료기한</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {technicalRisks.map((risk) => (
-                <TableRow key={risk.id}>
-                  <TableCell className="font-medium">{risk.category}</TableCell>
-                  <TableCell>{risk.risk}</TableCell>
-                  <TableCell>{getRiskLevelBadge(risk.level)}</TableCell>
-                  <TableCell className="max-w-xs">
-                    <div className="truncate" title={risk.currentStatus}>
-                      {risk.currentStatus}
-                    </div>
-                  </TableCell>
-                  <TableCell className="max-w-xs">
-                    <div className="truncate" title={risk.improvementPlan}>
-                      {risk.improvementPlan}
-                    </div>
-                  </TableCell>
-                  <TableCell>{risk.responsible}</TableCell>
-                  <TableCell>{risk.deadline}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <div className="space-y-6">
+            {items.map((item) => (
+              <Card key={item.id}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{item.systemName} - {item.code}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="font-semibold">시스템명</Label>
+                    <Input value={item.systemName} disabled className="mt-1" />
+                  </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>기술적 위험도 통계</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-destructive">2</div>
-              <div className="text-sm text-muted-foreground">높음</div>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-orange-500">1</div>
-              <div className="text-sm text-muted-foreground">중간</div>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-green-500">0</div>
-              <div className="text-sm text-muted-foreground">낮음</div>
-            </div>
+                  <div>
+                    <Label className="font-semibold">질의문 코드</Label>
+                    <Input value={item.code} disabled className="mt-1" />
+                  </div>
+
+                  <div>
+                    <Label className="font-semibold">질의문</Label>
+                    <Textarea value={item.question} disabled className="mt-1" rows={2} />
+                  </div>
+
+                  <div>
+                    <Label className="font-semibold">평가 근거 및 의견</Label>
+                    <Textarea value={item.evidence} disabled className="mt-1" rows={3} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`risk-${item.id}`} className="font-semibold">침해요인</Label>
+                    <Textarea
+                      id={`risk-${item.id}`}
+                      value={item.riskFactor}
+                      onChange={(e) => handleRiskFactorChange(item.id, e.target.value)}
+                      placeholder="침해요인을 입력하세요"
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`plan-${item.id}`} className="font-semibold">개선방안</Label>
+                    <Textarea
+                      id={`plan-${item.id}`}
+                      value={item.improvementPlan}
+                      onChange={(e) => handleImprovementPlanChange(item.id, e.target.value)}
+                      placeholder="개선방안을 입력하세요"
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {items.length === 0 && (
+              <Card>
+                <CardContent className="py-8">
+                  <p className="text-center text-muted-foreground">
+                    Admin Checklist에서 부분이행 또는 미이행 항목이 있을 때 표시됩니다.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </CardContent>
       </Card>

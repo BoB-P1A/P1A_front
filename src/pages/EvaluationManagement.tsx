@@ -37,7 +37,7 @@ export default function EvaluationManagement() {
     if (saved) {
       return JSON.parse(saved);
     }
-    return [
+    const defaultItems = [
       {
         id: 1,
         area: '3. 개인정보 처리단계별 보호조치',
@@ -55,6 +55,8 @@ export default function EvaluationManagement() {
         item: '개인정보취급자별로 책임추적성이 확보될 수 있도록 개별 계정을 부여하도록 계획하고 있습니까?',
       },
     ];
+    localStorage.setItem('evaluationItems', JSON.stringify(defaultItems));
+    return defaultItems;
   });
 
   const [editingItem, setEditingItem] = useState<EvaluationItem | null>(null);

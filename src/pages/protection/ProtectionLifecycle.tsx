@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface EvaluationItem {
   id: number;
@@ -16,6 +17,7 @@ interface EvaluationItem {
 
 interface LifecycleItem {
   id: number;
+  taskName: string;
   subField: string;
   no: string;
   item: string;
@@ -24,25 +26,51 @@ interface LifecycleItem {
   relatedLaw: string;
 }
 
+interface ProcessingTask {
+  id: number;
+  taskName: string;
+  purpose: string;
+  personalInfo: string;
+  department: string;
+}
+
 export default function ProtectionLifecycle() {
+  const [tasks, setTasks] = useState<ProcessingTask[]>([]);
   const [items, setItems] = useState<LifecycleItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('');
 
   useEffect(() => {
+    const processingTasks = localStorage.getItem('processingTasks');
+    if (processingTasks) {
+      const parsed: ProcessingTask[] = JSON.parse(processingTasks);
+      setTasks(parsed);
+      if (parsed.length > 0 && !activeTab) {
+        setActiveTab(parsed[0].taskName);
+      }
+    }
+
     const evaluationItems = localStorage.getItem('evaluationItems');
     if (evaluationItems) {
       const parsed: EvaluationItem[] = JSON.parse(evaluationItems);
       const filtered = parsed.filter(item => item.area === '3. 개인정보 처리단계별 보호조치');
       
-      const lifecycleItems: LifecycleItem[] = filtered.map(item => ({
-        id: item.id,
-        subField: item.subField,
-        no: item.no,
-        item: item.item,
-        status: null,
-        evidence: '',
-        relatedLaw: '',
-      }));
+      const savedData = localStorage.getItem('lifecycleData');
+      const savedItems = savedData ? JSON.parse(savedData) : [];
+      
+      const lifecycleItems: LifecycleItem[] = filtered.map(item => {
+        const saved = savedItems.find((s: LifecycleItem) => s.id === item.id);
+        return {
+          id: item.id,
+          taskName: saved?.taskName || '',
+          subField: item.subField,
+          no: item.no,
+          item: item.item,
+          status: saved?.status || null,
+          evidence: saved?.evidence || '',
+          relatedLaw: saved?.relatedLaw || '',
+        };
+      });
       
       setItems(lifecycleItems);
     }
@@ -64,8 +92,11 @@ export default function ProtectionLifecycle() {
   };
 
   const handleSave = () => {
-    console.log('Saving lifecycle data:', items);
-    localStorage.setItem('lifecycleData', JSON.stringify(items));
+    const updatedItems = items.map(item => 
+      item.taskName === '' || item.taskName === activeTab ? { ...item, taskName: activeTab } : item
+    );
+    localStorage.setItem('lifecycleData', JSON.stringify(updatedItems));
+    setItems(updatedItems);
     setHasChanges(false);
   };
 
@@ -73,6 +104,24 @@ export default function ProtectionLifecycle() {
     setItems(prev => prev.map(item => ({ ...item, status: null, evidence: '', relatedLaw: '' })));
     setHasChanges(true);
   };
+
+  const getItemsForTask = (taskName: string) => {
+    return items.filter(item => !item.taskName || item.taskName === taskName);
+  };
+
+  if (tasks.length === 0) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">
+              처리업무표에서 평가업무를 추가해주세요.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -84,8 +133,19 @@ export default function ProtectionLifecycle() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        {items.map(item => (
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          {tasks.map(task => (
+            <TabsTrigger key={task.id} value={task.taskName}>
+              {task.taskName}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {tasks.map(task => (
+          <TabsContent key={task.id} value={task.taskName}>
+            <div className="space-y-6">
+              {getItemsForTask(task.taskName).map(item => (
           <Card key={item.id}>
             <CardHeader>
               <CardTitle className="text-lg">{item.no} - {item.subField}</CardTitle>
@@ -147,19 +207,22 @@ export default function ProtectionLifecycle() {
                 />
               </div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
+                </Card>
+              ))}
 
-      {items.length === 0 && (
-        <Card>
-          <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">
-              영향평가 관리 페이지에서 평가항목을 추가해주세요.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+              {getItemsForTask(task.taskName).length === 0 && (
+                <Card>
+                  <CardContent className="py-8">
+                    <p className="text-center text-muted-foreground">
+                      영향평가 관리 페이지에서 평가항목을 추가해주세요.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }
