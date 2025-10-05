@@ -65,6 +65,16 @@ const mockUsers: Record<string, { password: string; user: User }> = {
       role: 'planning-team',
       company: 'PIA Corp'
     }
+  },
+  'plan': {
+    password: 'plan123',
+    user: {
+      id: 'plan',
+      name: '최기획',
+      email: 'plan@pia.com',
+      role: 'planning-team',
+      company: 'PIA Corp'
+    }
   }
 };
 

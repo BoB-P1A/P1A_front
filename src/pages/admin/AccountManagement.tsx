@@ -65,6 +65,14 @@ export default function AccountManagement() {
       company: 'PIA Corp',
       createdAt: '2024-01-20',
     },
+    {
+      id: 'plan',
+      name: '최기획',
+      email: 'plan@pia.com',
+      role: 'planning-team',
+      company: 'PIA Corp',
+      createdAt: '2024-01-10',
+    },
   ]);
 
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);

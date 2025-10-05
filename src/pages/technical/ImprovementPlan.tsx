@@ -22,7 +22,7 @@ interface TechnicalItem {
   item: string;
   status: '이행' | '부분이행' | '미이행' | '해당없음' | null;
   evidence: string;
-  relatedLaw: string;
+  files: any[];
 }
 
 interface ImprovementItem {
@@ -31,6 +31,7 @@ interface ImprovementItem {
   code: string;
   question: string;
   evidence: string;
+  relatedLaw: string;
   riskFactor: string;
   improvementPlan: string;
 }
@@ -59,6 +60,7 @@ export default function TechnicalImprovementPlan() {
           code: item.no,
           question: item.item,
           evidence: item.evidence,
+          relatedLaw: savedItem?.relatedLaw || '',
           riskFactor: savedItem?.riskFactor || '',
           improvementPlan: savedItem?.improvementPlan || '',
         };
@@ -67,6 +69,13 @@ export default function TechnicalImprovementPlan() {
       setItems(improvementItems);
     }
   }, []);
+
+  const handleRelatedLawChange = (id: string, value: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === id ? { ...item, relatedLaw: value } : item
+    ));
+    setHasChanges(true);
+  };
 
   const handleRiskFactorChange = (id: string, value: string) => {
     setItems(prev => prev.map(item => 
@@ -83,9 +92,10 @@ export default function TechnicalImprovementPlan() {
   };
 
   const handleSave = () => {
-    const improvements: { [key: string]: { riskFactor: string; improvementPlan: string } } = {};
+    const improvements: { [key: string]: { relatedLaw: string; riskFactor: string; improvementPlan: string } } = {};
     items.forEach(item => {
       improvements[item.id] = {
+        relatedLaw: item.relatedLaw,
         riskFactor: item.riskFactor,
         improvementPlan: item.improvementPlan,
       };
@@ -136,22 +146,34 @@ export default function TechnicalImprovementPlan() {
                 <CardContent className="space-y-4 pt-6">
                   <div>
                     <Label className="font-semibold">시스템명</Label>
-                    <Input value={item.systemName} disabled className="mt-1" />
+                    <Input value={item.systemName} readOnly className="mt-1" />
                   </div>
 
                   <div>
                     <Label className="font-semibold">질의문 코드</Label>
-                    <Input value={item.code} disabled className="mt-1" />
+                    <Input value={item.code} readOnly className="mt-1" />
                   </div>
 
                   <div>
                     <Label className="font-semibold">질의문</Label>
-                    <Textarea value={item.question} disabled className="mt-1" rows={2} />
+                    <Textarea value={item.question} readOnly className="mt-1" rows={2} />
                   </div>
 
                   <div>
                     <Label className="font-semibold">평가 근거 및 의견</Label>
-                    <Textarea value={item.evidence} disabled className="mt-1" rows={3} />
+                    <Textarea value={item.evidence} readOnly className="mt-1" rows={3} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`law-${item.id}`} className="font-semibold">관련 법률</Label>
+                    <Textarea
+                      id={`law-${item.id}`}
+                      value={item.relatedLaw}
+                      onChange={(e) => handleRelatedLawChange(item.id, e.target.value)}
+                      placeholder="관련 법률을 입력하세요"
+                      className="mt-1"
+                      rows={2}
+                    />
                   </div>
 
                   <div>

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Upload, Download, Trash2 } from 'lucide-react';
 
 interface EvaluationItem {
   id: number;
@@ -24,7 +25,13 @@ interface LifecycleItem {
   item: string;
   status: '이행' | '부분이행' | '미이행' | '해당없음' | null;
   evidence: string;
-  relatedLaw: string;
+  files: FileAttachment[];
+}
+
+interface FileAttachment {
+  name: string;
+  data: string;
+  type: string;
 }
 
 interface ProcessingTask {
@@ -70,7 +77,7 @@ export default function ProtectionLifecycle() {
           item: item.item,
           status: saved?.status || null,
           evidence: saved?.evidence || '',
-          relatedLaw: saved?.relatedLaw || '',
+          files: saved?.files || [],
         };
       });
       
@@ -88,9 +95,39 @@ export default function ProtectionLifecycle() {
     setHasChanges(true);
   };
 
-  const handleRelatedLawChange = (id: number, relatedLaw: string) => {
-    setItems(prev => prev.map(item => item.id === id ? { ...item, relatedLaw } : item));
+  const handleFileUpload = (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fileData: FileAttachment = {
+          name: file.name,
+          data: e.target?.result as string,
+          type: file.type,
+        };
+        setItems(prev => prev.map(item => 
+          item.id === id ? { ...item, files: [...item.files, fileData] } : item
+        ));
+        setHasChanges(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileDelete = (itemId: number, fileName: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === itemId 
+        ? { ...item, files: item.files.filter(f => f.name !== fileName) } 
+        : item
+    ));
     setHasChanges(true);
+  };
+
+  const handleFileDownload = (file: FileAttachment) => {
+    const link = document.createElement('a');
+    link.href = file.data;
+    link.download = file.name;
+    link.click();
   };
 
   const handleSave = () => {
@@ -103,12 +140,12 @@ export default function ProtectionLifecycle() {
   };
 
   const handleReset = () => {
-    setItems(prev => prev.map(item => ({ ...item, status: null, evidence: '', relatedLaw: '' })));
+    setItems(prev => prev.map(item => ({ ...item, status: null, evidence: '', files: [] })));
     setHasChanges(true);
   };
 
   const getItemsForTask = (taskName: string) => {
-    return items.filter(item => !item.taskName || item.taskName === taskName);
+    return items;
   };
 
   if (tasks.length === 0) {
@@ -145,7 +182,7 @@ export default function ProtectionLifecycle() {
         </TabsList>
 
         {tasks.map(task => (
-          <TabsContent key={task.id} value={task.taskName}>
+          <TabsContent key={task.id} value={task.taskName} className="mt-6">
             <div className="space-y-6">
               {getItemsForTask(task.taskName).map((item, index, array) => {
                 const prevItem = index > 0 ? array[index - 1] : null;
@@ -210,15 +247,46 @@ export default function ProtectionLifecycle() {
               </div>
 
               <div>
-                <Label htmlFor={`law-${item.id}`} className="font-semibold">관련 법률</Label>
-                <Textarea
-                  id={`law-${item.id}`}
-                  value={item.relatedLaw}
-                  onChange={(e) => handleRelatedLawChange(item.id, e.target.value)}
-                  placeholder="관련 법률을 입력하세요"
-                  className="mt-1"
-                  rows={2}
-                />
+                <Label className="font-semibold">증적 자료</Label>
+                <div className="mt-2 space-y-2">
+                  {item.files.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm truncate flex-1">{file.name}</span>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleFileDownload(file)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleFileDelete(item.id, file.name)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <div>
+                    <input
+                      type="file"
+                      id={`file-${item.id}`}
+                      className="hidden"
+                      onChange={(e) => handleFileUpload(item.id, e)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById(`file-${item.id}`)?.click()}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      파일 업로드
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
                     </Card>

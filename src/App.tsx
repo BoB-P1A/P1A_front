@@ -53,7 +53,11 @@ const App = () => (
             <Route index element={<Dashboard />} />
               
               {/* 영향평가 관리 페이지 */}
-              <Route path="evaluation-management" element={<EvaluationManagement />} />
+              <Route path="evaluation-management" element={
+                <ProtectedRoute allowedRoles={['admin', 'privacy-team']}>
+                  <EvaluationManagement />
+                </ProtectedRoute>
+              } />
               
               {/* 개인정보 처리단계별 보호조치 */}
               <Route path="protection/task-table" element={<TaskTable />} />
