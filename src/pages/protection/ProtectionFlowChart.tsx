@@ -1,83 +1,208 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PieChart, RefreshCw, Download, ArrowRight, Database, Shield } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PieChart, RefreshCw, Download, Save } from 'lucide-react';
 
-interface FlowNode {
+interface DraggableIcon {
   id: string;
-  step: number;
-  label: string;
-  type: 'source' | 'process' | 'storage' | 'destination';
+  type: 'box' | 'arrow' | 'db' | 'system' | 'burst' | 'pc' | 'file' | 'number';
   x: number;
   y: number;
+  text: string;
 }
 
-interface FlowConnection {
-  from: string;
-  to: string;
-  label: string;
-  dataType: string;
+interface FlowChartData {
+  icons: DraggableIcon[];
 }
-
-const mockFlowNodes: FlowNode[] = [
-  { id: 'customer', step: 1, label: '고객', type: 'source', x: 50, y: 150 },
-  { id: 'signup', step: 2, label: '회원가입', type: 'process', x: 200, y: 150 },
-  { id: 'member-db', step: 3, label: '회원DB', type: 'storage', x: 350, y: 150 },
-  { id: 'auth', step: 4, label: '인증서버', type: 'process', x: 200, y: 300 },
-  { id: 'app', step: 5, label: '어플리케이션', type: 'destination', x: 500, y: 150 },
-];
-
-const mockConnections: FlowConnection[] = [
-  { from: 'customer', to: 'signup', label: '정보입력', dataType: '이름, 이메일, 전화번호' },
-  { from: 'signup', to: 'member-db', label: '정보저장', dataType: '암호화된 개인정보' },
-  { from: 'member-db', to: 'auth', label: '인증요청', dataType: '로그인 정보' },
-  { from: 'member-db', to: 'app', label: '프로필 제공', dataType: '사용자 프로필' },
-];
 
 export default function ProtectionFlowChart() {
-  const [nodes] = useState<FlowNode[]>(mockFlowNodes);
-  const [connections] = useState<FlowConnection[]>(mockConnections);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [taskNames, setTaskNames] = useState<string[]>(['회원가입', '고객상담']);
+  const [selectedTask, setSelectedTask] = useState('회원가입');
+  const [flowDataByTask, setFlowDataByTask] = useState<Record<string, FlowChartData>>({
+    '회원가입': { icons: [] },
+    '고객상담': { icons: [] },
+  });
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
-  const getNodeTypeIcon = (type: string) => {
-    switch (type) {
-      case 'source':
-        return '👤';
-      case 'process':
-        return '⚙️';
-      case 'storage':
-        return '🗄️';
-      case 'destination':
-        return '📱';
-      default:
-        return '📋';
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('processingTasks');
+    if (savedTasks) {
+      const tasks = JSON.parse(savedTasks);
+      const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
+      if (taskNamesList.length > 0) {
+        setTaskNames(taskNamesList);
+        
+        const newFlowData = { ...flowDataByTask };
+        taskNamesList.forEach((name: string) => {
+          if (!newFlowData[name]) {
+            newFlowData[name] = { icons: [] };
+          }
+        });
+        setFlowDataByTask(newFlowData);
+        
+        if (!taskNamesList.includes(selectedTask)) {
+          setSelectedTask(taskNamesList[0]);
+        }
+      }
     }
-  };
 
-  const getNodeTypeColor = (type: string) => {
-    switch (type) {
-      case 'source':
-        return 'bg-green-100 border-green-300 text-green-800';
-      case 'process':
-        return 'bg-blue-100 border-blue-300 text-blue-800';  
-      case 'storage':
-        return 'bg-purple-100 border-purple-300 text-purple-800';
-      case 'destination':
-        return 'bg-orange-100 border-orange-300 text-orange-800';
-      default:
-        return 'bg-gray-100 border-gray-300 text-gray-800';
+    const savedFlowData = localStorage.getItem('flowChartData');
+    if (savedFlowData) {
+      setFlowDataByTask(JSON.parse(savedFlowData));
     }
+  }, []);
+
+  const addIcon = (type: DraggableIcon['type']) => {
+    const newIcon: DraggableIcon = {
+      id: Date.now().toString(),
+      type,
+      x: 100,
+      y: 100,
+      text: '',
+    };
+
+    setFlowDataByTask(prev => ({
+      ...prev,
+      [selectedTask]: {
+        ...prev[selectedTask],
+        icons: [...prev[selectedTask].icons, newIcon],
+      },
+    }));
   };
 
-  const handleGenerateChart = () => {
-    // TODO: 흐름표 데이터를 기반으로 차트 자동 생성
-    console.log('Generating flow chart from table data...');
+  const handleDrag = (id: string, x: number, y: number) => {
+    setFlowDataByTask(prev => ({
+      ...prev,
+      [selectedTask]: {
+        ...prev[selectedTask],
+        icons: prev[selectedTask].icons.map(icon =>
+          icon.id === id ? { ...icon, x, y } : icon
+        ),
+      },
+    }));
   };
 
-  const handleExportChart = () => {
-    // TODO: 차트를 이미지 또는 PDF로 내보내기
+  const handleTextEdit = (id: string, text: string) => {
+    setFlowDataByTask(prev => ({
+      ...prev,
+      [selectedTask]: {
+        ...prev[selectedTask],
+        icons: prev[selectedTask].icons.map(icon =>
+          icon.id === id ? { ...icon, text } : icon
+        ),
+      },
+    }));
+    setEditingText(null);
+  };
+
+  const handleSave = () => {
+    localStorage.setItem('flowChartData', JSON.stringify(flowDataByTask));
+    alert('저장되었습니다.');
+  };
+
+  const handleExport = () => {
     console.log('Exporting flow chart...');
+  };
+
+  const renderIcon = (icon: DraggableIcon) => {
+    const isSelected = selectedIcon === icon.id;
+    const isEditing = editingText === icon.id;
+
+    let style = 'px-4 py-2 rounded-lg border-2 shadow-sm cursor-move';
+    let content = icon.text || '텍스트 입력';
+
+    switch (icon.type) {
+      case 'box':
+        style += ' bg-gray-100 border-gray-400';
+        break;
+      case 'db':
+        style += ' bg-orange-100 border-orange-400 rounded-full';
+        break;
+      case 'system':
+        style += ' bg-blue-100 border-blue-400';
+        break;
+      case 'burst':
+        style += ' bg-red-100 border-red-400';
+        break;
+      case 'pc':
+        style += ' bg-cyan-100 border-cyan-400';
+        break;
+      case 'file':
+        style += ' bg-purple-100 border-purple-400';
+        break;
+      case 'number':
+        style += ' bg-black text-white border-black rounded-full w-10 h-10 flex items-center justify-center';
+        break;
+      case 'arrow':
+        return (
+          <div
+            key={icon.id}
+            className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            style={{ left: icon.x, top: icon.y }}
+            draggable
+            onDragEnd={(e) => {
+              const rect = canvasRef.current?.getBoundingClientRect();
+              if (rect) {
+                handleDrag(icon.id, e.clientX - rect.left, e.clientY - rect.top);
+              }
+            }}
+            onClick={() => setSelectedIcon(icon.id)}
+            onDoubleClick={() => setEditingText(icon.id)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-20 h-0.5 bg-black"></div>
+              <div className="w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-l-8 border-l-black"></div>
+            </div>
+            {isEditing ? (
+              <Input
+                value={icon.text}
+                onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+                onBlur={() => setEditingText(null)}
+                className="mt-1 w-32"
+                autoFocus
+              />
+            ) : (
+              icon.text && <div className="text-xs mt-1">{icon.text}</div>
+            )}
+          </div>
+        );
+    }
+
+    return (
+      <div
+        key={icon.id}
+        className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+        style={{ left: icon.x, top: icon.y }}
+        draggable
+        onDragEnd={(e) => {
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (rect) {
+            handleDrag(icon.id, e.clientX - rect.left, e.clientY - rect.top);
+          }
+        }}
+        onClick={() => setSelectedIcon(icon.id)}
+        onDoubleClick={() => setEditingText(icon.id)}
+      >
+        <div className={style}>
+          {isEditing ? (
+            <Input
+              value={icon.text}
+              onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+              onBlur={() => setEditingText(null)}
+              className="min-w-[100px]"
+              autoFocus
+            />
+          ) : (
+            <span className="text-sm">{content}</span>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -90,208 +215,139 @@ export default function ProtectionFlowChart() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleGenerateChart} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            차트 생성
+          <Button onClick={handleSave} variant="outline">
+            <Save className="h-4 w-4 mr-2" />
+            저장
           </Button>
-          <Button onClick={handleExportChart} className="bg-pia-secondary hover:bg-pia-secondary-light">
+          <Button onClick={handleExport} className="bg-pia-secondary hover:bg-pia-secondary-light">
             <Download className="h-4 w-4 mr-2" />
             내보내기
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* 흐름도 영역 */}
-        <div className="lg:col-span-3">
-          <Card className="shadow-pia-card min-h-[500px]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5 text-pia-secondary" />
-                개인정보 처리 흐름도
-              </CardTitle>
-              <CardDescription>
-                개인정보 처리 과정을 시각적으로 표현한 다이어그램입니다
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative h-96 bg-gray-50 rounded-lg p-4 overflow-hidden">
-                {/* SVG 기반 플로우차트 */}
-                <svg width="100%" height="100%" className="absolute inset-0">
-                  {/* 연결선 그리기 */}
-                  {connections.map((conn, index) => {
-                    const fromNode = nodes.find(n => n.id === conn.from);
-                    const toNode = nodes.find(n => n.id === conn.to);
-                    if (!fromNode || !toNode) return null;
+      <Tabs value={selectedTask} onValueChange={setSelectedTask}>
+        <TabsList>
+          {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
+        </TabsList>
 
-                    return (
-                      <g key={index}>
-                        <line
-                          x1={fromNode.x + 40}
-                          y1={fromNode.y + 20}
-                          x2={toNode.x - 10}
-                          y2={toNode.y + 20}
-                          stroke="#6366f1"
-                          strokeWidth="2"
-                          markerEnd="url(#arrowhead)"
-                        />
-                        <text
-                          x={(fromNode.x + toNode.x) / 2}
-                          y={(fromNode.y + toNode.y) / 2 - 10}
-                          textAnchor="middle"
-                          className="text-xs fill-gray-600"
-                        >
-                          {conn.label}
-                        </text>
-                      </g>
-                    );
-                  })}
-                  
-                  {/* 화살표 마커 정의 */}
-                  <defs>
-                    <marker
-                      id="arrowhead"
-                      markerWidth="10"
-                      markerHeight="7"
-                      refX="9"
-                      refY="3.5"
-                      orient="auto"
+        {taskNames.map(task => (
+          <TabsContent key={task} value={task} className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* 흐름도 캔버스 */}
+              <div className="lg:col-span-3">
+                <Card className="shadow-pia-card min-h-[600px]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PieChart className="h-5 w-5 text-pia-secondary" />
+                      개인정보 처리 흐름도
+                    </CardTitle>
+                    <CardDescription>
+                      아이콘을 드래그하여 배치하고 더블클릭하여 텍스트를 입력하세요
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div
+                      ref={canvasRef}
+                      className="relative h-[500px] bg-gray-50 rounded-lg p-4 overflow-hidden border-2 border-dashed"
+                      onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                          setSelectedIcon(null);
+                        }
+                      }}
                     >
-                      <polygon
-                        points="0 0, 10 3.5, 0 7"
-                        fill="#6366f1"
-                      />
-                    </marker>
-                  </defs>
-                </svg>
-
-                {/* 노드 그리기 */}
-                {nodes.map((node) => (
-                  <div
-                    key={node.id}
-                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105 ${
-                      selectedNode === node.id ? 'ring-2 ring-pia-secondary' : ''
-                    }`}
-                    style={{ left: node.x, top: node.y }}
-                    onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)}
-                  >
-                    <div className={`px-4 py-2 rounded-lg border-2 shadow-sm ${getNodeTypeColor(node.type)}`}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{getNodeTypeIcon(node.type)}</span>
-                        <span className="font-medium text-sm">{node.label}</span>
-                      </div>
+                      {flowDataByTask[task]?.icons.map(icon => renderIcon(icon))}
                     </div>
-                  </div>
-                ))}
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* 사이드 패널 */}
-        <div className="space-y-4">
-          {/* 범례 */}
-          <Card className="shadow-pia-card">
-            <CardHeader>
-              <CardTitle className="text-lg">범례</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="px-2 py-1 rounded bg-green-100 border border-green-300">
-                  <span>👤</span>
-                </div>
-                <span className="text-sm">정보 출처</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="px-2 py-1 rounded bg-blue-100 border border-blue-300">
-                  <span>⚙️</span>
-                </div>
-                <span className="text-sm">처리 과정</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="px-2 py-1 rounded bg-purple-100 border border-purple-300">
-                  <span>🗄️</span>
-                </div>
-                <span className="text-sm">저장소</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="px-2 py-1 rounded bg-orange-100 border border-orange-300">
-                  <span>📱</span>
-                </div>
-                <span className="text-sm">최종 목적지</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 선택된 노드 정보 */}
-          {selectedNode && (
-            <Card className="shadow-pia-card">
-              <CardHeader>
-                <CardTitle className="text-lg">노드 정보</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  const node = nodes.find(n => n.id === selectedNode);
-                  if (!node) return null;
-                  
-                  return (
-                    <div className="space-y-3">
-                      <div>
-                        <p className="font-medium">{node.label}</p>
-                        <Badge variant="outline" className="mt-1">
-                          {node.type === 'source' ? '정보 출처' :
-                           node.type === 'process' ? '처리 과정' :
-                           node.type === 'storage' ? '저장소' : '최종 목적지'}
-                        </Badge>
+              {/* 아이콘 팔레트 */}
+              <div className="space-y-4">
+                <Card className="shadow-pia-card">
+                  <CardHeader>
+                    <CardTitle className="text-lg">아이콘 추가</CardTitle>
+                    <CardDescription className="text-xs">
+                      클릭하여 아이콘을 추가하세요
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('box')}
+                    >
+                      <div className="w-6 h-6 border-2 border-gray-400 rounded mr-2"></div>
+                      개인정보취급자 / 정보주체
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('arrow')}
+                    >
+                      <div className="flex items-center mr-2">
+                        <div className="w-4 h-0.5 bg-black"></div>
+                        <div className="w-0 h-0 border-t-2 border-t-transparent border-b-2 border-b-transparent border-l-4 border-l-black"></div>
                       </div>
-                      
-                      <div className="text-sm space-y-2">
-                        <p><strong>처리 단계:</strong> {node.step}</p>
-                        <div>
-                          <p><strong>연결된 흐름:</strong></p>
-                          <ul className="list-disc pl-4 mt-1 space-y-1">
-                            {connections
-                              .filter(conn => conn.from === node.id || conn.to === node.id)
-                              .map((conn, idx) => (
-                                <li key={idx} className="text-xs text-muted-foreground">
-                                  {conn.label}: {conn.dataType}
-                                </li>
-                              ))
-                            }
-                          </ul>
-                        </div>
+                      화살표
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('db')}
+                    >
+                      <div className="w-6 h-6 bg-orange-100 border-2 border-orange-400 rounded-full mr-2"></div>
+                      DB 암호화
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('system')}
+                    >
+                      <div className="w-6 h-6 bg-blue-100 border-2 border-blue-400 rounded mr-2"></div>
+                      온라인 / 오프라인 처리업무
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('burst')}
+                    >
+                      <div className="w-6 h-6 bg-red-100 border-2 border-red-400 mr-2" style={{clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'}}></div>
+                      개인정보 침해요인
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('pc')}
+                    >
+                      <div className="w-6 h-6 bg-cyan-100 border-2 border-cyan-400 rounded mr-2"></div>
+                      개인정보 단말PC
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('file')}
+                    >
+                      <div className="w-6 h-6 bg-purple-100 border-2 border-purple-400 rounded mr-2"></div>
+                      개인정보 문서(스캔파일)
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => addIcon('number')}
+                    >
+                      <div className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center mr-2 text-xs">
+                        1
                       </div>
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 통계 정보 */}
-          <Card className="shadow-pia-card">
-            <CardHeader>
-              <CardTitle className="text-lg">처리 현황</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm">총 처리 단계</span>
-                <Badge variant="outline">{nodes.length}개</Badge>
+                      처리되는 개인정보 숫자
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm">데이터 흐름</span>
-                <Badge variant="outline">{connections.length}개</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">저장소</span>
-                <Badge variant="outline">
-                  {nodes.filter(n => n.type === 'storage').length}개
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }

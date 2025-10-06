@@ -103,6 +103,7 @@ export default function Login() {
               <p>관리자: admin / admin123</p>
               <p>개발팀: developer / dev123</p>
               <p>개인정보팀: privacy / privacy123</p>
+              <p>사업주관팀: plan / plan123</p>
             </div>
           </div>
         </CardContent>

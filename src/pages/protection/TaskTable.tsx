@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import { Save, Plus, Trash2, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface TaskRow {
   id: number;
@@ -58,6 +59,18 @@ export default function TaskTable() {
     alert('저장되었습니다. 개인정보 흐름표 페이지에서 업무별 탭이 업데이트됩니다.');
   };
 
+  const handleExcelDownload = () => {
+    const workbook = XLSX.utils.book_new();
+    const headers = ['평가업무명', '처리 목적', '처리 개인정보', '주관부서'];
+    const data = [
+      headers,
+      ...tasks.map(task => [task.taskName, task.purpose, task.personalInfo, task.department])
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(workbook, worksheet, '처리업무표');
+    XLSX.writeFile(workbook, '개인정보_처리업무표.xlsx');
+  };
+
   const handleUpdateTask = (id: number, field: keyof TaskRow, value: string) => {
     const updated = tasks.map(t => 
       t.id === id ? { ...t, [field]: value } : t
@@ -78,6 +91,10 @@ export default function TaskTable() {
           <Button variant="outline" onClick={handleAddRow}>
             <Plus className="mr-2 h-4 w-4" />
             행 추가
+          </Button>
+          <Button variant="outline" onClick={handleExcelDownload}>
+            <Download className="mr-2 h-4 w-4" />
+            엑셀 다운로드
           </Button>
           <Button onClick={handleSave}>
             <Save className="mr-2 h-4 w-4" />

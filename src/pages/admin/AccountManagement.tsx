@@ -83,7 +83,7 @@ export default function AccountManagement() {
       case 'admin': return '관리자';
       case 'developer': return '개발팀';
       case 'privacy-team': return '개인정보팀';
-      case 'planning-team': return '기획팀';
+      case 'planning-team': return '사업주관팀';
       default: return role;
     }
   };
@@ -149,7 +149,7 @@ export default function AccountManagement() {
                     <SelectItem value="admin">관리자</SelectItem>
                     <SelectItem value="developer">개발팀</SelectItem>
                     <SelectItem value="privacy-team">개인정보팀</SelectItem>
-                    <SelectItem value="planning-team">기획팀</SelectItem>
+                    <SelectItem value="planning-team">사업주관팀</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

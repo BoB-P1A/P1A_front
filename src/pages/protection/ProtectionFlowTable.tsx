@@ -165,38 +165,38 @@ export default function ProtectionFlowTable() {
   const handleExcelDownload = () => {
     const workbook = XLSX.utils.book_new();
 
-    taskNames.forEach(taskName => {
-      const taskData = flowDataByTask[taskName];
+    const phaseLabels: Record<string, string> = {
+      collection: '수집',
+      storage: '보유이용',
+      provision: '제공',
+      disposal: '파기',
+    };
+
+    ['collection', 'storage', 'provision', 'disposal'].forEach(phase => {
+      let headers: string[] = [];
+      let allRows: any[] = [];
       
-      ['collection', 'storage', 'provision', 'disposal'].forEach(phase => {
-        const phaseLabels: Record<string, string> = {
-          collection: '수집',
-          storage: '보유이용',
-          provision: '제공',
-          disposal: '파기',
-        };
+      if (phase === 'collection') {
+        headers = ['평가업무명', '수집 항목', '수집 경로', '수집 대상', '수집 주기', '수집 담당자', '수집 근거'];
+      } else if (phase === 'storage') {
+        headers = ['평가업무명', '보유 형태', '암호화 항목', '이용 목적', '이용 항목', '개인정보취급자', '이용 방법'];
+      } else if (phase === 'provision') {
+        headers = ['평가업무명', '제공 목적', '제공자', '수신자', '제공 정보', '제공 방법', '제공 주기', '암호화 여부', '제공근거'];
+      } else {
+        headers = ['평가업무명', '보관 기간', '파기 담당자', '파기 절차', '분리보관 여부'];
+      }
 
+      taskNames.forEach(taskName => {
+        const taskData = flowDataByTask[taskName];
         const rows = taskData[phase as keyof TaskFlowData];
-        let headers: string[] = [];
-        
-        if (phase === 'collection') {
-          headers = ['평가업무명', '수집 항목', '수집 경로', '수집 대상', '수집 주기', '수집 담당자', '수집 근거'];
-        } else if (phase === 'storage') {
-          headers = ['평가업무명', '보유 형태', '암호화 항목', '이용 목적', '이용 항목', '개인정보취급자', '이용 방법'];
-        } else if (phase === 'provision') {
-          headers = ['평가업무명', '제공 목적', '제공자', '수신자', '제공 정보', '제공 방법', '제공 주기', '암호화 여부', '제공근거'];
-        } else {
-          headers = ['평가업무명', '보관 기간', '파기 담당자', '파기 절차', '분리보관 여부'];
-        }
-
-        const data = [
-          headers,
-          ...rows.map((row: any) => [taskName, ...Object.values(row).slice(1)])
-        ];
-        
-        const worksheet = XLSX.utils.aoa_to_sheet(data);
-        XLSX.utils.book_append_sheet(workbook, worksheet, `${taskName}_${phaseLabels[phase]}`);
+        rows.forEach((row: any) => {
+          allRows.push([taskName, ...Object.values(row).slice(1)]);
+        });
       });
+
+      const data = [headers, ...allRows];
+      const worksheet = XLSX.utils.aoa_to_sheet(data);
+      XLSX.utils.book_append_sheet(workbook, worksheet, phaseLabels[phase]);
     });
 
     XLSX.writeFile(workbook, '개인정보_흐름표.xlsx');
