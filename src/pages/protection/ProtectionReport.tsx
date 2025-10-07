@@ -1,10 +1,323 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Printer } from 'lucide-react';
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
 
 export default function ProtectionReport() {
-  const handleDownload = () => {
-    console.log('Downloading protection report...');
+  const handleDownload = async () => {
+    try {
+      // Load data from localStorage
+      const taskTableData = JSON.parse(localStorage.getItem('taskTableData') || '[]');
+      const flowTableData = JSON.parse(localStorage.getItem('flowTableData') || '{}');
+      const lifecycleData = JSON.parse(localStorage.getItem('lifecycleData') || '[]');
+      const improvements = JSON.parse(localStorage.getItem('protectionImprovements') || '{}');
+
+      const sections = [];
+
+      // Title
+      sections.push(
+        new Paragraph({
+          text: '개인정보 처리단계별 보호조치 결과보고서',
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        })
+      );
+
+      // 1. 개인정보 처리 흐름분석
+      sections.push(
+        new Paragraph({
+          text: '1. 개인정보 처리 흐름분석',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      // 처리업무표
+      sections.push(
+        new Paragraph({
+          text: '1.1 개인정보 처리업무표',
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 200, after: 100 }
+        })
+      );
+
+      if (taskTableData.length > 0) {
+        const taskTableRows = [
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph('처리업무명')] }),
+              new TableCell({ children: [new Paragraph('수집 항목')] }),
+              new TableCell({ children: [new Paragraph('수집 방법')] }),
+              new TableCell({ children: [new Paragraph('수집 근거')] }),
+              new TableCell({ children: [new Paragraph('보유 기간')] }),
+            ]
+          }),
+          ...taskTableData.map((task: any) => new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph(task.taskName || '')] }),
+              new TableCell({ children: [new Paragraph(task.collectionItems || '')] }),
+              new TableCell({ children: [new Paragraph(task.collectionMethod || '')] }),
+              new TableCell({ children: [new Paragraph(task.collectionBasis || '')] }),
+              new TableCell({ children: [new Paragraph(task.retentionPeriod || '')] }),
+            ]
+          }))
+        ];
+        sections.push(new Table({ rows: taskTableRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+      }
+
+      // 개인정보 흐름표
+      sections.push(
+        new Paragraph({
+          text: '1.2 개인정보 흐름표',
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 400, after: 100 }
+        })
+      );
+
+      const phases = ['수집', '보유이용', '제공', '파기'];
+      phases.forEach(phase => {
+        sections.push(
+          new Paragraph({
+            text: `${phase} 단계`,
+            heading: HeadingLevel.HEADING_4,
+            spacing: { before: 200, after: 100 }
+          })
+        );
+
+        const phaseData: any[] = [];
+        Object.keys(flowTableData).forEach(taskName => {
+          const taskData = flowTableData[taskName];
+          if (taskData && taskData[phase]) {
+            taskData[phase].forEach((row: any) => {
+              phaseData.push({ taskName, ...row });
+            });
+          }
+        });
+
+        if (phaseData.length > 0) {
+          const headers = phase === '수집' 
+            ? ['업무명', '수집항목', '수집방법', '수집근거']
+            : phase === '보유이용'
+            ? ['업무명', '개인정보파일명', '보유기간', '보유근거', '이용목적']
+            : phase === '제공'
+            ? ['업무명', '제공받는 자', '제공목적', '제공항목', '제공방법']
+            : ['업무명', '파기항목', '파기방법', '파기주기'];
+
+          const flowRows = [
+            new TableRow({
+              children: headers.map(h => new TableCell({ children: [new Paragraph(h)] }))
+            }),
+            ...phaseData.map(row => new TableRow({
+              children: phase === '수집'
+                ? [
+                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                    new TableCell({ children: [new Paragraph(row.items || '')] }),
+                    new TableCell({ children: [new Paragraph(row.method || '')] }),
+                    new TableCell({ children: [new Paragraph(row.basis || '')] })
+                  ]
+                : phase === '보유이용'
+                ? [
+                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                    new TableCell({ children: [new Paragraph(row.fileName || '')] }),
+                    new TableCell({ children: [new Paragraph(row.period || '')] }),
+                    new TableCell({ children: [new Paragraph(row.basis || '')] }),
+                    new TableCell({ children: [new Paragraph(row.purpose || '')] })
+                  ]
+                : phase === '제공'
+                ? [
+                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                    new TableCell({ children: [new Paragraph(row.recipient || '')] }),
+                    new TableCell({ children: [new Paragraph(row.purpose || '')] }),
+                    new TableCell({ children: [new Paragraph(row.items || '')] }),
+                    new TableCell({ children: [new Paragraph(row.method || '')] })
+                  ]
+                : [
+                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                    new TableCell({ children: [new Paragraph(row.items || '')] }),
+                    new TableCell({ children: [new Paragraph(row.method || '')] }),
+                    new TableCell({ children: [new Paragraph(row.cycle || '')] })
+                  ]
+            }))
+          ];
+          sections.push(new Table({ rows: flowRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+        }
+      });
+
+      // 개인정보 흐름도
+      sections.push(
+        new Paragraph({
+          text: '1.3 개인정보 흐름도',
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 400, after: 100 }
+        })
+      );
+      sections.push(new Paragraph({ text: '각 처리업무별 개인정보 흐름도가 별도로 작성되었습니다.' }));
+
+      // 2. 영향평가 기준
+      sections.push(
+        new Paragraph({
+          text: '2. 영향평가 기준',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const criteriaByTask: { [key: string]: { [subField: string]: string[] } } = {};
+      lifecycleData.forEach((item: any) => {
+        if (item.status !== '해당없음') {
+          if (!criteriaByTask[item.taskName]) criteriaByTask[item.taskName] = {};
+          if (!criteriaByTask[item.taskName][item.subField]) {
+            criteriaByTask[item.taskName][item.subField] = [];
+          }
+          criteriaByTask[item.taskName][item.subField].push(item.no);
+        }
+      });
+
+      Object.keys(criteriaByTask).forEach(taskName => {
+        sections.push(new Paragraph({
+          text: `[${taskName}]`,
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun({ text: `[${taskName}]`, bold: true })]
+        }));
+        Object.keys(criteriaByTask[taskName]).forEach(subField => {
+          const nos = criteriaByTask[taskName][subField].join(', ');
+          sections.push(new Paragraph({ text: `- ${subField} (${nos})` }));
+        });
+      });
+
+      // 3. 평가기준에 따른 개인정보 침해요인 분석･평가
+      sections.push(
+        new Paragraph({
+          text: '3. 평가기준에 따른 개인정보 침해요인 분석･평가',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const riskItems: any[] = [];
+      lifecycleData.forEach((item: any) => {
+        if (item.status === '부분이행' || item.status === '미이행') {
+          const itemId = `${item.taskName}-${item.no}`;
+          const saved = improvements[itemId];
+          riskItems.push({
+            taskName: item.taskName,
+            code: item.no,
+            evidence: item.evidence || '',
+            riskFactor: saved?.riskFactor || ''
+          });
+        }
+      });
+
+      if (riskItems.length > 0) {
+        const riskRows = [
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph('처리업무명')] }),
+              new TableCell({ children: [new Paragraph('질의문 코드')] }),
+              new TableCell({ children: [new Paragraph('평가 근거 및 의견')] }),
+              new TableCell({ children: [new Paragraph('침해요인')] }),
+            ]
+          }),
+          ...riskItems.map(item => new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph(item.taskName)] }),
+              new TableCell({ children: [new Paragraph(item.code)] }),
+              new TableCell({ children: [new Paragraph(item.evidence)] }),
+              new TableCell({ children: [new Paragraph(item.riskFactor)] }),
+            ]
+          }))
+        ];
+        sections.push(new Table({ rows: riskRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+      }
+
+      // 4. 주요 위험요소에 따른 개선 조치 방안
+      sections.push(
+        new Paragraph({
+          text: '4. 주요 위험요소에 따른 개선 조치 방안',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const improvementsByTask: { [key: string]: string[] } = {};
+      lifecycleData.forEach((item: any) => {
+        if (item.status === '부분이행' || item.status === '미이행') {
+          const itemId = `${item.taskName}-${item.no}`;
+          const saved = improvements[itemId];
+          if (saved?.improvementPlan) {
+            if (!improvementsByTask[item.taskName]) improvementsByTask[item.taskName] = [];
+            improvementsByTask[item.taskName].push(`${item.no}: ${saved.improvementPlan}`);
+          }
+        }
+      });
+
+      Object.keys(improvementsByTask).forEach(taskName => {
+        sections.push(new Paragraph({
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun({ text: `[${taskName}]`, bold: true })]
+        }));
+        improvementsByTask[taskName].forEach(plan => {
+          sections.push(new Paragraph({ text: `- ${plan}` }));
+        });
+      });
+
+      // 5. 평가결과
+      sections.push(
+        new Paragraph({
+          text: '5. 평가결과',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const resultsByTask: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
+      lifecycleData.forEach((item: any) => {
+        if (!resultsByTask[item.taskName]) resultsByTask[item.taskName] = {};
+        if (!resultsByTask[item.taskName][item.field]) {
+          resultsByTask[item.taskName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+        }
+        if (item.status) {
+          resultsByTask[item.taskName][item.field][item.status]++;
+        }
+      });
+
+      Object.keys(resultsByTask).forEach(taskName => {
+        sections.push(new Paragraph({
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun({ text: `[${taskName}]`, bold: true })]
+        }));
+
+        Object.keys(resultsByTask[taskName]).forEach(field => {
+          const counts = resultsByTask[taskName][field];
+          const total = counts.이행 + counts.부분이행 + counts.미이행;
+          const rate = total > 0 ? ((counts.이행 + counts.부분이행 * 0.5) / total * 100).toFixed(1) : '0.0';
+          
+          sections.push(new Paragraph({
+            text: `${field}: 이행 ${counts.이행}건, 부분이행 ${counts.부분이행}건, 미이행 ${counts.미이행}건, 해당없음 ${counts.해당없음}건 (이행률: ${rate}%)`
+          }));
+        });
+      });
+
+      // Create document
+      const doc = new Document({
+        sections: [{
+          children: sections
+        }]
+      });
+
+      // Generate and download
+      const blob = await Packer.toBlob(doc);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '개인정보_처리단계별_보호조치_결과보고서.docx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('보고서 생성 중 오류가 발생했습니다.');
+    }
   };
 
   const handlePrint = () => {
@@ -43,77 +356,49 @@ export default function ProtectionReport() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 border rounded-lg">
-              <div className="text-sm text-muted-foreground">총 평가항목</div>
-              <div className="text-2xl font-bold text-primary mt-2">24개</div>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="text-sm text-muted-foreground">이행 완료</div>
-              <div className="text-2xl font-bold text-green-600 mt-2">18개</div>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="text-sm text-muted-foreground">이행률</div>
-              <div className="text-2xl font-bold text-blue-600 mt-2">75%</div>
-            </div>
-          </div>
-
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">1. 처리업무표</h3>
+            <h3 className="text-lg font-semibold">1. 개인정보 처리 흐름분석</h3>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                총 2개의 처리업무가 등록되었습니다. (회원가입, 고객상담)
+                - 개인정보 처리업무표 전체<br/>
+                - 개인정보 흐름표 (수집/보유이용/제공/파기)<br/>
+                - 평가업무별 개인정보 흐름도
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">2. Lifecycle Checklist</h3>
-            <div className="p-4 bg-muted/30 rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">수집 단계</span>
-                <span className="text-sm font-medium">이행률: 80%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">이용 단계</span>
-                <span className="text-sm font-medium">이행률: 70%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">3. 개인정보 흐름표</h3>
+            <h3 className="text-lg font-semibold">2. 영향평가 기준</h3>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                처리업무별 개인정보 흐름이 정의되었습니다.
+                각 평가업무별 세부분야와 평가번호가 포함됩니다
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">4. 개인정보 흐름도</h3>
+            <h3 className="text-lg font-semibold">3. 평가기준에 따른 개인정보 침해요인 분석･평가</h3>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                시각화된 개인정보 처리 흐름도가 생성되었습니다.
+                질의문 코드, 평가 근거 및 의견, 침해요인 분석 내용이 포함됩니다
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">5. 침해요인별 개선방안</h3>
+            <h3 className="text-lg font-semibold">4. 주요 위험요소에 따른 개선 조치 방안</h3>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                식별된 침해요인에 대한 개선방안이 수립되었습니다.
+                각 평가업무별 개선방안이 포함됩니다
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">종합 의견</h3>
+            <h3 className="text-lg font-semibold">5. 평가결과</h3>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                개인정보 처리단계별 보호조치가 전반적으로 양호하게 이행되고 있으며, 
-                일부 미이행 항목에 대해서는 개선방안을 수립하여 지속적으로 관리할 필요가 있습니다.
+                평가분야별 이행/부분이행/미이행/해당없음 건수 및 이행률이 포함됩니다
               </p>
             </div>
           </div>

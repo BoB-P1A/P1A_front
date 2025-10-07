@@ -1,10 +1,190 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Printer } from 'lucide-react';
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
 
 export default function TechnicalReport() {
-  const handleDownload = () => {
-    console.log('Downloading technical report...');
+  const handleDownload = async () => {
+    try {
+      // Load data from localStorage
+      const technicalData = JSON.parse(localStorage.getItem('technicalData') || '[]');
+      const improvements = JSON.parse(localStorage.getItem('technicalImprovements') || '{}');
+
+      const sections = [];
+
+      // Title
+      sections.push(
+        new Paragraph({
+          text: '기술적 보호조치 결과보고서',
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        })
+      );
+
+      // 1. 영향평가 기준
+      sections.push(
+        new Paragraph({
+          text: '1. 영향평가 기준',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const criteriaBySystem: { [key: string]: { [subField: string]: string[] } } = {};
+      technicalData.forEach((item: any) => {
+        if (item.status !== '해당없음') {
+          if (!criteriaBySystem[item.systemName]) criteriaBySystem[item.systemName] = {};
+          if (!criteriaBySystem[item.systemName][item.subField]) {
+            criteriaBySystem[item.systemName][item.subField] = [];
+          }
+          criteriaBySystem[item.systemName][item.subField].push(item.no);
+        }
+      });
+
+      Object.keys(criteriaBySystem).forEach(systemName => {
+        sections.push(new Paragraph({
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun({ text: `[${systemName}]`, bold: true })]
+        }));
+        Object.keys(criteriaBySystem[systemName]).forEach(subField => {
+          const nos = criteriaBySystem[systemName][subField].join(', ');
+          sections.push(new Paragraph({ text: `- ${subField} (${nos})` }));
+        });
+      });
+
+      // 2. 평가기준에 따른 개인정보 침해요인 분석･평가
+      sections.push(
+        new Paragraph({
+          text: '2. 평가기준에 따른 개인정보 침해요인 분석･평가',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const riskItems: any[] = [];
+      technicalData.forEach((item: any) => {
+        if (item.status === '부분이행' || item.status === '미이행') {
+          const itemId = `${item.systemName}-${item.no}`;
+          const saved = improvements[itemId];
+          riskItems.push({
+            systemName: item.systemName,
+            code: item.no,
+            evidence: item.evidence || '',
+            riskFactor: saved?.riskFactor || ''
+          });
+        }
+      });
+
+      if (riskItems.length > 0) {
+        const riskRows = [
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph('시스템명')] }),
+              new TableCell({ children: [new Paragraph('질의문 코드')] }),
+              new TableCell({ children: [new Paragraph('평가 근거 및 의견')] }),
+              new TableCell({ children: [new Paragraph('침해요인')] }),
+            ]
+          }),
+          ...riskItems.map(item => new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph(item.systemName)] }),
+              new TableCell({ children: [new Paragraph(item.code)] }),
+              new TableCell({ children: [new Paragraph(item.evidence)] }),
+              new TableCell({ children: [new Paragraph(item.riskFactor)] }),
+            ]
+          }))
+        ];
+        sections.push(new Table({ rows: riskRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+      }
+
+      // 3. 주요 위험요소에 따른 개선 조치 방안
+      sections.push(
+        new Paragraph({
+          text: '3. 주요 위험요소에 따른 개선 조치 방안',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const improvementsBySystem: { [key: string]: string[] } = {};
+      technicalData.forEach((item: any) => {
+        if (item.status === '부분이행' || item.status === '미이행') {
+          const itemId = `${item.systemName}-${item.no}`;
+          const saved = improvements[itemId];
+          if (saved?.improvementPlan) {
+            if (!improvementsBySystem[item.systemName]) improvementsBySystem[item.systemName] = [];
+            improvementsBySystem[item.systemName].push(`${item.no}: ${saved.improvementPlan}`);
+          }
+        }
+      });
+
+      Object.keys(improvementsBySystem).forEach(systemName => {
+        sections.push(new Paragraph({
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun({ text: `[${systemName}]`, bold: true })]
+        }));
+        improvementsBySystem[systemName].forEach(plan => {
+          sections.push(new Paragraph({ text: `- ${plan}` }));
+        });
+      });
+
+      // 4. 평가결과
+      sections.push(
+        new Paragraph({
+          text: '4. 평가결과',
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 400, after: 200 }
+        })
+      );
+
+      const resultsBySystem: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
+      technicalData.forEach((item: any) => {
+        if (!resultsBySystem[item.systemName]) resultsBySystem[item.systemName] = {};
+        if (!resultsBySystem[item.systemName][item.field]) {
+          resultsBySystem[item.systemName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+        }
+        if (item.status) {
+          resultsBySystem[item.systemName][item.field][item.status]++;
+        }
+      });
+
+      Object.keys(resultsBySystem).forEach(systemName => {
+        sections.push(new Paragraph({
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun({ text: `[${systemName}]`, bold: true })]
+        }));
+
+        Object.keys(resultsBySystem[systemName]).forEach(field => {
+          const counts = resultsBySystem[systemName][field];
+          const total = counts.이행 + counts.부분이행 + counts.미이행;
+          const rate = total > 0 ? ((counts.이행 + counts.부분이행 * 0.5) / total * 100).toFixed(1) : '0.0';
+          
+          sections.push(new Paragraph({
+            text: `${field}: 이행 ${counts.이행}건, 부분이행 ${counts.부분이행}건, 미이행 ${counts.미이행}건, 해당없음 ${counts.해당없음}건 (이행률: ${rate}%)`
+          }));
+        });
+      });
+
+      // Create document
+      const doc = new Document({
+        sections: [{
+          children: sections
+        }]
+      });
+
+      // Generate and download
+      const blob = await Packer.toBlob(doc);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '기술적_보호조치_결과보고서.docx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('보고서 생성 중 오류가 발생했습니다.');
+    }
   };
 
   const handlePrint = () => {
@@ -43,98 +223,38 @@ export default function TechnicalReport() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 border rounded-lg">
-              <div className="text-sm text-muted-foreground">총 평가항목</div>
-              <div className="text-2xl font-bold text-primary mt-2">15개</div>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="text-sm text-muted-foreground">이행 완료</div>
-              <div className="text-2xl font-bold text-green-600 mt-2">12개</div>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="text-sm text-muted-foreground">이행률</div>
-              <div className="text-2xl font-bold text-blue-600 mt-2">80%</div>
-            </div>
-          </div>
-
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">1. 접근통제</h3>
-            <div className="p-4 bg-muted/30 rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">사용자 계정 관리</span>
-                <span className="text-sm font-medium">이행</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">인증 및 권한 관리</span>
-                <span className="text-sm font-medium">이행</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">접근기록 관리</span>
-                <span className="text-sm font-medium">부분이행</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">2. 암호화</h3>
-            <div className="p-4 bg-muted/30 rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">개인정보 암호화</span>
-                <span className="text-sm font-medium">이행</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">암호키 관리</span>
-                <span className="text-sm font-medium">이행</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">3. 접근기록</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <div className="flex justify-between">
-                <span className="text-sm">접근기록 보관</span>
-                <span className="text-sm font-medium">이행</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">4. 악성코드 차단</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <div className="flex justify-between">
-                <span className="text-sm">백신 프로그램 운영</span>
-                <span className="text-sm font-medium">이행</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">5. 보안 업데이트</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <div className="flex justify-between">
-                <span className="text-sm">보안패치 관리</span>
-                <span className="text-sm font-medium">이행</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">6. 침해요인별 개선방안</h3>
+            <h3 className="text-lg font-semibold">1. 영향평가 기준</h3>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                식별된 기술적 침해요인에 대한 개선방안이 수립되었습니다.
+                각 시스템별 세부분야와 평가번호가 포함됩니다
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">종합 의견</h3>
+            <h3 className="text-lg font-semibold">2. 평가기준에 따른 개인정보 침해요인 분석･평가</h3>
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                기술적 보호조치가 전반적으로 양호하게 이행되고 있으며, 
-                접근기록 관리 등 일부 미이행 항목에 대해서는 조속히 개선 조치를 취할 필요가 있습니다.
+                질의문 코드, 평가 근거 및 의견, 침해요인 분석 내용이 포함됩니다
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">3. 주요 위험요소에 따른 개선 조치 방안</h3>
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                각 시스템별 개선방안이 포함됩니다
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">4. 평가결과</h3>
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                평가분야별 이행/부분이행/미이행/해당없음 건수 및 이행률이 포함됩니다
               </p>
             </div>
           </div>

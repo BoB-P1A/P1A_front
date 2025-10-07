@@ -215,10 +215,10 @@ export default function TechnicalAdminChecklist() {
                   시스템명을 입력해주세요
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
+              <div className="space-y-6">
+                <div className="space-y-2">
                   <Label htmlFor="systemName">시스템명</Label>
-                  <Input 
+                  <Input
                     id="systemName" 
                     value={systemName}
                     onChange={(e) => setSystemName(e.target.value)}

@@ -106,7 +106,17 @@ export default function ProtectionFlowChart() {
   };
 
   const handleExport = () => {
-    console.log('Exporting flow chart...');
+    if (!selectedTask) return;
+    
+    // Export as JSON data
+    const data = JSON.stringify(flowDataByTask[selectedTask], null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `개인정보_흐름도_${selectedTask}.json`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const renderIcon = (icon: DraggableIcon) => {

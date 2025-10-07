@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Download, AlertTriangle, Save } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface LifecycleItem {
   id: number;
@@ -39,6 +41,20 @@ interface ImprovementItem {
 export default function ImprovementPlan() {
   const [items, setItems] = useState<ImprovementItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('전체');
+  const [taskNames, setTaskNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    const taskTableData = localStorage.getItem('taskTableData');
+    if (taskTableData) {
+      const tasks = JSON.parse(taskTableData);
+      const names = tasks.map((t: any) => t.taskName);
+      setTaskNames(names);
+      if (names.length > 0 && activeTab === '전체') {
+        setActiveTab('전체');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const lifecycleData = localStorage.getItem('lifecycleData');
@@ -105,8 +121,25 @@ export default function ImprovementPlan() {
   };
 
   const handleExportToExcel = () => {
-    console.log('Exporting to Excel...');
+    const exportData = filteredItems.map(item => ({
+      '개인정보 처리업무명': item.taskName,
+      '질의문 코드': item.code,
+      '질의문': item.question,
+      '평가 근거 및 의견': item.evidence,
+      '관련 법률': item.relatedLaw,
+      '침해요인': item.riskFactor,
+      '개선방안': item.improvementPlan,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '침해요인별 개선방안');
+    XLSX.writeFile(wb, '개인정보_침해요인별_개선방안.xlsx');
   };
+
+  const filteredItems = activeTab === '전체' 
+    ? items 
+    : items.filter(item => item.taskName === activeTab);
 
   return (
     <div className="space-y-6">
@@ -129,19 +162,28 @@ export default function ImprovementPlan() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            침해요인 목록 및 개선방안
-          </CardTitle>
-          <CardDescription>
-            각 침해요인에 대한 현황과 개선방안을 확인하세요
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {items.map((item) => (
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="전체">전체</TabsTrigger>
+          {taskNames.map(name => (
+            <TabsTrigger key={name} value={name}>{name}</TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value={activeTab}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                침해요인 목록 및 개선방안
+              </CardTitle>
+              <CardDescription>
+                각 침해요인에 대한 현황과 개선방안을 확인하세요
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {filteredItems.map((item) => (
               <Card key={item.id}>
                 <CardContent className="space-y-4 pt-6">
                   <div>
@@ -203,18 +245,20 @@ export default function ImprovementPlan() {
               </Card>
             ))}
 
-            {items.length === 0 && (
-              <Card>
-                <CardContent className="py-8">
-                  <p className="text-center text-muted-foreground">
-                    Lifecycle Checklist에서 부분이행 또는 미이행 항목이 있을 때 표시됩니다.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                {filteredItems.length === 0 && (
+                  <Card>
+                    <CardContent className="py-8">
+                      <p className="text-center text-muted-foreground">
+                        Lifecycle Checklist에서 부분이행 또는 미이행 항목이 있을 때 표시됩니다.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
