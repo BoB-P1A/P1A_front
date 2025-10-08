@@ -65,20 +65,18 @@ export default function ProtectionReport() {
         const taskTableRows = [
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('처리업무명')] }),
-              new TableCell({ children: [new Paragraph('수집 항목')] }),
-              new TableCell({ children: [new Paragraph('수집 방법')] }),
-              new TableCell({ children: [new Paragraph('수집 근거')] }),
-              new TableCell({ children: [new Paragraph('보유 기간')] }),
+              new TableCell({ children: [new Paragraph('평가업무명')] }),
+              new TableCell({ children: [new Paragraph('처리 목적')] }),
+              new TableCell({ children: [new Paragraph('처리 개인정보')] }),
+              new TableCell({ children: [new Paragraph('주관부서')] }),
             ]
           }),
           ...taskTableData.map((task: any) => new TableRow({
             children: [
               new TableCell({ children: [new Paragraph(task.taskName || '')] }),
-              new TableCell({ children: [new Paragraph(task.collectionItems || '')] }),
-              new TableCell({ children: [new Paragraph(task.collectionMethod || '')] }),
-              new TableCell({ children: [new Paragraph(task.collectionBasis || '')] }),
-              new TableCell({ children: [new Paragraph(task.retentionPeriod || '')] }),
+              new TableCell({ children: [new Paragraph(task.purpose || '')] }),
+              new TableCell({ children: [new Paragraph(task.personalInfo || '')] }),
+              new TableCell({ children: [new Paragraph(task.department || '')] }),
             ]
           }))
         ];
@@ -195,7 +193,6 @@ export default function ProtectionReport() {
 
       Object.keys(criteriaByTask).forEach(taskName => {
         sections.push(new Paragraph({
-          text: `[${taskName}]`,
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${taskName}]`, bold: true })]
         }));
@@ -627,7 +624,7 @@ export default function ProtectionReport() {
               <p className="font-semibold">[{task}]</p>
               <ul className="list-disc pl-6">
                 {improvementsByTask[task].map((plan, idx) => (
-                  <li key={idx}>- {plan}</li>
+                  <li key={idx}>{plan}</li>
                 ))}
               </ul>
             </div>

@@ -341,7 +341,7 @@ export default function TechnicalReport() {
               <p className="font-semibold">[{sys}]</p>
               <ul className="list-disc pl-6">
                 {improvementsBySystem[sys].map((plan, idx) => (
-                  <li key={idx}>- {plan}</li>
+                  <li key={idx}>{plan}</li>
                 ))}
               </ul>
             </div>
