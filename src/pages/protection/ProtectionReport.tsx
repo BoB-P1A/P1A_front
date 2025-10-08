@@ -26,7 +26,7 @@ export default function ProtectionReport() {
   const handleDownload = async () => {
     try {
       // Load data from localStorage
-      const taskTableData = JSON.parse(localStorage.getItem('taskTableData') || '[]');
+      const taskTableData = JSON.parse(localStorage.getItem('processingTasks') || '[]');
       const flowTableData = JSON.parse(localStorage.getItem('flowTableData') || '{}');
       const lifecycleData = JSON.parse(localStorage.getItem('lifecycleData') || '[]');
       const improvements = JSON.parse(localStorage.getItem('protectionImprovements') || '{}');

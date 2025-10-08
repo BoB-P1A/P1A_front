@@ -61,19 +61,25 @@ interface TaskFlowData {
 export default function ProtectionFlowTable() {
   const [taskNames, setTaskNames] = useState<string[]>(['회원가입', '고객상담']);
   const [selectedTask, setSelectedTask] = useState('회원가입');
-  const [flowDataByTask, setFlowDataByTask] = useState<Record<string, TaskFlowData>>({
-    '회원가입': {
-      collection: [],
-      storage: [],
-      provision: [],
-      disposal: [],
-    },
-    '고객상담': {
-      collection: [],
-      storage: [],
-      provision: [],
-      disposal: [],
-    },
+  const [flowDataByTask, setFlowDataByTask] = useState<Record<string, TaskFlowData>>(() => {
+    const saved = localStorage.getItem('flowTableData');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return {
+      '회원가입': {
+        collection: [],
+        storage: [],
+        provision: [],
+        disposal: [],
+      },
+      '고객상담': {
+        collection: [],
+        storage: [],
+        provision: [],
+        disposal: [],
+      },
+    };
   });
 
   // 처리업무표에서 업무명 가져오기

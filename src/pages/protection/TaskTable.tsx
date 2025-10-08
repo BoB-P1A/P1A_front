@@ -22,22 +22,28 @@ interface TaskRow {
 }
 
 export default function TaskTable() {
-  const [tasks, setTasks] = useState<TaskRow[]>([
-    {
-      id: 1,
-      taskName: '회원가입',
-      purpose: '서비스 이용을 위한 회원 식별',
-      personalInfo: '이름, 이메일, 전화번호',
-      department: '개발팀',
-    },
-    {
-      id: 2,
-      taskName: '고객상담',
-      purpose: '고객 문의 응대 및 서비스 개선',
-      personalInfo: '이름, 연락처, 상담내용',
-      department: 'CS팀',
-    },
-  ]);
+  const [tasks, setTasks] = useState<TaskRow[]>(() => {
+    const saved = localStorage.getItem('processingTasks');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [
+      {
+        id: 1,
+        taskName: '회원가입',
+        purpose: '서비스 이용을 위한 회원 식별',
+        personalInfo: '이름, 이메일, 전화번호',
+        department: '개발팀',
+      },
+      {
+        id: 2,
+        taskName: '고객상담',
+        purpose: '고객 문의 응대 및 서비스 개선',
+        personalInfo: '이름, 연락처, 상담내용',
+        department: 'CS팀',
+      },
+    ];
+  });
 
   const handleAddRow = () => {
     const newTask: TaskRow = {
