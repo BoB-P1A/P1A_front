@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { PieChart, RefreshCw, Download, Save } from 'lucide-react';
+import { PieChart, RefreshCw, Download, Save, Camera } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 interface DraggableIcon {
   id: string;
@@ -114,6 +115,34 @@ export default function ProtectionFlowChart() {
     localStorage.setItem('flowChartData', JSON.stringify(flowDataByTask));
     localStorage.setItem('personalInfoTexts', JSON.stringify(personalInfoTexts));
     alert('저장되었습니다.');
+  };
+
+  const handleCaptureFlowChart = async () => {
+    const flowChartElement = document.querySelector('.flow-chart-canvas') as HTMLElement;
+    if (!flowChartElement) {
+      alert('흐름도를 찾을 수 없습니다.');
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(flowChartElement, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+      });
+      
+      const imageData = canvas.toDataURL('image/png');
+      
+      // Save to localStorage
+      const flowChartImages = JSON.parse(localStorage.getItem('flowChartImages') || '{}');
+      flowChartImages[selectedTask] = imageData;
+      localStorage.setItem('flowChartImages', JSON.stringify(flowChartImages));
+      
+      alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
+    } catch (error) {
+      console.error('Error capturing flow chart:', error);
+      alert('흐름도 캡처 중 오류가 발생했습니다.');
+    }
   };
 
   const handleExport = () => {
@@ -545,6 +574,10 @@ export default function ProtectionFlowChart() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={handleCaptureFlowChart} variant="outline">
+            <Camera className="h-4 w-4 mr-2" />
+            이미지 캡처
+          </Button>
           <Button onClick={handleSave} variant="outline">
             <Save className="h-4 w-4 mr-2" />
             저장
@@ -576,7 +609,7 @@ export default function ProtectionFlowChart() {
                       아이콘을 드래그하여 배치하고 더블클릭하여 텍스트를 입력하세요
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="flow-chart-canvas">
                     <div className="relative h-[55vh] md:h-[60vh] border border-border rounded-lg overflow-hidden">
                       <ResizablePanelGroup direction="horizontal">
                         {/* 개인정보 생명주기 열 (고정) */}
