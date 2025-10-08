@@ -96,7 +96,7 @@ export default function TechnicalReport() {
             ]
           }))
         ];
-        sections.push(new Table({ rows: riskRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+        sections.push(new DocxTable({ rows: riskRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
       }
 
       // 3. 주요 위험요소에 따른 개선 조치 방안

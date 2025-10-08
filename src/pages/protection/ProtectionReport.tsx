@@ -64,7 +64,7 @@ export default function ProtectionReport() {
             ]
           }))
         ];
-        sections.push(new Table({ rows: taskTableRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+        sections.push(new DocxTable({ rows: taskTableRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
       }
 
       // 개인정보 흐름표
@@ -141,7 +141,7 @@ export default function ProtectionReport() {
                   ]
             }))
           ];
-          sections.push(new Table({ rows: flowRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+          sections.push(new DocxTable({ rows: flowRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
         }
       });
 
@@ -229,7 +229,7 @@ export default function ProtectionReport() {
             ]
           }))
         ];
-        sections.push(new Table({ rows: riskRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+        sections.push(new DocxTable({ rows: riskRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
       }
 
       // 4. 주요 위험요소에 따른 개선 조치 방안
