@@ -170,6 +170,17 @@ export default function AccountManagement() {
       return;
     }
 
+    // 아이디 중복 체크
+    const isDuplicate = accounts.some(account => 
+      account.username === formData.username && 
+      (!editingAccount || account.id !== editingAccount.id)
+    );
+
+    if (isDuplicate) {
+      alert('이미 존재하는 아이디입니다. 다른 아이디를 입력해주세요.');
+      return;
+    }
+
     if (editingAccount) {
       // 수정
       setAccounts(accounts.map(a => 
