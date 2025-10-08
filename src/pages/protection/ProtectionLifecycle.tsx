@@ -49,17 +49,28 @@ export default function ProtectionLifecycle() {
   const [activeTab, setActiveTab] = useState<string>('');
 
   useEffect(() => {
-    const processingTasks = localStorage.getItem('processingTasks');
-    if (processingTasks) {
-      const parsed: ProcessingTask[] = JSON.parse(processingTasks);
-      setTasks(parsed);
-      if (parsed.length > 0 && !activeTab) {
-        setActiveTab(parsed[0].taskName);
+    const loadTasks = () => {
+      const processingTasks = localStorage.getItem('processingTasks');
+      if (processingTasks) {
+        const parsed: ProcessingTask[] = JSON.parse(processingTasks);
+        setTasks(parsed);
+        if (parsed.length > 0 && !activeTab) {
+          setActiveTab(parsed[0].taskName);
+        }
       }
-    }
+    };
 
-    const evaluationItems = localStorage.getItem('evaluationItems');
-    // 항목 로드는 탭 변경 시 수행됩니다.
+    loadTasks();
+
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'processingTasks' || customEvent.detail?.key === 'evaluationItems') {
+        loadTasks();
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, []);
 
   useEffect(() => {
@@ -142,6 +153,7 @@ export default function ProtectionLifecycle() {
     const others = savedAll.filter((s) => s.taskName !== activeTab);
     const toSave = items.map((it) => ({ ...it, taskName: activeTab }));
     localStorage.setItem('lifecycleData', JSON.stringify([...others, ...toSave]));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'lifecycleData' } }));
     setHasChanges(false);
   };
 

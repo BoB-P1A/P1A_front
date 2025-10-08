@@ -3,8 +3,26 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download, Printer } from 'lucide-react';
 import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
 import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
+import { useState, useEffect } from 'react';
 
 export default function ProtectionReport() {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'processingTasks' || 
+          customEvent.detail?.key === 'flowTableData' ||
+          customEvent.detail?.key === 'flowChartData' ||
+          customEvent.detail?.key === 'lifecycleData' ||
+          customEvent.detail?.key === 'protectionImprovements') {
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
+  }, []);
   const handleDownload = async () => {
     try {
       // Load data from localStorage

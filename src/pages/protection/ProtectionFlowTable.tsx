@@ -78,33 +78,47 @@ export default function ProtectionFlowTable() {
 
   // 처리업무표에서 업무명 가져오기
   useEffect(() => {
-    const savedTasks = localStorage.getItem('processingTasks');
-    if (savedTasks) {
-      const tasks = JSON.parse(savedTasks);
-      const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
-      if (taskNamesList.length > 0) {
-        setTaskNames(taskNamesList);
-        
-        // 새로운 업무에 대한 빈 데이터 구조 생성
-        const newFlowData = { ...flowDataByTask };
-        taskNamesList.forEach((name: string) => {
-          if (!newFlowData[name]) {
-            newFlowData[name] = {
-              collection: [],
-              storage: [],
-              provision: [],
-              disposal: [],
-            };
+    const loadTaskNames = () => {
+      const savedTasks = localStorage.getItem('processingTasks');
+      if (savedTasks) {
+        const tasks = JSON.parse(savedTasks);
+        const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
+        if (taskNamesList.length > 0) {
+          setTaskNames(taskNamesList);
+          
+          // 새로운 업무에 대한 빈 데이터 구조 생성
+          const newFlowData = { ...flowDataByTask };
+          taskNamesList.forEach((name: string) => {
+            if (!newFlowData[name]) {
+              newFlowData[name] = {
+                collection: [],
+                storage: [],
+                provision: [],
+                disposal: [],
+              };
+            }
+          });
+          setFlowDataByTask(newFlowData);
+          
+          // 선택된 태스크가 없으면 첫 번째로 설정
+          if (!taskNamesList.includes(selectedTask)) {
+            setSelectedTask(taskNamesList[0]);
           }
-        });
-        setFlowDataByTask(newFlowData);
-        
-        // 선택된 태스크가 없으면 첫 번째로 설정
-        if (!taskNamesList.includes(selectedTask)) {
-          setSelectedTask(taskNamesList[0]);
         }
       }
-    }
+    };
+
+    loadTaskNames();
+
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'processingTasks') {
+        loadTaskNames();
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, []);
 
   const handleAddRow = (stage: 'collection' | 'storage' | 'provision' | 'disposal') => {
@@ -159,6 +173,7 @@ export default function ProtectionFlowTable() {
 
   const handleSave = () => {
     localStorage.setItem('flowTableData', JSON.stringify(flowDataByTask));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'flowTableData' } }));
     alert('저장되었습니다.');
   };
 

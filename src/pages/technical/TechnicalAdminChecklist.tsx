@@ -51,40 +51,54 @@ export default function TechnicalAdminChecklist() {
   const [systemName, setSystemName] = useState('');
 
   useEffect(() => {
-    const savedSystems = localStorage.getItem('technicalSystems');
-    if (savedSystems) {
-      const parsed: SystemInfo[] = JSON.parse(savedSystems);
-      setSystems(parsed);
-      if (parsed.length > 0 && !activeTab) {
-        setActiveTab(parsed[0].name);
+    const loadSystems = () => {
+      const savedSystems = localStorage.getItem('technicalSystems');
+      if (savedSystems) {
+        const parsed: SystemInfo[] = JSON.parse(savedSystems);
+        setSystems(parsed);
+        if (parsed.length > 0 && !activeTab) {
+          setActiveTab(parsed[0].name);
+        }
       }
-    }
 
-    const evaluationItems = localStorage.getItem('evaluationItems');
-    if (evaluationItems) {
-      const parsed: EvaluationItem[] = JSON.parse(evaluationItems);
-      const filtered = parsed.filter(item => item.area === '4. 대상시스템의 기술적 보호조치');
-      
-      const savedData = localStorage.getItem('technicalData');
-      const savedItems = savedData ? JSON.parse(savedData) : [];
-      
-      const technicalItems: TechnicalItem[] = filtered.map(item => {
-        const saved = savedItems.find((s: TechnicalItem) => s.id === item.id);
-        return {
-          id: item.id,
-          systemName: saved?.systemName || (systems.length > 0 ? systems[0].name : ''),
-          field: item.field,
-          subField: item.subField,
-          no: item.no,
-          item: item.item,
-          status: saved?.status || null,
-          evidence: saved?.evidence || '',
-          files: saved?.files || [],
-        };
-      });
-      
-      setItems(technicalItems);
-    }
+      const evaluationItems = localStorage.getItem('evaluationItems');
+      if (evaluationItems) {
+        const parsed: EvaluationItem[] = JSON.parse(evaluationItems);
+        const filtered = parsed.filter(item => item.area === '4. 대상시스템의 기술적 보호조치');
+        
+        const savedData = localStorage.getItem('technicalData');
+        const savedItems = savedData ? JSON.parse(savedData) : [];
+        
+        const technicalItems: TechnicalItem[] = filtered.map(item => {
+          const saved = savedItems.find((s: TechnicalItem) => s.id === item.id);
+          return {
+            id: item.id,
+            systemName: saved?.systemName || (systems.length > 0 ? systems[0].name : ''),
+            field: item.field,
+            subField: item.subField,
+            no: item.no,
+            item: item.item,
+            status: saved?.status || null,
+            evidence: saved?.evidence || '',
+            files: saved?.files || [],
+          };
+        });
+        
+        setItems(technicalItems);
+      }
+    };
+
+    loadSystems();
+
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'technicalSystems' || customEvent.detail?.key === 'evaluationItems') {
+        loadSystems();
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, []);
 
   useEffect(() => {
@@ -166,6 +180,7 @@ export default function TechnicalAdminChecklist() {
     const others = savedAll.filter((s) => s.systemName !== activeTab);
     const toSave = items.map((it) => ({ ...it, systemName: activeTab }));
     localStorage.setItem('technicalData', JSON.stringify([...others, ...toSave]));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalData' } }));
     setHasChanges(false);
   };
 
@@ -203,6 +218,7 @@ export default function TechnicalAdminChecklist() {
     }
     setSystems(updatedSystems);
     localStorage.setItem('technicalSystems', JSON.stringify(updatedSystems));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalSystems' } }));
     setIsDialogOpen(false);
     setEditingSystem(null);
     setSystemName('');
@@ -212,6 +228,7 @@ export default function TechnicalAdminChecklist() {
     const updatedSystems = systems.filter(s => s.id !== id);
     setSystems(updatedSystems);
     localStorage.setItem('technicalSystems', JSON.stringify(updatedSystems));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalSystems' } }));
     if (updatedSystems.length > 0 && activeTab === systems.find(s => s.id === id)?.name) {
       setActiveTab(updatedSystems[0].name);
     }

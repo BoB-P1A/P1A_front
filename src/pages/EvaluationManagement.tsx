@@ -161,6 +161,7 @@ export default function EvaluationManagement() {
     setItems(updatedItems);
     localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
     localStorage.setItem('evaluationItemsVersion', '1.1');
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'evaluationItems' } }));
     setIsDialogOpen(false);
     setEditingItem(null);
     setFormData({});
@@ -170,6 +171,7 @@ export default function EvaluationManagement() {
     const updatedItems = items.filter(item => item.id !== id);
     setItems(updatedItems);
     localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'evaluationItems' } }));
   };
 
   return (

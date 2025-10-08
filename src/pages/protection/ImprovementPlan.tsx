@@ -45,52 +45,69 @@ export default function ImprovementPlan() {
   const [taskNames, setTaskNames] = useState<string[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('processingTasks');
-    const tasks = stored ? JSON.parse(stored) : [];
-    const names = tasks.map((t: any) => t.taskName).filter(Boolean);
-    setTaskNames(names);
-  }, []);
-
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'processingTasks') {
-        const tasks = e.newValue ? JSON.parse(e.newValue) : [];
-        const names = tasks.map((t: any) => t.taskName).filter(Boolean);
+    const loadData = () => {
+      const taskNamesData = localStorage.getItem('processingTasks');
+      if (taskNamesData) {
+        const tasks = JSON.parse(taskNamesData);
+        const names = tasks.map((t: any) => t.taskName);
         setTaskNames(names);
       }
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+
+    loadData();
+
+    const onStorage = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'processingTasks') {
+        loadData();
+      }
+    };
+    window.addEventListener('storageUpdate', onStorage);
+    return () => window.removeEventListener('storageUpdate', onStorage);
   }, []);
 
   useEffect(() => {
-    const lifecycleData = localStorage.getItem('lifecycleData');
-    if (lifecycleData) {
-      const parsed: LifecycleItem[] = JSON.parse(lifecycleData);
-      const filtered = parsed.filter(item => 
-        item.status === '부분이행' || item.status === '미이행'
-      );
+    const loadImprovements = () => {
+      const lifecycleData = localStorage.getItem('lifecycleData');
+      if (lifecycleData) {
+        const parsed: LifecycleItem[] = JSON.parse(lifecycleData);
+        const filtered = parsed.filter(item => 
+          item.status === '부분이행' || item.status === '미이행'
+        );
 
-      const savedImprovements = localStorage.getItem('protectionImprovements');
-      const saved = savedImprovements ? JSON.parse(savedImprovements) : {};
+        const savedImprovements = localStorage.getItem('protectionImprovements');
+        const saved = savedImprovements ? JSON.parse(savedImprovements) : {};
 
-      const improvementItems: ImprovementItem[] = filtered.map(item => {
-        const itemId = `${item.taskName}-${item.no}`;
-        const savedItem = saved[itemId];
-        return {
-          id: itemId,
-          taskName: item.taskName,
-          code: item.no,
-          question: item.item,
-          evidence: item.evidence,
-          relatedLaw: savedItem?.relatedLaw || '',
-          riskFactor: savedItem?.riskFactor || '',
-          improvementPlan: savedItem?.improvementPlan || '',
-        };
-      });
+        const improvementItems: ImprovementItem[] = filtered.map(item => {
+          const itemId = `${item.taskName}-${item.no}`;
+          const savedItem = saved[itemId];
+          return {
+            id: itemId,
+            taskName: item.taskName,
+            code: item.no,
+            question: item.item,
+            evidence: item.evidence,
+            relatedLaw: savedItem?.relatedLaw || '',
+            riskFactor: savedItem?.riskFactor || '',
+            improvementPlan: savedItem?.improvementPlan || '',
+          };
+        });
 
-      setItems(improvementItems);
-    }
+        setItems(improvementItems);
+      }
+    };
+
+    loadImprovements();
+
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'lifecycleData') {
+        loadImprovements();
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, []);
 
   const handleRelatedLawChange = (id: string, value: string) => {
@@ -124,6 +141,7 @@ export default function ImprovementPlan() {
       };
     });
     localStorage.setItem('protectionImprovements', JSON.stringify(improvements));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'protectionImprovements' } }));
     setHasChanges(false);
   };
 

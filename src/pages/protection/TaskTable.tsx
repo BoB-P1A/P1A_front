@@ -56,6 +56,7 @@ export default function TaskTable() {
 
   const handleSave = () => {
     localStorage.setItem('processingTasks', JSON.stringify(tasks));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'processingTasks' } }));
     alert('저장되었습니다. 개인정보 흐름표 페이지에서 업무별 탭이 업데이트됩니다.');
   };
 

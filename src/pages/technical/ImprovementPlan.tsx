@@ -45,45 +45,73 @@ export default function TechnicalImprovementPlan() {
   const [systemNames, setSystemNames] = useState<string[]>([]);
 
   useEffect(() => {
-    const systemsData = localStorage.getItem('technicalSystems');
-    if (systemsData) {
-      const systems = JSON.parse(systemsData);
-      const names = systems.map((s: any) => s.name);
-      setSystemNames(names);
-      if (names.length > 0 && activeTab === '전체') {
-        setActiveTab('전체');
+    const loadData = () => {
+      const systemsData = localStorage.getItem('technicalSystems');
+      if (systemsData) {
+        const systems = JSON.parse(systemsData);
+        const names = systems.map((s: any) => s.name);
+        setSystemNames(names);
+        if (names.length > 0 && activeTab === '전체') {
+          setActiveTab('전체');
+        }
       }
-    }
+    };
+
+    loadData();
+
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'technicalSystems') {
+        loadData();
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, []);
 
   useEffect(() => {
-    const technicalData = localStorage.getItem('technicalData');
-    if (technicalData) {
-      const parsed: TechnicalItem[] = JSON.parse(technicalData);
-      const filtered = parsed.filter(item => 
-        item.status === '부분이행' || item.status === '미이행'
-      );
+    const loadImprovements = () => {
+      const technicalData = localStorage.getItem('technicalData');
+      if (technicalData) {
+        const parsed: TechnicalItem[] = JSON.parse(technicalData);
+        const filtered = parsed.filter(item => 
+          item.status === '부분이행' || item.status === '미이행'
+        );
 
-      const savedImprovements = localStorage.getItem('technicalImprovements');
-      const saved = savedImprovements ? JSON.parse(savedImprovements) : {};
+        const savedImprovements = localStorage.getItem('technicalImprovements');
+        const saved = savedImprovements ? JSON.parse(savedImprovements) : {};
 
-      const improvementItems: ImprovementItem[] = filtered.map(item => {
-        const itemId = `${item.systemName}-${item.no}`;
-        const savedItem = saved[itemId];
-        return {
-          id: itemId,
-          systemName: item.systemName,
-          code: item.no,
-          question: item.item,
-          evidence: item.evidence,
-          relatedLaw: savedItem?.relatedLaw || '',
-          riskFactor: savedItem?.riskFactor || '',
-          improvementPlan: savedItem?.improvementPlan || '',
-        };
-      });
+        const improvementItems: ImprovementItem[] = filtered.map(item => {
+          const itemId = `${item.systemName}-${item.no}`;
+          const savedItem = saved[itemId];
+          return {
+            id: itemId,
+            systemName: item.systemName,
+            code: item.no,
+            question: item.item,
+            evidence: item.evidence,
+            relatedLaw: savedItem?.relatedLaw || '',
+            riskFactor: savedItem?.riskFactor || '',
+            improvementPlan: savedItem?.improvementPlan || '',
+          };
+        });
 
-      setItems(improvementItems);
-    }
+        setItems(improvementItems);
+      }
+    };
+
+    loadImprovements();
+
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'technicalData') {
+        loadImprovements();
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, []);
 
   const handleRelatedLawChange = (id: string, value: string) => {
@@ -117,6 +145,7 @@ export default function TechnicalImprovementPlan() {
       };
     });
     localStorage.setItem('technicalImprovements', JSON.stringify(improvements));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalImprovements' } }));
     setHasChanges(false);
   };
 

@@ -35,36 +35,50 @@ export default function ProtectionFlowChart() {
   const [personalInfoTexts, setPersonalInfoTexts] = useState<Record<string, { row1: string; row2: string; row3: string }>>({});
 
   useEffect(() => {
-    const savedTasks = localStorage.getItem('processingTasks');
-    if (savedTasks) {
-      const tasks = JSON.parse(savedTasks);
-      const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
-      if (taskNamesList.length > 0) {
-        setTaskNames(taskNamesList);
-        
-        const newFlowData = { ...flowDataByTask };
-        taskNamesList.forEach((name: string) => {
-          if (!newFlowData[name]) {
-            newFlowData[name] = { icons: [] };
+    const loadData = () => {
+      const savedTasks = localStorage.getItem('processingTasks');
+      if (savedTasks) {
+        const tasks = JSON.parse(savedTasks);
+        const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
+        if (taskNamesList.length > 0) {
+          setTaskNames(taskNamesList);
+          
+          const newFlowData = { ...flowDataByTask };
+          taskNamesList.forEach((name: string) => {
+            if (!newFlowData[name]) {
+              newFlowData[name] = { icons: [] };
+            }
+          });
+          setFlowDataByTask(newFlowData);
+          
+          if (!taskNamesList.includes(selectedTask)) {
+            setSelectedTask(taskNamesList[0]);
           }
-        });
-        setFlowDataByTask(newFlowData);
-        
-        if (!taskNamesList.includes(selectedTask)) {
-          setSelectedTask(taskNamesList[0]);
         }
       }
-    }
 
-    const savedFlowData = localStorage.getItem('flowChartData');
-    if (savedFlowData) {
-      setFlowDataByTask(JSON.parse(savedFlowData));
-    }
+      const savedFlowData = localStorage.getItem('flowChartData');
+      if (savedFlowData) {
+        setFlowDataByTask(JSON.parse(savedFlowData));
+      }
 
-    const savedPersonalInfoTexts = localStorage.getItem('personalInfoTexts');
-    if (savedPersonalInfoTexts) {
-      setPersonalInfoTexts(JSON.parse(savedPersonalInfoTexts));
-    }
+      const savedPersonalInfoTexts = localStorage.getItem('personalInfoTexts');
+      if (savedPersonalInfoTexts) {
+        setPersonalInfoTexts(JSON.parse(savedPersonalInfoTexts));
+      }
+    };
+
+    loadData();
+
+    const handleStorageUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.key === 'processingTasks') {
+        loadData();
+      }
+    };
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, []);
 
   const addIcon = (type: DraggableIcon['type']) => {
@@ -144,6 +158,7 @@ export default function ProtectionFlowChart() {
   const handleSave = () => {
     localStorage.setItem('flowChartData', JSON.stringify(flowDataByTask));
     localStorage.setItem('personalInfoTexts', JSON.stringify(personalInfoTexts));
+    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'flowChartData' } }));
     alert('저장되었습니다.');
   };
 
