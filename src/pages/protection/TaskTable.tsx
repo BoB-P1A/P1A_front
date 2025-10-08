@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/table';
 import { Save, Plus, Trash2, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData } from '@/lib/utils';
 
 interface TaskRow {
   id: number;
@@ -22,12 +24,9 @@ interface TaskRow {
 }
 
 export default function TaskTable() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<TaskRow[]>(() => {
-    const saved = localStorage.getItem('processingTasks');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return [
+    return getCompanyData(user?.company, 'processingTasks', [
       {
         id: 1,
         taskName: '회원가입',
@@ -42,7 +41,7 @@ export default function TaskTable() {
         personalInfo: '이름, 연락처, 상담내용',
         department: 'CS팀',
       },
-    ];
+    ]);
   });
 
   const handleAddRow = () => {
@@ -61,8 +60,7 @@ export default function TaskTable() {
   };
 
   const handleSave = () => {
-    localStorage.setItem('processingTasks', JSON.stringify(tasks));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'processingTasks' } }));
+    setCompanyData(user?.company, 'processingTasks', tasks);
     alert('저장되었습니다. 개인정보 흐름표 페이지에서 업무별 탭이 업데이트됩니다.');
   };
 

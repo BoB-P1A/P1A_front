@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2, Save } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData } from '@/lib/utils';
 
 interface EvaluationItem {
   id: number;
@@ -32,16 +34,16 @@ interface EvaluationItem {
 }
 
 export default function EvaluationManagement() {
+  const { user } = useAuth();
   const [items, setItems] = useState<EvaluationItem[]>(() => {
     const DATA_VERSION = '1.1'; // 데이터 버전
-    const savedVersion = localStorage.getItem('evaluationItemsVersion');
-    const saved = localStorage.getItem('evaluationItems');
+    const savedVersion = getCompanyData(user?.company, 'evaluationItemsVersion', null);
+    const saved = getCompanyData(user?.company, 'evaluationItems', null);
     
     // 버전이 다르면 새로운 defaultItems 로드
     if (saved && savedVersion === DATA_VERSION) {
-      const parsedItems = JSON.parse(saved);
       // No. 기준으로 정렬
-      return parsedItems.sort((a: EvaluationItem, b: EvaluationItem) => {
+      return saved.sort((a: EvaluationItem, b: EvaluationItem) => {
         return a.no.localeCompare(b.no, undefined, { numeric: true });
       });
     }
@@ -115,8 +117,8 @@ export default function EvaluationManagement() {
     const sortedItems = defaultItems.sort((a, b) => {
       return a.no.localeCompare(b.no, undefined, { numeric: true });
     });
-    localStorage.setItem('evaluationItems', JSON.stringify(sortedItems));
-    localStorage.setItem('evaluationItemsVersion', DATA_VERSION);
+    setCompanyData(user?.company, 'evaluationItems', sortedItems);
+    setCompanyData(user?.company, 'evaluationItemsVersion', DATA_VERSION);
     return sortedItems;
   });
 
@@ -159,9 +161,8 @@ export default function EvaluationManagement() {
       return a.no.localeCompare(b.no, undefined, { numeric: true });
     });
     setItems(updatedItems);
-    localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
-    localStorage.setItem('evaluationItemsVersion', '1.1');
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'evaluationItems' } }));
+    setCompanyData(user?.company, 'evaluationItems', updatedItems);
+    setCompanyData(user?.company, 'evaluationItemsVersion', '1.1');
     setIsDialogOpen(false);
     setEditingItem(null);
     setFormData({});

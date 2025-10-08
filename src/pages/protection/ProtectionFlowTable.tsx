@@ -6,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Save, Plus, Trash2, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import * as XLSX from 'xlsx';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 // 수집 단계 데이터
 interface CollectionData {
@@ -59,14 +61,11 @@ interface TaskFlowData {
 }
 
 export default function ProtectionFlowTable() {
+  const { user } = useAuth();
   const [taskNames, setTaskNames] = useState<string[]>(['회원가입', '고객상담']);
   const [selectedTask, setSelectedTask] = useState('회원가입');
   const [flowDataByTask, setFlowDataByTask] = useState<Record<string, TaskFlowData>>(() => {
-    const saved = localStorage.getItem('flowTableData');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
+    return getCompanyData(user?.company, 'flowTableData', {
       '회원가입': {
         collection: [],
         storage: [],
@@ -79,16 +78,15 @@ export default function ProtectionFlowTable() {
         provision: [],
         disposal: [],
       },
-    };
+    });
   });
 
   // 처리업무표에서 업무명 가져오기
   useEffect(() => {
     const loadTaskNames = () => {
-      const savedTasks = localStorage.getItem('processingTasks');
-      if (savedTasks) {
-        const tasks = JSON.parse(savedTasks);
-        const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
+      const savedTasks = getCompanyData(user?.company, 'processingTasks', []);
+      if (savedTasks.length > 0) {
+        const taskNamesList = savedTasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
         if (taskNamesList.length > 0) {
           setTaskNames(taskNamesList);
           
@@ -118,7 +116,8 @@ export default function ProtectionFlowTable() {
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'processingTasks') {
+      const storageKey = getCompanyStorageKey(user?.company, 'processingTasks');
+      if (customEvent.detail?.key === storageKey) {
         loadTaskNames();
       }
     };
@@ -178,8 +177,7 @@ export default function ProtectionFlowTable() {
   };
 
   const handleSave = () => {
-    localStorage.setItem('flowTableData', JSON.stringify(flowDataByTask));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'flowTableData' } }));
+    setCompanyData(user?.company, 'flowTableData', flowDataByTask);
     alert('저장되었습니다.');
   };
 

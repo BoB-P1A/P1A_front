@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/table';
 import { Download, AlertTriangle, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 interface LifecycleItem {
   id: number;
@@ -39,6 +41,7 @@ interface ImprovementItem {
 }
 
 export default function ImprovementPlan() {
+  const { user } = useAuth();
   const [items, setItems] = useState<ImprovementItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
@@ -46,9 +49,8 @@ export default function ImprovementPlan() {
 
   useEffect(() => {
     const loadData = () => {
-      const taskNamesData = localStorage.getItem('processingTasks');
-      if (taskNamesData) {
-        const tasks = JSON.parse(taskNamesData);
+      const tasks = getCompanyData(user?.company, 'processingTasks', []);
+      if (tasks.length > 0) {
         const names = tasks.map((t: any) => t.taskName);
         setTaskNames(names);
       }
@@ -58,57 +60,55 @@ export default function ImprovementPlan() {
 
     const onStorage = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'processingTasks') {
+      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
+      if (customEvent.detail?.key === taskKey) {
         loadData();
       }
     };
     window.addEventListener('storageUpdate', onStorage);
     return () => window.removeEventListener('storageUpdate', onStorage);
-  }, []);
+  }, [user?.company]);
 
   useEffect(() => {
     const loadImprovements = () => {
-      const lifecycleData = localStorage.getItem('lifecycleData');
-      if (lifecycleData) {
-        const parsed: LifecycleItem[] = JSON.parse(lifecycleData);
-        const filtered = parsed.filter(item => 
-          item.status === '부분이행' || item.status === '미이행'
-        );
+      const parsed: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
+      const filtered = parsed.filter(item => 
+        item.status === '부분이행' || item.status === '미이행'
+      );
 
-        const savedImprovements = localStorage.getItem('protectionImprovements');
-        const saved = savedImprovements ? JSON.parse(savedImprovements) : {};
+      const saved = getCompanyData(user?.company, 'protectionImprovements', {});
 
-        const improvementItems: ImprovementItem[] = filtered.map(item => {
-          const itemId = `${item.taskName}-${item.no}`;
-          const savedItem = saved[itemId];
-          return {
-            id: itemId,
-            taskName: item.taskName,
-            code: item.no,
-            question: item.item,
-            evidence: item.evidence,
-            relatedLaw: savedItem?.relatedLaw || '',
-            riskFactor: savedItem?.riskFactor || '',
-            improvementPlan: savedItem?.improvementPlan || '',
-          };
-        });
+      const improvementItems: ImprovementItem[] = filtered.map(item => {
+        const itemId = `${item.taskName}-${item.no}`;
+        const savedItem = saved[itemId];
+        return {
+          id: itemId,
+          taskName: item.taskName,
+          code: item.no,
+          question: item.item,
+          evidence: item.evidence,
+          relatedLaw: savedItem?.relatedLaw || '',
+          riskFactor: savedItem?.riskFactor || '',
+          improvementPlan: savedItem?.improvementPlan || '',
+        };
+      });
 
-        setItems(improvementItems);
-      }
+      setItems(improvementItems);
     };
 
     loadImprovements();
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'lifecycleData') {
+      const lifecycleKey = getCompanyStorageKey(user?.company, 'lifecycleData');
+      if (customEvent.detail?.key === lifecycleKey) {
         loadImprovements();
       }
     };
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+  }, [user?.company]);
 
   const handleRelatedLawChange = (id: string, value: string) => {
     setItems(prev => prev.map(item => 
@@ -140,8 +140,7 @@ export default function ImprovementPlan() {
         improvementPlan: item.improvementPlan,
       };
     });
-    localStorage.setItem('protectionImprovements', JSON.stringify(improvements));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'protectionImprovements' } }));
+    setCompanyData(user?.company, 'protectionImprovements', improvements);
     setHasChanges(false);
   };
 

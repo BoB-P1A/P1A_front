@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Download, Trash2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 interface EvaluationItem {
   id: number;
@@ -43,6 +45,7 @@ interface ProcessingTask {
 }
 
 export default function ProtectionLifecycle() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<ProcessingTask[]>([]);
   const [items, setItems] = useState<LifecycleItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -50,12 +53,11 @@ export default function ProtectionLifecycle() {
 
   useEffect(() => {
     const loadTasks = () => {
-      const processingTasks = localStorage.getItem('processingTasks');
-      if (processingTasks) {
-        const parsed: ProcessingTask[] = JSON.parse(processingTasks);
-        setTasks(parsed);
-        if (parsed.length > 0 && !activeTab) {
-          setActiveTab(parsed[0].taskName);
+      const processingTasks = getCompanyData(user?.company, 'processingTasks', []);
+      if (processingTasks.length > 0) {
+        setTasks(processingTasks);
+        if (!activeTab) {
+          setActiveTab(processingTasks[0].taskName);
         }
       }
     };
@@ -64,7 +66,9 @@ export default function ProtectionLifecycle() {
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'processingTasks' || customEvent.detail?.key === 'evaluationItems') {
+      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
+      const evalKey = getCompanyStorageKey(user?.company, 'evaluationItems');
+      if (customEvent.detail?.key === taskKey || customEvent.detail?.key === evalKey) {
         loadTasks();
       }
     };
@@ -76,12 +80,10 @@ export default function ProtectionLifecycle() {
   useEffect(() => {
     if (!activeTab) return;
 
-    const evaluationItemsRaw = localStorage.getItem('evaluationItems');
-    const evaluationItems: EvaluationItem[] = evaluationItemsRaw ? JSON.parse(evaluationItemsRaw) : [];
+    const evaluationItems: EvaluationItem[] = getCompanyData(user?.company, 'evaluationItems', []);
     const filtered = evaluationItems.filter(item => item.area === '3. 개인정보 처리단계별 보호조치');
 
-    const savedDataRaw = localStorage.getItem('lifecycleData');
-    const savedItems: LifecycleItem[] = savedDataRaw ? JSON.parse(savedDataRaw) : [];
+    const savedItems: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
     const savedForTask = savedItems.filter((s) => s.taskName === activeTab);
 
     const merged: LifecycleItem[] = filtered.map((item) => {
@@ -100,7 +102,7 @@ export default function ProtectionLifecycle() {
     });
 
     setItems(merged);
-  }, [activeTab, tasks.length]);
+  }, [activeTab, tasks.length, user?.company]);
 
   const handleStatusChange = (id: number, status: '이행' | '부분이행' | '미이행' | '해당없음') => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
@@ -148,12 +150,10 @@ export default function ProtectionLifecycle() {
   };
 
   const handleSave = () => {
-    const savedRaw = localStorage.getItem('lifecycleData');
-    const savedAll: LifecycleItem[] = savedRaw ? JSON.parse(savedRaw) : [];
+    const savedAll: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
     const others = savedAll.filter((s) => s.taskName !== activeTab);
     const toSave = items.map((it) => ({ ...it, taskName: activeTab }));
-    localStorage.setItem('lifecycleData', JSON.stringify([...others, ...toSave]));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'lifecycleData' } }));
+    setCompanyData(user?.company, 'lifecycleData', [...others, ...toSave]);
     setHasChanges(false);
   };
 

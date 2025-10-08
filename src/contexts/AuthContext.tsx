@@ -102,7 +102,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const mockUser = mockUsers[credentials.id];
+    // First check mock users
+    let mockUser = mockUsers[credentials.id];
+    
+    // If not in mock users, check AccountManagement accounts
+    if (!mockUser) {
+      const accountsData = localStorage.getItem('accounts');
+      if (accountsData) {
+        try {
+          const accounts = JSON.parse(accountsData);
+          const account = accounts.find((acc: any) => acc.username === credentials.id);
+          if (account && account.password === credentials.password) {
+            mockUser = {
+              password: account.password,
+              user: {
+                id: account.id,
+                name: account.name,
+                email: account.username + '@company.com',
+                role: account.role,
+                company: account.company
+              }
+            };
+          }
+        } catch (error) {
+          console.error('Failed to parse accounts:', error);
+        }
+      }
+    }
     
     if (mockUser && mockUser.password === credentials.password) {
       setUser(mockUser.user);
