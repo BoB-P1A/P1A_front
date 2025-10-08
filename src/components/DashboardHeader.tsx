@@ -110,8 +110,8 @@ export function DashboardHeader() {
                         <p className="text-sm text-muted-foreground">{user?.name}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium">이메일</label>
-                        <p className="text-sm text-muted-foreground">{user?.email}</p>
+                        <label className="text-sm font-medium">아이디</label>
+                        <p className="text-sm text-muted-foreground">{user?.id}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium">역할</label>
