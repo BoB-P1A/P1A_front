@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { PieChart, RefreshCw, Download, Save, Camera } from 'lucide-react';
+import { PieChart, RefreshCw, Download, Save, Camera, Trash, RotateCcw } from 'lucide-react';
 
 interface DraggableIcon {
   id: string;
@@ -107,6 +107,37 @@ export default function ProtectionFlowChart() {
         ),
       },
     }));
+    setEditingText(null);
+  };
+
+  const handleDeleteIcon = () => {
+    if (!selectedIcon) {
+      alert('삭제할 아이콘을 선택해주세요.');
+      return;
+    }
+
+    setFlowDataByTask(prev => ({
+      ...prev,
+      [selectedTask]: {
+        ...prev[selectedTask],
+        icons: prev[selectedTask].icons.filter(icon => icon.id !== selectedIcon),
+      },
+    }));
+    setSelectedIcon(null);
+  };
+
+  const handleReset = () => {
+    if (!confirm(`${selectedTask}의 모든 아이콘을 초기화하시겠습니까?`)) {
+      return;
+    }
+
+    setFlowDataByTask(prev => ({
+      ...prev,
+      [selectedTask]: {
+        icons: [],
+      },
+    }));
+    setSelectedIcon(null);
     setEditingText(null);
   };
 
@@ -639,6 +670,18 @@ export default function ProtectionFlowChart() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            onClick={handleDeleteIcon} 
+            variant="outline"
+            disabled={!selectedIcon}
+          >
+            <Trash className="h-4 w-4 mr-2" />
+            삭제
+          </Button>
+          <Button onClick={handleReset} variant="outline">
+            <RotateCcw className="h-4 w-4 mr-2" />
+            초기화
+          </Button>
           <Button onClick={handleCaptureFlowChart} variant="outline">
             <Camera className="h-4 w-4 mr-2" />
             이미지 저장
