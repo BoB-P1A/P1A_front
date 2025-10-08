@@ -384,136 +384,134 @@ export default function ProtectionFlowChart() {
                         <div className="w-[100px] bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm text-center p-2">
                           개인정보<br/>생명주기
                         </div>
-                        <ResizablePanelGroup direction="horizontal" className="flex-1">
-                          <ResizablePanel defaultSize={20} minSize={10}>
-                            <div className="h-12 bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm text-center p-2">
-                              정보주체/<br/>개인정보취급자
-                            </div>
-                          </ResizablePanel>
-                          <ResizableHandle withHandle />
-                          <ResizablePanel defaultSize={40} minSize={20}>
-                            <div className="h-12 bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm text-center p-2">
-                              개인정보 처리 흐름
-                            </div>
-                          </ResizablePanel>
-                          <ResizableHandle withHandle />
-                          <ResizablePanel defaultSize={20} minSize={10}>
-                            <div className="h-12 bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm text-center p-2">
-                              외부연계·제공
-                            </div>
-                          </ResizablePanel>
-                          <ResizableHandle withHandle />
-                          <ResizablePanel defaultSize={20} minSize={10}>
-                            <div className="h-12 bg-blue-100 flex items-center justify-center font-semibold text-sm text-center p-2">
-                              처리 개인정보
-                            </div>
-                          </ResizablePanel>
-                        </ResizablePanelGroup>
+                        <div className="flex-1 flex">
+                          <div className="w-[20%] bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm text-center p-2">
+                            정보주체/<br/>개인정보취급자
+                          </div>
+                          <div className="w-[40%] bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm text-center p-2">
+                            개인정보 처리 흐름
+                          </div>
+                          <div className="w-[20%] bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm text-center p-2">
+                            외부연계·제공
+                          </div>
+                          <div className="w-[20%] bg-blue-100 flex items-center justify-center font-semibold text-sm text-center p-2">
+                            처리 개인정보
+                          </div>
+                        </div>
                       </div>
 
                       {/* BODY AREA */}
-                      <div className="h-[calc(100%-3rem)]">
-                        <ResizablePanelGroup direction="vertical">
-                          {/* 수집 행 */}
-                          <ResizablePanel defaultSize={33.33} minSize={15}>
-                            <div className="flex h-full">
-                              {/* Left label */}
-                              <div className="w-[100px] flex-shrink-0 bg-blue-100 border-r border-b border-border flex items-center justify-center font-semibold text-sm">
+                      <div className="flex h-[calc(100%-3rem)]">
+                        {/* Left fixed column for row labels */}
+                        <div className="w-[100px] flex-shrink-0">
+                          <ResizablePanelGroup direction="vertical">
+                            <ResizablePanel defaultSize={33.33} minSize={15}>
+                              <div className="h-full bg-blue-100 border-r border-b border-border flex items-center justify-center font-semibold text-sm">
                                 수집
                               </div>
-                              {/* Right content */}
-                              <div className="flex-1">
-                                <ResizablePanelGroup direction="horizontal">
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-r border-b border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizableHandle withHandle />
-                                  <ResizablePanel defaultSize={40} minSize={20}>
-                                    <div className="h-full border-r border-b border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-r border-b border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-b border-border p-2" />
-                                  </ResizablePanel>
-                                </ResizablePanelGroup>
-                              </div>
-                            </div>
-                          </ResizablePanel>
-
-                          <ResizableHandle withHandle />
-
-                          {/* 보유·이용·제공 행 */}
-                          <ResizablePanel defaultSize={33.33} minSize={15}>
-                            <div className="flex h-full">
-                              {/* Left label */}
-                              <div className="w-[100px] flex-shrink-0 bg-blue-100 border-r border-b border-border flex items-center justify-center font-semibold text-sm text-center p-2">
+                            </ResizablePanel>
+                            <ResizableHandle withHandle />
+                            <ResizablePanel defaultSize={33.33} minSize={15}>
+                              <div className="h-full bg-blue-100 border-r border-b border-border flex items-center justify-center font-semibold text-sm text-center p-2">
                                 보유·<br/>이용·<br/>제공
                               </div>
-                              {/* Right content */}
-                              <div className="flex-1 relative">
-                                <ResizablePanelGroup direction="horizontal">
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-r border-b border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizableHandle withHandle />
-                                  <ResizablePanel defaultSize={40} minSize={20}>
-                                    <div className="h-full border-r border-b border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-r border-b border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-b border-border p-2" />
-                                  </ResizablePanel>
-                                </ResizablePanelGroup>
-                              </div>
-                            </div>
-                          </ResizablePanel>
-
-                          {/* 파기 행 */}
-                          <ResizablePanel defaultSize={33.33} minSize={15}>
-                            <div className="flex h-full">
-                              {/* Left label */}
-                              <div className="w-[100px] flex-shrink-0 bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm">
+                            </ResizablePanel>
+                            <ResizableHandle withHandle />
+                            <ResizablePanel defaultSize={33.33} minSize={15}>
+                              <div className="h-full bg-blue-100 border-r border-border flex items-center justify-center font-semibold text-sm">
                                 파기
                               </div>
-                              {/* Right content */}
-                              <div className="flex-1 relative">
-                                <ResizablePanelGroup direction="horizontal">
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-r border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizableHandle withHandle />
-                                  <ResizablePanel defaultSize={40} minSize={20}>
-                                    <div className="h-full border-r border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full border-r border-border p-2" />
-                                  </ResizablePanel>
-                                  <ResizablePanel defaultSize={20} minSize={10}>
-                                    <div className="h-full p-2" />
-                                  </ResizablePanel>
-                                </ResizablePanelGroup>
+                            </ResizablePanel>
+                          </ResizablePanelGroup>
+                        </div>
 
-                                {/* Icons overlay */}
-                                <div
-                                  ref={canvasRef}
-                                  className="absolute left-0 right-0 top-0 bottom-0 z-10 pointer-events-auto"
-                                  style={{ top: '-200%', height: '300%' }}
-                                  onClick={(e) => {
-                                    if (e.target === e.currentTarget) {
-                                      setSelectedIcon(null);
-                                    }
-                                  }}
-                                >
-                                  {flowDataByTask[task]?.icons.map(icon => renderIcon(icon))}
-                                </div>
-                              </div>
-                            </div>
-                          </ResizablePanel>
-                        </ResizablePanelGroup>
+                        {/* Right content area */}
+                        <div className="flex-1 relative">
+                          <ResizablePanelGroup direction="horizontal">
+                            {/* 정보주체/개인정보취급자 열 */}
+                            <ResizablePanel defaultSize={20} minSize={10}>
+                              <ResizablePanelGroup direction="vertical">
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-border p-2" />
+                                </ResizablePanel>
+                              </ResizablePanelGroup>
+                            </ResizablePanel>
+
+                            <ResizableHandle withHandle />
+
+                            {/* 개인정보 처리 흐름 열 */}
+                            <ResizablePanel defaultSize={40} minSize={20}>
+                              <ResizablePanelGroup direction="vertical">
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-border p-2" />
+                                </ResizablePanel>
+                              </ResizablePanelGroup>
+                            </ResizablePanel>
+
+                            {/* 외부연계·제공 열 */}
+                            <ResizablePanel defaultSize={20} minSize={10}>
+                              <ResizablePanelGroup direction="vertical">
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-r border-border p-2" />
+                                </ResizablePanel>
+                              </ResizablePanelGroup>
+                            </ResizablePanel>
+
+                            {/* 처리 개인정보 열 */}
+                            <ResizablePanel defaultSize={20} minSize={10}>
+                              <ResizablePanelGroup direction="vertical">
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full border-b border-border p-2" />
+                                </ResizablePanel>
+                                <ResizableHandle />
+                                <ResizablePanel defaultSize={33.33} minSize={15}>
+                                  <div className="h-full p-2" />
+                                </ResizablePanel>
+                              </ResizablePanelGroup>
+                            </ResizablePanel>
+                          </ResizablePanelGroup>
+
+                          {/* Icons overlay */}
+                          <div
+                            ref={canvasRef}
+                            className="absolute left-0 right-0 top-0 bottom-0 z-10 pointer-events-auto"
+                            onClick={(e) => {
+                              if (e.target === e.currentTarget) {
+                                setSelectedIcon(null);
+                              }
+                            }}
+                          >
+                            {flowDataByTask[task]?.icons.map(icon => renderIcon(icon))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
