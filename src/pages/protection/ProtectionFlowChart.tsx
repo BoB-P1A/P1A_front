@@ -132,11 +132,11 @@ export default function ProtectionFlowChart() {
 
     switch (icon.type) {
       case 'handler':
-        style += ' bg-gray-100 border-gray-400';
+        style += ' bg-gray-400 border-gray-600 text-white';
         content = icon.text || '개인정보취급자';
         break;
       case 'subject':
-        style += ' bg-gray-100 border-gray-400';
+        style += ' bg-white border-gray-600';
         content = icon.text || '정보주체';
         break;
       case 'db-encrypt':
@@ -145,38 +145,186 @@ export default function ProtectionFlowChart() {
         break;
       case 'online-process':
         style += ' bg-blue-100 border-blue-500';
+        style = style.replace('rounded', '');
         content = icon.text || '온라인 처리업무';
         break;
       case 'offline-process':
         style += ' bg-white border-gray-800 border-dashed';
+        style = style.replace('rounded', '');
         content = icon.text || '오프라인 처리업무';
         break;
       case 'mixed-process':
-        style += ' bg-white border-gray-800 border-dashed';
+        style += ' bg-blue-100 border-blue-500 border-dashed';
+        style = style.replace('rounded', '');
         content = icon.text || '온/오프라인 처리업무';
         break;
       case 'system-db':
-        style += ' bg-yellow-200 border-yellow-600 rounded-full px-6 py-4';
-        content = icon.text || '시스템 DB';
-        break;
+        // 원기둥 모양은 특별 렌더링
+        return (
+          <div
+            key={icon.id}
+            className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            style={{ left: icon.x, top: icon.y }}
+            draggable
+            onDragEnd={(e) => {
+              const rect = canvasRef.current?.getBoundingClientRect();
+              if (rect) {
+                handleDrag(icon.id, e.clientX - rect.left, e.clientY - rect.top);
+              }
+            }}
+            onClick={() => setSelectedIcon(icon.id)}
+            onDoubleClick={() => setEditingText(icon.id)}
+          >
+            <div className="relative">
+              <svg width="100" height="80" viewBox="0 0 100 80">
+                <ellipse cx="50" cy="15" rx="40" ry="12" fill="#fef08a" stroke="#ca8a04" strokeWidth="2"/>
+                <rect x="10" y="15" width="80" height="50" fill="#fef08a" stroke="none"/>
+                <line x1="10" y1="15" x2="10" y2="65" stroke="#ca8a04" strokeWidth="2"/>
+                <line x1="90" y1="15" x2="90" y2="65" stroke="#ca8a04" strokeWidth="2"/>
+                <ellipse cx="50" cy="65" rx="40" ry="12" fill="#fef08a" stroke="#ca8a04" strokeWidth="2"/>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
+                {isEditing ? (
+                  <Input
+                    value={icon.text}
+                    onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+                    onBlur={() => setEditingText(null)}
+                    className="w-20 h-6"
+                    autoFocus
+                  />
+                ) : (
+                  <span>{icon.text || '시스템 DB'}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
       case 'cabinet':
-        style += ' bg-yellow-100 border-yellow-500';
-        content = icon.text || '캐비닛';
-        break;
+        // 직육면체 모양
+        return (
+          <div
+            key={icon.id}
+            className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            style={{ left: icon.x, top: icon.y }}
+            draggable
+            onDragEnd={(e) => {
+              const rect = canvasRef.current?.getBoundingClientRect();
+              if (rect) {
+                handleDrag(icon.id, e.clientX - rect.left, e.clientY - rect.top);
+              }
+            }}
+            onClick={() => setSelectedIcon(icon.id)}
+            onDoubleClick={() => setEditingText(icon.id)}
+          >
+            <div className="relative">
+              <svg width="90" height="70" viewBox="0 0 90 70">
+                <polygon points="15,15 65,15 75,5 25,5" fill="#fef3c7" stroke="#f59e0b" strokeWidth="2"/>
+                <rect x="15" y="15" width="50" height="45" fill="#fef3c7" stroke="#f59e0b" strokeWidth="2"/>
+                <polygon points="65,15 75,5 75,50 65,60" fill="#fde68a" stroke="#f59e0b" strokeWidth="2"/>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold" style={{paddingRight: '20px'}}>
+                {isEditing ? (
+                  <Input
+                    value={icon.text}
+                    onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+                    onBlur={() => setEditingText(null)}
+                    className="w-16 h-6"
+                    autoFocus
+                  />
+                ) : (
+                  <span>{icon.text || '캐비닛'}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
       case 'external-system':
-        style += ' bg-amber-100 border-amber-600';
-        content = icon.text || '외부 시스템';
-        break;
+        // 직육면체 모양 (회색)
+        return (
+          <div
+            key={icon.id}
+            className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            style={{ left: icon.x, top: icon.y }}
+            draggable
+            onDragEnd={(e) => {
+              const rect = canvasRef.current?.getBoundingClientRect();
+              if (rect) {
+                handleDrag(icon.id, e.clientX - rect.left, e.clientY - rect.top);
+              }
+            }}
+            onClick={() => setSelectedIcon(icon.id)}
+            onDoubleClick={() => setEditingText(icon.id)}
+          >
+            <div className="relative">
+              <svg width="90" height="70" viewBox="0 0 90 70">
+                <polygon points="15,15 65,15 75,5 25,5" fill="#d1d5db" stroke="#6b7280" strokeWidth="2"/>
+                <rect x="15" y="15" width="50" height="45" fill="#d1d5db" stroke="#6b7280" strokeWidth="2"/>
+                <polygon points="65,15 75,5 75,50 65,60" fill="#9ca3af" stroke="#6b7280" strokeWidth="2"/>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold" style={{paddingRight: '20px'}}>
+                {isEditing ? (
+                  <Input
+                    value={icon.text}
+                    onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+                    onBlur={() => setEditingText(null)}
+                    className="w-16 h-6"
+                    autoFocus
+                  />
+                ) : (
+                  <span>{icon.text || '외부 시스템'}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
       case 'internal-system':
-        style += ' bg-white border-gray-500 border-dashed';
-        content = icon.text || '내부 시스템';
+        // 직육면체 모양 (점선)
+        return (
+          <div
+            key={icon.id}
+            className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            style={{ left: icon.x, top: icon.y }}
+            draggable
+            onDragEnd={(e) => {
+              const rect = canvasRef.current?.getBoundingClientRect();
+              if (rect) {
+                handleDrag(icon.id, e.clientX - rect.left, e.clientY - rect.top);
+              }
+            }}
+            onClick={() => setSelectedIcon(icon.id)}
+            onDoubleClick={() => setEditingText(icon.id)}
+          >
+            <div className="relative">
+              <svg width="90" height="70" viewBox="0 0 90 70">
+                <polygon points="15,15 65,15 75,5 25,5" fill="white" stroke="#6b7280" strokeWidth="2" strokeDasharray="4"/>
+                <rect x="15" y="15" width="50" height="45" fill="white" stroke="#6b7280" strokeWidth="2" strokeDasharray="4"/>
+                <polygon points="65,15 75,5 75,50 65,60" fill="#f3f4f6" stroke="#6b7280" strokeWidth="2" strokeDasharray="4"/>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold" style={{paddingRight: '20px'}}>
+                {isEditing ? (
+                  <Input
+                    value={icon.text}
+                    onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+                    onBlur={() => setEditingText(null)}
+                    className="w-16 h-6"
+                    autoFocus
+                  />
+                ) : (
+                  <span>{icon.text || '내부 시스템'}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
         break;
       case 'online-destroy':
         style += ' bg-green-400 border-green-600 text-white font-semibold';
+        style = style.replace('rounded', '');
         content = icon.text || '온라인 파기';
         break;
       case 'offline-destroy':
         style += ' bg-white border-gray-600 border-dotted';
+        style = style.replace('rounded', '');
         content = icon.text || '오프라인 파기';
         break;
       case 'online-system':
@@ -200,8 +348,41 @@ export default function ProtectionFlowChart() {
         content = icon.text || '문서';
         break;
       case 'number':
-        style += ' bg-black text-white rounded-full w-10 h-10 flex items-center justify-center p-0';
-        content = icon.text || '1';
+        // 숫자 아이콘은 특별 렌더링 (내부 숫자 + 우측 텍스트)
+        return (
+          <div
+            key={icon.id}
+            className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            style={{ left: icon.x, top: icon.y }}
+            draggable
+            onDragEnd={(e) => {
+              const rect = canvasRef.current?.getBoundingClientRect();
+              if (rect) {
+                handleDrag(icon.id, e.clientX - rect.left, e.clientY - rect.top);
+              }
+            }}
+            onClick={() => setSelectedIcon(icon.id)}
+            onDoubleClick={() => setEditingText(icon.id)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="bg-black text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">
+                {icon.text?.split('|')[0] || '1'}
+              </div>
+              {isEditing ? (
+                <Input
+                  value={icon.text}
+                  onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+                  onBlur={() => setEditingText(null)}
+                  placeholder="숫자|텍스트"
+                  className="w-32"
+                  autoFocus
+                />
+              ) : (
+                <span className="text-sm">{icon.text?.split('|')[1] || ''}</span>
+              )}
+            </div>
+          </div>
+        );
         break;
       case 'arrow-solid':
         return (
@@ -229,10 +410,11 @@ export default function ProtectionFlowChart() {
                 onChange={(e) => handleTextEdit(icon.id, e.target.value)}
                 onBlur={() => setEditingText(null)}
                 className="mt-1 w-32"
+                placeholder="온라인 개인정보 흐름"
                 autoFocus
               />
             ) : (
-              icon.text && <div className="text-xs mt-1">{icon.text}</div>
+              <div className="text-xs mt-1">{icon.text || '온라인 개인정보 흐름'}</div>
             )}
           </div>
         );
@@ -262,10 +444,11 @@ export default function ProtectionFlowChart() {
                 onChange={(e) => handleTextEdit(icon.id, e.target.value)}
                 onBlur={() => setEditingText(null)}
                 className="mt-1 w-32"
+                placeholder="오프라인 개인정보 흐름"
                 autoFocus
               />
             ) : (
-              icon.text && <div className="text-xs mt-1">{icon.text}</div>
+              <div className="text-xs mt-1">{icon.text || '오프라인 개인정보 흐름'}</div>
             )}
           </div>
         );
@@ -295,13 +478,25 @@ export default function ProtectionFlowChart() {
                 onChange={(e) => handleTextEdit(icon.id, e.target.value)}
                 onBlur={() => setEditingText(null)}
                 className="mt-1 w-32"
+                placeholder="암호화 전송"
                 autoFocus
               />
             ) : (
-              icon.text && <div className="text-xs mt-1">{icon.text}</div>
+              <div className="text-xs mt-1">{icon.text || '암호화 전송'}</div>
             )}
           </div>
         );
+    }
+
+    // 상단 귀퉁이가 잘린 사각형 처리
+    const isClippedTopRight = ['online-process', 'offline-process', 'mixed-process'].includes(icon.type);
+    const isClippedTopLeft = ['online-destroy', 'offline-destroy'].includes(icon.type);
+    
+    let clipPath = '';
+    if (isClippedTopRight) {
+      clipPath = 'polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%)';
+    } else if (isClippedTopLeft) {
+      clipPath = 'polygon(15px 0, 100% 0, 100% 100%, 0 100%, 0 15px)';
     }
 
     return (
@@ -319,7 +514,7 @@ export default function ProtectionFlowChart() {
         onClick={() => setSelectedIcon(icon.id)}
         onDoubleClick={() => setEditingText(icon.id)}
       >
-        <div className={style}>
+        <div className={style} style={clipPath ? { clipPath } : undefined}>
           {isEditing ? (
             <Input
               value={icon.text}
@@ -553,11 +748,11 @@ export default function ProtectionFlowChart() {
                   </CardHeader>
                   <CardContent className="space-y-2 max-h-[65vh] overflow-y-auto">
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('handler')}>
-                      <div className="w-6 h-6 border-2 border-gray-400 rounded mr-2 bg-gray-100"></div>
+                      <div className="w-6 h-6 border-2 border-gray-600 rounded mr-2 bg-gray-400"></div>
                       개인정보취급자
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('subject')}>
-                      <div className="w-6 h-6 border-2 border-gray-400 rounded mr-2 bg-gray-100"></div>
+                      <div className="w-6 h-6 border-2 border-gray-600 rounded mr-2 bg-white"></div>
                       정보주체
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('arrow-solid')}>
@@ -565,36 +760,36 @@ export default function ProtectionFlowChart() {
                         <div className="w-4 h-0.5 bg-black"></div>
                         <div className="w-0 h-0 border-t-2 border-t-transparent border-b-2 border-b-transparent border-l-4 border-l-black"></div>
                       </div>
-                      실선 화살표
+                      온라인 개인정보 흐름
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('arrow-dashed')}>
                       <div className="flex items-center mr-2">
                         <div className="w-4 h-0.5 border-t-2 border-dashed border-black"></div>
                         <div className="w-0 h-0 border-t-2 border-t-transparent border-b-2 border-b-transparent border-l-4 border-l-black"></div>
                       </div>
-                      점선 화살표
+                      오프라인 개인정보 흐름
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('arrow-red')}>
                       <div className="flex items-center mr-2">
                         <div className="w-4 h-0.5 bg-red-500"></div>
                         <div className="w-0 h-0 border-t-2 border-t-transparent border-b-2 border-b-transparent border-l-4 border-l-red-500"></div>
                       </div>
-                      빨간색 화살표
+                      암호화 전송
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('db-encrypt')}>
                       <div className="w-6 h-6 bg-orange-500 border-2 border-orange-600 rounded mr-2"></div>
                       DB 암호화
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('online-process')}>
-                      <div className="w-6 h-6 bg-blue-100 border-2 border-blue-500 rounded mr-2"></div>
+                      <div className="w-6 h-6 bg-blue-100 border-2 border-blue-500 mr-2" style={{clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)'}}></div>
                       온라인 처리업무
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('offline-process')}>
-                      <div className="w-6 h-6 bg-white border-2 border-dashed border-gray-800 rounded mr-2"></div>
+                      <div className="w-6 h-6 bg-white border-2 border-dashed border-gray-800 mr-2" style={{clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)'}}></div>
                       오프라인 처리업무
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('mixed-process')}>
-                      <div className="w-6 h-6 bg-white border-2 border-dashed border-gray-800 rounded mr-2"></div>
+                      <div className="w-6 h-6 bg-blue-100 border-2 border-dashed border-blue-500 mr-2" style={{clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)'}}></div>
                       온/오프라인 처리업무
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('system-db')}>
@@ -606,7 +801,7 @@ export default function ProtectionFlowChart() {
                       캐비닛
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('external-system')}>
-                      <div className="w-6 h-6 bg-amber-100 border-2 border-amber-600 rounded mr-2"></div>
+                      <div className="w-6 h-6 bg-gray-300 border-2 border-gray-600 rounded mr-2"></div>
                       외부 시스템
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('internal-system')}>
@@ -614,11 +809,11 @@ export default function ProtectionFlowChart() {
                       내부 시스템
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('online-destroy')}>
-                      <div className="w-6 h-6 bg-green-400 border-2 border-green-600 rounded mr-2"></div>
+                      <div className="w-6 h-6 bg-green-400 border-2 border-green-600 mr-2" style={{clipPath: 'polygon(6px 0, 100% 0, 100% 100%, 0 100%, 0 6px)'}}></div>
                       온라인 파기
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('offline-destroy')}>
-                      <div className="w-6 h-6 bg-white border-2 border-dotted border-gray-600 rounded mr-2"></div>
+                      <div className="w-6 h-6 bg-white border-2 border-dotted border-gray-600 mr-2" style={{clipPath: 'polygon(6px 0, 100% 0, 100% 100%, 0 100%, 0 6px)'}}></div>
                       오프라인 파기
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('online-system')}>
@@ -642,8 +837,11 @@ export default function ProtectionFlowChart() {
                       개인정보 문서(스캔파일)
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('number')}>
-                      <div className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center mr-2 text-xs">
-                        1
+                      <div className="flex items-center mr-2">
+                        <div className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold">
+                          1
+                        </div>
+                        <span className="ml-1 text-xs">텍스트</span>
                       </div>
                       처리되는 개인정보 숫자
                     </Button>
