@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Edit, Trash2, Upload, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface EvaluationItem {
   id: number;
@@ -178,6 +179,7 @@ export default function TechnicalAdminChecklist() {
     const toSave = items.map((it) => ({ ...it, systemName: activeTab }));
     setCompanyData(user?.company, 'technicalData', [...others, ...toSave]);
     setHasChanges(false);
+    toast.success('저장되었습니다');
   };
 
   const handleReset = () => {
