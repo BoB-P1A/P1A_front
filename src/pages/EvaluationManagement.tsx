@@ -35,28 +35,84 @@ export default function EvaluationManagement() {
   const [items, setItems] = useState<EvaluationItem[]>(() => {
     const saved = localStorage.getItem('evaluationItems');
     if (saved) {
-      return JSON.parse(saved);
+      const parsedItems = JSON.parse(saved);
+      // No. 기준으로 정렬
+      return parsedItems.sort((a: EvaluationItem, b: EvaluationItem) => {
+        return a.no.localeCompare(b.no, undefined, { numeric: true });
+      });
     }
     const defaultItems = [
       {
         id: 1,
         area: '3. 개인정보 처리단계별 보호조치',
-        field: '3.1 수집',
+        field: '3.1. 수집',
         subField: '개인정보 수집의 적합성',
         no: '3.1.1',
         item: '개인정보를 수집하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 수집하도록 계획하고 있습니까?',
       },
       {
         id: 2,
+        area: '3. 개인정보 처리단계별 보호조치',
+        field: '3.1. 수집',
+        subField: '개인정보 수집의 적합성',
+        no: '3.1.2',
+        item: '개인정보를 수집하는 경우 목적에 필요한 최소한의 범위에서만 수집하도록 계획하고 있습니까?',
+      },
+      {
+        id: 3,
+        area: '3. 개인정보 처리단계별 보호조치',
+        field: '3.1. 수집',
+        subField: '동의받는 방법의 적절성',
+        no: '3.1.6',
+        item: '개인정보를 수집하는 경우 필수항목과 선택항목을 분리하고 선택적으로 동의할 수 있는 사항에 동의하지 아니하여도 서비스 이용이 가능하도록 계획하고 있습니까?',
+      },
+      {
+        id: 4,
+        area: '3. 개인정보 처리단계별 보호조치',
+        field: '3.3. 이용·제공',
+        subField: '개인정보 제공의 적합성',
+        no: '3.3.1',
+        item: '개인정보를 제3자에게 제공하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 제공하도록 계획하고 있습니까?',
+      },
+      {
+        id: 5,
         area: '4. 대상시스템의 기술적 보호조치',
-        field: '4.1 접근권한 관리',
+        field: '4.1. 접근권한 관리',
         subField: '계정관리',
         no: '4.1.1',
         item: '개인정보취급자별로 책임추적성이 확보될 수 있도록 개별 계정을 부여하도록 계획하고 있습니까?',
       },
+      {
+        id: 6,
+        area: '4. 대상시스템의 기술적 보호조치',
+        field: '4.1. 접근권한 관리',
+        subField: '인증 관리',
+        no: '4.1.2',
+        item: '개인정보취급자 및 정보주체의 인증수단을 안전하게 적용하고 관리하도록 계획하고 있습니까?',
+      },
+      {
+        id: 7,
+        area: '4. 대상시스템의 기술적 보호조치',
+        field: '4.1. 접근권한 관리',
+        subField: '인증 관리',
+        no: '4.1.3',
+        item: '정보주체가 비밀번호 변경 등 중요 정보 접근 시 비밀번호 재확인 등 추가적인 인증이 적용되도록 계획하고 있습니까?',
+      },
+      {
+        id: 8,
+        area: '4. 대상시스템의 기술적 보호조치',
+        field: '4.2. 접근통제',
+        subField: '접근통제 조치',
+        no: '4.2.1',
+        item: '개인정보처리시스템에 대한 불법적인 접근 제한 및 개인정보 유출 시도 탐지·대응을 위한 안전조치를 하도록 계획하고 있습니까?',
+      },
     ];
-    localStorage.setItem('evaluationItems', JSON.stringify(defaultItems));
-    return defaultItems;
+    // No. 기준으로 정렬
+    const sortedItems = defaultItems.sort((a, b) => {
+      return a.no.localeCompare(b.no, undefined, { numeric: true });
+    });
+    localStorage.setItem('evaluationItems', JSON.stringify(sortedItems));
+    return sortedItems;
   });
 
   const [editingItem, setEditingItem] = useState<EvaluationItem | null>(null);
@@ -93,6 +149,10 @@ export default function EvaluationManagement() {
       };
       updatedItems = [...items, newItem];
     }
+    // No. 기준으로 정렬
+    updatedItems.sort((a, b) => {
+      return a.no.localeCompare(b.no, undefined, { numeric: true });
+    });
     setItems(updatedItems);
     localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
     setIsDialogOpen(false);
