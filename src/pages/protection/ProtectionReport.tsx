@@ -512,36 +512,9 @@ export default function ProtectionReport() {
           </div>
 
           {/* 1.3 흐름도 */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-lg font-semibold">1.3 개인정보 흐름도</h3>
-            {(() => {
-              const flowChartImages = JSON.parse(localStorage.getItem('flowChartImages') || '{}');
-              const taskNames = processingTasks.map((t: any) => t.taskName).filter((name: string) => name.trim() !== '');
-              
-              if (Object.keys(flowChartImages).length === 0) {
-                return <p className="text-sm text-muted-foreground">각 처리업무별 흐름도는 "개인정보 흐름도" 페이지에서 관리됩니다.</p>;
-              }
-              
-              return (
-                <div className="space-y-6">
-                  {taskNames.map((taskName: string) => {
-                    const imageData = flowChartImages[taskName];
-                    if (!imageData) return null;
-                    
-                    return (
-                      <div key={taskName} className="space-y-2">
-                        <h4 className="font-semibold">[{taskName}]</h4>
-                        <img 
-                          src={imageData} 
-                          alt={`${taskName} 흐름도`}
-                          className="w-full border rounded-lg"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+            <p className="text-sm text-muted-foreground">각 처리업무별 흐름도는 "개인정보 흐름도" 페이지에서 관리됩니다.</p>
           </div>
         </CardContent>
       </Card>
