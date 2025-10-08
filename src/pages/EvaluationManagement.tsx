@@ -33,8 +33,12 @@ interface EvaluationItem {
 
 export default function EvaluationManagement() {
   const [items, setItems] = useState<EvaluationItem[]>(() => {
+    const DATA_VERSION = '1.1'; // 데이터 버전
+    const savedVersion = localStorage.getItem('evaluationItemsVersion');
     const saved = localStorage.getItem('evaluationItems');
-    if (saved) {
+    
+    // 버전이 다르면 새로운 defaultItems 로드
+    if (saved && savedVersion === DATA_VERSION) {
       const parsedItems = JSON.parse(saved);
       // No. 기준으로 정렬
       return parsedItems.sort((a: EvaluationItem, b: EvaluationItem) => {
@@ -112,6 +116,7 @@ export default function EvaluationManagement() {
       return a.no.localeCompare(b.no, undefined, { numeric: true });
     });
     localStorage.setItem('evaluationItems', JSON.stringify(sortedItems));
+    localStorage.setItem('evaluationItemsVersion', DATA_VERSION);
     return sortedItems;
   });
 
@@ -155,6 +160,7 @@ export default function EvaluationManagement() {
     });
     setItems(updatedItems);
     localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
+    localStorage.setItem('evaluationItemsVersion', '1.1');
     setIsDialogOpen(false);
     setEditingItem(null);
     setFormData({});
