@@ -177,18 +177,13 @@ export default function TechnicalAdminChecklist() {
     try {
       const savedAll: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
       const others = savedAll.filter((s) => s.systemName !== activeTab);
-      // 파일 데이터 제외하고 저장 (localStorage 용량 초과 방지)
-      const toSave = items.map((it) => ({ 
-        ...it, 
-        systemName: activeTab,
-        files: [] // 파일은 저장하지 않음
-      }));
+      const toSave = items.map((it) => ({ ...it, systemName: activeTab }));
       setCompanyData(user?.company, 'technicalData', [...others, ...toSave]);
       setHasChanges(false);
       toast.success('저장되었습니다');
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        toast.error('저장 용량이 초과되었습니다. 파일 첨부를 줄여주세요.');
+        toast.error('저장 용량이 초과되었습니다. 파일 크기를 줄이거나 개수를 줄여주세요.');
       } else {
         toast.error('저장 중 오류가 발생했습니다.');
       }
