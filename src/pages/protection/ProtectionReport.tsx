@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Printer } from 'lucide-react';
-import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel, ImageRun } from 'docx';
 import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -189,7 +189,52 @@ export default function ProtectionReport() {
           spacing: { before: 400, after: 100 }
         })
       );
-      sections.push(new Paragraph({ text: '각 처리업무별 개인정보 흐름도가 별도로 작성되었습니다.' }));
+
+      // Load flow chart images
+      const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
+      const taskNames = Object.keys(flowChartImages);
+      
+      if (taskNames.length > 0) {
+        for (const taskName of taskNames) {
+          sections.push(
+            new Paragraph({
+              text: `${taskName} 흐름도`,
+              heading: HeadingLevel.HEADING_4,
+              spacing: { before: 200, after: 100 }
+            })
+          );
+          
+          const imageData = flowChartImages[taskName];
+          if (imageData) {
+            try {
+              // Convert base64 to buffer for docx
+              const base64Data = imageData.split(',')[1];
+              const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+              
+              sections.push(
+                new Paragraph({
+                  children: [
+                    new ImageRun({
+                      data: imageBuffer,
+                      transformation: {
+                        width: 600,
+                        height: 385,
+                      },
+                      type: 'png',
+                    } as any)
+                  ],
+                  spacing: { after: 200 }
+                })
+              );
+            } catch (error) {
+              console.error('Error adding image to document:', error);
+              sections.push(new Paragraph({ text: '(이미지 삽입 오류)' }));
+            }
+          }
+        }
+      } else {
+        sections.push(new Paragraph({ text: '저장된 흐름도 이미지가 없습니다.' }));
+      }
 
       // 2. 영향평가 기준
       sections.push(
