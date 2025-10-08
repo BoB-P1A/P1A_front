@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { PieChart, RefreshCw, Download, Save, Camera, Trash, RotateCcw } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 interface DraggableIcon {
   id: string;
@@ -23,6 +25,7 @@ interface FlowChartData {
 }
 
 export default function ProtectionFlowChart() {
+  const { user } = useAuth();
   const [taskNames, setTaskNames] = useState<string[]>(['회원가입', '고객상담']);
   const [selectedTask, setSelectedTask] = useState('회원가입');
   const [flowDataByTask, setFlowDataByTask] = useState<Record<string, FlowChartData>>({
@@ -36,9 +39,8 @@ export default function ProtectionFlowChart() {
 
   useEffect(() => {
     const loadData = () => {
-      const savedTasks = localStorage.getItem('processingTasks');
-      if (savedTasks) {
-        const tasks = JSON.parse(savedTasks);
+      const tasks = getCompanyData(user?.company, 'processingTasks', []);
+      if (tasks.length > 0) {
         const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
         if (taskNamesList.length > 0) {
           setTaskNames(taskNamesList);
@@ -57,14 +59,14 @@ export default function ProtectionFlowChart() {
         }
       }
 
-      const savedFlowData = localStorage.getItem('flowChartData');
+      const savedFlowData = getCompanyData(user?.company, 'flowChartData', null);
       if (savedFlowData) {
-        setFlowDataByTask(JSON.parse(savedFlowData));
+        setFlowDataByTask(savedFlowData);
       }
 
-      const savedPersonalInfoTexts = localStorage.getItem('personalInfoTexts');
+      const savedPersonalInfoTexts = getCompanyData(user?.company, 'personalInfoTexts', {});
       if (savedPersonalInfoTexts) {
-        setPersonalInfoTexts(JSON.parse(savedPersonalInfoTexts));
+        setPersonalInfoTexts(savedPersonalInfoTexts);
       }
     };
 
@@ -72,14 +74,15 @@ export default function ProtectionFlowChart() {
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'processingTasks') {
+      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
+      if (customEvent.detail?.key === taskKey) {
         loadData();
       }
     };
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+  }, [user?.company]);
 
   const addIcon = (type: DraggableIcon['type']) => {
     const newIcon: DraggableIcon = {
@@ -156,9 +159,8 @@ export default function ProtectionFlowChart() {
   };
 
   const handleSave = () => {
-    localStorage.setItem('flowChartData', JSON.stringify(flowDataByTask));
-    localStorage.setItem('personalInfoTexts', JSON.stringify(personalInfoTexts));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'flowChartData' } }));
+    setCompanyData(user?.company, 'flowChartData', flowDataByTask);
+    setCompanyData(user?.company, 'personalInfoTexts', personalInfoTexts);
     alert('저장되었습니다.');
   };
 

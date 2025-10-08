@@ -4,32 +4,41 @@ import { FileText, Download, Printer } from 'lucide-react';
 import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
 import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 export default function ProtectionReport() {
+  const { user } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'processingTasks' || 
-          customEvent.detail?.key === 'flowTableData' ||
-          customEvent.detail?.key === 'flowChartData' ||
-          customEvent.detail?.key === 'lifecycleData' ||
-          customEvent.detail?.key === 'protectionImprovements') {
+      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
+      const flowKey = getCompanyStorageKey(user?.company, 'flowTableData');
+      const chartKey = getCompanyStorageKey(user?.company, 'flowChartData');
+      const lifecycleKey = getCompanyStorageKey(user?.company, 'lifecycleData');
+      const improvementsKey = getCompanyStorageKey(user?.company, 'protectionImprovements');
+      
+      if (customEvent.detail?.key === taskKey || 
+          customEvent.detail?.key === flowKey ||
+          customEvent.detail?.key === chartKey ||
+          customEvent.detail?.key === lifecycleKey ||
+          customEvent.detail?.key === improvementsKey) {
         setRefreshKey(prev => prev + 1);
       }
     };
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+  }, [user?.company]);
   const handleDownload = async () => {
     try {
-      // Load data from localStorage
-      const taskTableData = JSON.parse(localStorage.getItem('processingTasks') || '[]');
-      const flowTableData = JSON.parse(localStorage.getItem('flowTableData') || '{}');
-      const lifecycleData = JSON.parse(localStorage.getItem('lifecycleData') || '[]');
-      const improvements = JSON.parse(localStorage.getItem('protectionImprovements') || '{}');
+      // Load data from company storage
+      const taskTableData = getCompanyData(user?.company, 'processingTasks', []);
+      const flowTableData = getCompanyData(user?.company, 'flowTableData', {});
+      const lifecycleData = getCompanyData(user?.company, 'lifecycleData', []);
+      const improvements = getCompanyData(user?.company, 'protectionImprovements', {});
 
       const sections = [];
 
@@ -351,10 +360,10 @@ export default function ProtectionReport() {
     window.print();
   };
 
-  const processingTasks = JSON.parse(localStorage.getItem('processingTasks') || '[]');
-  const flowTableData = JSON.parse(localStorage.getItem('flowTableData') || '{}');
-  const lifecycleData = JSON.parse(localStorage.getItem('lifecycleData') || '[]');
-  const improvements = JSON.parse(localStorage.getItem('protectionImprovements') || '{}');
+  const processingTasks = getCompanyData(user?.company, 'processingTasks', []);
+  const flowTableData = getCompanyData(user?.company, 'flowTableData', {});
+  const lifecycleData = getCompanyData(user?.company, 'lifecycleData', []);
+  const improvements = getCompanyData(user?.company, 'protectionImprovements', {});
   const PHASES = ['수집','보유이용','제공','파기'] as const;
 
   const criteriaByTask: { [key: string]: { [subField: string]: string[] } } = {};
@@ -550,7 +559,7 @@ export default function ProtectionReport() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">1.3 개인정보 흐름도</h3>
             {(() => {
-              const flowChartImages = JSON.parse(localStorage.getItem('flowChartImages') || '{}');
+              const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
               const taskNames = processingTasks.map((t: any) => t.taskName).filter((name: string) => name.trim() !== '');
               
               if (Object.keys(flowChartImages).length === 0) {

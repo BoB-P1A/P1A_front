@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Upload, Download } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 interface EvaluationItem {
   id: number;
@@ -42,6 +44,7 @@ interface SystemInfo {
 }
 
 export default function TechnicalAdminChecklist() {
+  const { user } = useAuth();
   const [systems, setSystems] = useState<SystemInfo[]>([]);
   const [items, setItems] = useState<TechnicalItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -52,68 +55,63 @@ export default function TechnicalAdminChecklist() {
 
   useEffect(() => {
     const loadSystems = () => {
-      const savedSystems = localStorage.getItem('technicalSystems');
-      if (savedSystems) {
-        const parsed: SystemInfo[] = JSON.parse(savedSystems);
-        setSystems(parsed);
-        if (parsed.length > 0 && !activeTab) {
-          setActiveTab(parsed[0].name);
+      const savedSystems = getCompanyData(user?.company, 'technicalSystems', []);
+      if (savedSystems.length > 0) {
+        setSystems(savedSystems);
+        if (!activeTab) {
+          setActiveTab(savedSystems[0].name);
         }
       }
 
-      const evaluationItems = localStorage.getItem('evaluationItems');
-      if (evaluationItems) {
-        const parsed: EvaluationItem[] = JSON.parse(evaluationItems);
-        const filtered = parsed.filter(item => item.area === '4. 대상시스템의 기술적 보호조치');
-        
-        const savedData = localStorage.getItem('technicalData');
-        const savedItems = savedData ? JSON.parse(savedData) : [];
-        
-        const technicalItems: TechnicalItem[] = filtered.map(item => {
-          const saved = savedItems.find((s: TechnicalItem) => s.id === item.id);
-          return {
-            id: item.id,
-            systemName: saved?.systemName || (systems.length > 0 ? systems[0].name : ''),
-            field: item.field,
-            subField: item.subField,
-            no: item.no,
-            item: item.item,
-            status: saved?.status || null,
-            evidence: saved?.evidence || '',
-            files: saved?.files || [],
-          };
-        });
-        
-        setItems(technicalItems);
-      }
+      const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
+      const filtered = evaluationItems.filter((item: any) => item.area === '4. 대상시스템의 기술적 보호조치');
+      
+      const savedData = getCompanyData(user?.company, 'technicalData', []);
+      
+      const technicalItems: TechnicalItem[] = filtered.map((item: any) => {
+        const saved = savedData.find((s: TechnicalItem) => s.id === item.id);
+        return {
+          id: item.id,
+          systemName: saved?.systemName || (systems.length > 0 ? systems[0].name : ''),
+          field: item.field,
+          subField: item.subField,
+          no: item.no,
+          item: item.item,
+          status: saved?.status || null,
+          evidence: saved?.evidence || '',
+          files: saved?.files || [],
+        };
+      });
+      
+      setItems(technicalItems);
     };
 
     loadSystems();
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'technicalSystems' || customEvent.detail?.key === 'evaluationItems') {
+      const systemsKey = getCompanyStorageKey(user?.company, 'technicalSystems');
+      const evalKey = getCompanyStorageKey(user?.company, 'evaluationItems');
+      if (customEvent.detail?.key === systemsKey || customEvent.detail?.key === evalKey) {
         loadSystems();
       }
     };
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+  }, [user?.company, activeTab]);
 
   useEffect(() => {
     if (!activeTab) return;
 
-    const evaluationItemsRaw = localStorage.getItem('evaluationItems');
-    const evaluationItems: EvaluationItem[] = evaluationItemsRaw ? JSON.parse(evaluationItemsRaw) : [];
-    const filtered = evaluationItems.filter(item => item.area === '4. 대상시스템의 기술적 보호조치');
+    const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
+    const filtered = evaluationItems.filter((item: any) => item.area === '4. 대상시스템의 기술적 보호조치');
 
-    const savedDataRaw = localStorage.getItem('technicalData');
-    const savedItems: TechnicalItem[] = savedDataRaw ? JSON.parse(savedDataRaw) : [];
+    const savedItems: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
     const savedForSystem = savedItems.filter((s) => s.systemName === activeTab);
 
-    const merged: TechnicalItem[] = filtered.map((item) => {
-      const saved = savedForSystem.find((s) => s.id === item.id);
+    const merged: TechnicalItem[] = filtered.map((item: any) => {
+      const saved = savedForSystem.find((s: any) => s.id === item.id);
       return {
         id: item.id,
         systemName: activeTab,
@@ -128,7 +126,7 @@ export default function TechnicalAdminChecklist() {
     });
 
     setItems(merged);
-  }, [activeTab, systems.length]);
+  }, [activeTab, systems.length, user?.company]);
   const handleStatusChange = (id: number, status: '이행' | '부분이행' | '미이행' | '해당없음') => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     setHasChanges(true);
@@ -175,12 +173,10 @@ export default function TechnicalAdminChecklist() {
   };
 
   const handleSave = () => {
-    const savedRaw = localStorage.getItem('technicalData');
-    const savedAll: TechnicalItem[] = savedRaw ? JSON.parse(savedRaw) : [];
+    const savedAll: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
     const others = savedAll.filter((s) => s.systemName !== activeTab);
     const toSave = items.map((it) => ({ ...it, systemName: activeTab }));
-    localStorage.setItem('technicalData', JSON.stringify([...others, ...toSave]));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalData' } }));
+    setCompanyData(user?.company, 'technicalData', [...others, ...toSave]);
     setHasChanges(false);
   };
 
@@ -217,8 +213,7 @@ export default function TechnicalAdminChecklist() {
       }
     }
     setSystems(updatedSystems);
-    localStorage.setItem('technicalSystems', JSON.stringify(updatedSystems));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalSystems' } }));
+    setCompanyData(user?.company, 'technicalSystems', updatedSystems);
     setIsDialogOpen(false);
     setEditingSystem(null);
     setSystemName('');
@@ -227,8 +222,7 @@ export default function TechnicalAdminChecklist() {
   const handleDeleteSystem = (id: number) => {
     const updatedSystems = systems.filter(s => s.id !== id);
     setSystems(updatedSystems);
-    localStorage.setItem('technicalSystems', JSON.stringify(updatedSystems));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalSystems' } }));
+    setCompanyData(user?.company, 'technicalSystems', updatedSystems);
     if (updatedSystems.length > 0 && activeTab === systems.find(s => s.id === id)?.name) {
       setActiveTab(updatedSystems[0].name);
     }

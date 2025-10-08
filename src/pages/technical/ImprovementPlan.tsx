@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/table';
 import { Download, AlertTriangle, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 interface TechnicalItem {
   id: number;
@@ -39,6 +41,7 @@ interface ImprovementItem {
 }
 
 export default function TechnicalImprovementPlan() {
+  const { user } = useAuth();
   const [items, setItems] = useState<ImprovementItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
@@ -46,12 +49,11 @@ export default function TechnicalImprovementPlan() {
 
   useEffect(() => {
     const loadData = () => {
-      const systemsData = localStorage.getItem('technicalSystems');
-      if (systemsData) {
-        const systems = JSON.parse(systemsData);
+      const systems = getCompanyData(user?.company, 'technicalSystems', []);
+      if (systems.length > 0) {
         const names = systems.map((s: any) => s.name);
         setSystemNames(names);
-        if (names.length > 0 && activeTab === '전체') {
+        if (activeTab === '전체') {
           setActiveTab('전체');
         }
       }
@@ -61,58 +63,56 @@ export default function TechnicalImprovementPlan() {
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'technicalSystems') {
+      const systemsKey = getCompanyStorageKey(user?.company, 'technicalSystems');
+      if (customEvent.detail?.key === systemsKey) {
         loadData();
       }
     };
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+  }, [user?.company]);
 
   useEffect(() => {
     const loadImprovements = () => {
-      const technicalData = localStorage.getItem('technicalData');
-      if (technicalData) {
-        const parsed: TechnicalItem[] = JSON.parse(technicalData);
-        const filtered = parsed.filter(item => 
-          item.status === '부분이행' || item.status === '미이행'
-        );
+      const parsed: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
+      const filtered = parsed.filter(item => 
+        item.status === '부분이행' || item.status === '미이행'
+      );
 
-        const savedImprovements = localStorage.getItem('technicalImprovements');
-        const saved = savedImprovements ? JSON.parse(savedImprovements) : {};
+      const saved = getCompanyData(user?.company, 'technicalImprovements', {});
 
-        const improvementItems: ImprovementItem[] = filtered.map(item => {
-          const itemId = `${item.systemName}-${item.no}`;
-          const savedItem = saved[itemId];
-          return {
-            id: itemId,
-            systemName: item.systemName,
-            code: item.no,
-            question: item.item,
-            evidence: item.evidence,
-            relatedLaw: savedItem?.relatedLaw || '',
-            riskFactor: savedItem?.riskFactor || '',
-            improvementPlan: savedItem?.improvementPlan || '',
-          };
-        });
+      const improvementItems: ImprovementItem[] = filtered.map(item => {
+        const itemId = `${item.systemName}-${item.no}`;
+        const savedItem = saved[itemId];
+        return {
+          id: itemId,
+          systemName: item.systemName,
+          code: item.no,
+          question: item.item,
+          evidence: item.evidence,
+          relatedLaw: savedItem?.relatedLaw || '',
+          riskFactor: savedItem?.riskFactor || '',
+          improvementPlan: savedItem?.improvementPlan || '',
+        };
+      });
 
-        setItems(improvementItems);
-      }
+      setItems(improvementItems);
     };
 
     loadImprovements();
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'technicalData') {
+      const techDataKey = getCompanyStorageKey(user?.company, 'technicalData');
+      if (customEvent.detail?.key === techDataKey) {
         loadImprovements();
       }
     };
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+  }, [user?.company]);
 
   const handleRelatedLawChange = (id: string, value: string) => {
     setItems(prev => prev.map(item => 
@@ -144,8 +144,7 @@ export default function TechnicalImprovementPlan() {
         improvementPlan: item.improvementPlan,
       };
     });
-    localStorage.setItem('technicalImprovements', JSON.stringify(improvements));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'technicalImprovements' } }));
+    setCompanyData(user?.company, 'technicalImprovements', improvements);
     setHasChanges(false);
   };
 

@@ -4,28 +4,36 @@ import { FileText, Download, Printer } from 'lucide-react';
 import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
 import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
 export default function TechnicalReport() {
+  const { user } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      if (customEvent.detail?.key === 'technicalData' || 
-          customEvent.detail?.key === 'technicalImprovements' ||
-          customEvent.detail?.key === 'technicalSystems') {
+      const dataKey = getCompanyStorageKey(user?.company, 'technicalData');
+      const improvementsKey = getCompanyStorageKey(user?.company, 'technicalImprovements');
+      const systemsKey = getCompanyStorageKey(user?.company, 'technicalSystems');
+      
+      if (customEvent.detail?.key === dataKey || 
+          customEvent.detail?.key === improvementsKey ||
+          customEvent.detail?.key === systemsKey) {
         setRefreshKey(prev => prev + 1);
       }
     };
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+  }, [user?.company]);
+  
   const handleDownload = async () => {
     try {
-      // Load data from localStorage
-      const technicalData = JSON.parse(localStorage.getItem('technicalData') || '[]');
-      const improvements = JSON.parse(localStorage.getItem('technicalImprovements') || '{}');
+      // Load data from company storage
+      const technicalData = getCompanyData(user?.company, 'technicalData', []);
+      const improvements = getCompanyData(user?.company, 'technicalImprovements', {});
 
       const sections = [];
 
@@ -208,8 +216,8 @@ export default function TechnicalReport() {
     window.print();
   };
 
-  const technicalData = JSON.parse(localStorage.getItem('technicalData') || '[]');
-  const improvements = JSON.parse(localStorage.getItem('technicalImprovements') || '{}');
+  const technicalData = getCompanyData(user?.company, 'technicalData', []);
+  const improvements = getCompanyData(user?.company, 'technicalImprovements', {});
 
   const criteriaBySystem: { [key: string]: { [subField: string]: string[] } } = {};
   technicalData.forEach((item: any) => {
