@@ -17,6 +17,7 @@ import { Download, AlertTriangle, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface LifecycleItem {
   id: number;
@@ -142,6 +143,7 @@ export default function ImprovementPlan() {
     });
     setCompanyData(user?.company, 'protectionImprovements', improvements);
     setHasChanges(false);
+    toast.success('저장되었습니다');
   };
 
   const handleExportToExcel = () => {
