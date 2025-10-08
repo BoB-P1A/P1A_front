@@ -430,72 +430,28 @@ export default function ProtectionFlowChart() {
                           <ResizablePanelGroup direction="horizontal">
                             {/* 정보주체/개인정보취급자 열 */}
                             <ResizablePanel defaultSize={20} minSize={10}>
-                              <ResizablePanelGroup direction="vertical">
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-border p-2" />
-                                </ResizablePanel>
-                              </ResizablePanelGroup>
+                              <div className="h-full border-r border-border" />
                             </ResizablePanel>
 
                             <ResizableHandle withHandle />
 
                             {/* 개인정보 처리 흐름 열 */}
                             <ResizablePanel defaultSize={40} minSize={20}>
-                              <ResizablePanelGroup direction="vertical">
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-border p-2" />
-                                </ResizablePanel>
-                              </ResizablePanelGroup>
+                              <div className="h-full border-r border-border" />
                             </ResizablePanel>
+
+                            <ResizableHandle withHandle />
 
                             {/* 외부연계·제공 열 */}
                             <ResizablePanel defaultSize={20} minSize={10}>
-                              <ResizablePanelGroup direction="vertical">
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-r border-border p-2" />
-                                </ResizablePanel>
-                              </ResizablePanelGroup>
+                              <div className="h-full border-r border-border" />
                             </ResizablePanel>
+
+                            <ResizableHandle withHandle />
 
                             {/* 처리 개인정보 열 */}
                             <ResizablePanel defaultSize={20} minSize={10}>
-                              <ResizablePanelGroup direction="vertical">
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-b border-border p-2" />
-                                </ResizablePanel>
-                                <ResizableHandle />
-                                <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full p-2" />
-                                </ResizablePanel>
-                              </ResizablePanelGroup>
+                              <div className="h-full" />
                             </ResizablePanel>
                           </ResizablePanelGroup>
 
