@@ -120,6 +120,7 @@ export default function AccountManagement() {
     switch (role) {
       case 'admin': return 'default';
       case 'developer': return 'secondary';
+      case 'planning-team': return 'secondary';
       default: return 'outline';
     }
   };
