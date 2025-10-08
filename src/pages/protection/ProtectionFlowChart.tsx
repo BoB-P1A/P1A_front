@@ -889,13 +889,10 @@ export default function ProtectionFlowChart() {
                       개인정보 문서(스캔파일)
                     </Button>
                     <Button variant="outline" className="w-full justify-start text-xs" onClick={() => addIcon('number')}>
-                      <div className="flex items-center mr-2">
-                        <div className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold">
-                          1
-                        </div>
-                        <span className="ml-1 text-xs">텍스트</span>
+                      <div className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">
+                        1
                       </div>
-                      처리되는 개인정보 숫자
+                      처리되는 개인정보를 구분하기 위한 숫자 표기
                     </Button>
                   </CardContent>
                 </Card>
