@@ -93,6 +93,7 @@ export default function ProtectionReport() {
       );
 
       const phases = ['수집', '보유이용', '제공', '파기'];
+      const phaseKeyMap: Record<string, string> = { 수집: 'collection', 보유이용: 'storage', 제공: 'provision', 파기: 'disposal' };
       phases.forEach(phase => {
         sections.push(
           new Paragraph({
@@ -105,56 +106,66 @@ export default function ProtectionReport() {
         const phaseData: any[] = [];
         Object.keys(flowTableData).forEach(taskName => {
           const taskData = flowTableData[taskName];
-          if (taskData && taskData[phase]) {
-            taskData[phase].forEach((row: any) => {
-              phaseData.push({ taskName, ...row });
-            });
-          }
+          const key = phaseKeyMap[phase];
+          const rows = taskData?.[key] || [];
+          rows.forEach((row: any) => phaseData.push({ taskName, ...row }));
         });
 
         if (phaseData.length > 0) {
-          const headers = phase === '수집' 
-            ? ['업무명', '수집항목', '수집방법', '수집근거']
-            : phase === '보유이용'
-            ? ['업무명', '개인정보파일명', '보유기간', '보유근거', '이용목적']
-            : phase === '제공'
-            ? ['업무명', '제공받는 자', '제공목적', '제공항목', '제공방법']
-            : ['업무명', '파기항목', '파기방법', '파기주기'];
+          const headers =
+            phase === '수집'
+              ? ['업무명', '수집 항목', '수집 경로', '수집 대상', '수집 주기', '수집 담당자', '수집 근거']
+              : phase === '보유이용'
+              ? ['업무명', '보유 형태', '암호화 항목', '이용 목적', '이용 항목', '개인정보취급자', '이용 방법']
+              : phase === '제공'
+              ? ['업무명', '제공 목적', '제공자', '수신자', '제공 정보', '제공 방법', '제공 주기', '암호화 여부', '제공근거']
+              : ['업무명', '보관 기간', '파기 담당자', '파기 절차', '분리보관 여부'];
 
           const flowRows = [
             new TableRow({
               children: headers.map(h => new TableCell({ children: [new Paragraph(h)] }))
             }),
             ...phaseData.map(row => new TableRow({
-              children: phase === '수집'
-                ? [
-                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
-                    new TableCell({ children: [new Paragraph(row.items || '')] }),
-                    new TableCell({ children: [new Paragraph(row.method || '')] }),
-                    new TableCell({ children: [new Paragraph(row.basis || '')] })
-                  ]
-                : phase === '보유이용'
-                ? [
-                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
-                    new TableCell({ children: [new Paragraph(row.fileName || '')] }),
-                    new TableCell({ children: [new Paragraph(row.period || '')] }),
-                    new TableCell({ children: [new Paragraph(row.basis || '')] }),
-                    new TableCell({ children: [new Paragraph(row.purpose || '')] })
-                  ]
-                : phase === '제공'
-                ? [
-                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
-                    new TableCell({ children: [new Paragraph(row.recipient || '')] }),
-                    new TableCell({ children: [new Paragraph(row.purpose || '')] }),
-                    new TableCell({ children: [new Paragraph(row.items || '')] }),
-                    new TableCell({ children: [new Paragraph(row.method || '')] })
-                  ]
-                : [
-                    new TableCell({ children: [new Paragraph(row.taskName || '')] }),
-                    new TableCell({ children: [new Paragraph(row.items || '')] }),
-                    new TableCell({ children: [new Paragraph(row.method || '')] }),
-                    new TableCell({ children: [new Paragraph(row.cycle || '')] })
-                  ]
+              children:
+                phase === '수집'
+                  ? [
+                      new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionItem || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionPath || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionTarget || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionPeriod || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionManager || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionBasis || '')] }),
+                    ]
+                  : phase === '보유이용'
+                  ? [
+                      new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                      new TableCell({ children: [new Paragraph(row.storageType || '')] }),
+                      new TableCell({ children: [new Paragraph(row.encryptionItem || '')] }),
+                      new TableCell({ children: [new Paragraph(row.usagePurpose || '')] }),
+                      new TableCell({ children: [new Paragraph(row.usageItem || '')] }),
+                      new TableCell({ children: [new Paragraph(row.personalInfoHandler || '')] }),
+                      new TableCell({ children: [new Paragraph(row.usageMethod || '')] }),
+                    ]
+                  : phase === '제공'
+                  ? [
+                      new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionPurpose || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provider || '')] }),
+                      new TableCell({ children: [new Paragraph(row.recipient || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionInfo || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionMethod || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionPeriod || '')] }),
+                      new TableCell({ children: [new Paragraph(row.encryptionStatus || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionBasis || '')] }),
+                    ]
+                  : [
+                      new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                      new TableCell({ children: [new Paragraph(row.retentionPeriod || '')] }),
+                      new TableCell({ children: [new Paragraph(row.disposalManager || '')] }),
+                      new TableCell({ children: [new Paragraph(row.disposalProcedure || '')] }),
+                      new TableCell({ children: [new Paragraph(row.separateStorageStatus || '')] }),
+                    ],
             }))
           ];
           sections.push(new DocxTable({ rows: flowRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
@@ -393,12 +404,10 @@ export default function ProtectionReport() {
   Object.keys(flowTableData).forEach((taskName) => {
     const task = flowTableData[taskName];
     if (!task) return;
-    PHASES.forEach((p) => {
-      const rows = task[p];
-      if (rows && Array.isArray(rows)) {
-        rows.forEach((row: any) => flowByPhase[p].push({ taskName, ...row }));
-      }
-    });
+    (task.collection || []).forEach((row: any) => flowByPhase['수집'].push({ taskName, ...row }));
+    (task.storage || []).forEach((row: any) => flowByPhase['보유이용'].push({ taskName, ...row }));
+    (task.provision || []).forEach((row: any) => flowByPhase['제공'].push({ taskName, ...row }));
+    (task.disposal || []).forEach((row: any) => flowByPhase['파기'].push({ taskName, ...row }));
   });
 
   return (
@@ -462,13 +471,14 @@ export default function ProtectionReport() {
             {PHASES.map((phase) => {
               const rows = flowByPhase[phase];
               if (!rows || rows.length === 0) return null;
-              const headers = phase === '수집'
-                ? ['업무명','수집항목','수집방법','수집근거']
-                : phase === '보유이용'
-                ? ['업무명','개인정보파일명','보유기간','보유근거','이용목적']
-                : phase === '제공'
-                ? ['업무명','제공받는 자','제공목적','제공항목','제공방법']
-                : ['업무명','파기항목','파기방법','파기주기'];
+              const headers =
+                phase === '수집'
+                  ? ['업무명','수집 항목','수집 경로','수집 대상','수집 주기','수집 담당자','수집 근거']
+                  : phase === '보유이용'
+                  ? ['업무명','보유 형태','암호화 항목','이용 목적','이용 항목','개인정보취급자','이용 방법']
+                  : phase === '제공'
+                  ? ['업무명','제공 목적','제공자','수신자','제공 정보','제공 방법','제공 주기','암호화 여부','제공근거']
+                  : ['업무명','보관 기간','파기 담당자','파기 절차','분리보관 여부'];
               return (
                 <div key={phase} className="space-y-2">
                   <h4 className="font-medium">{phase} 단계</h4>
@@ -485,35 +495,45 @@ export default function ProtectionReport() {
                             {phase === '수집' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
-                                <UITableCell>{row.items}</UITableCell>
-                                <UITableCell>{row.method}</UITableCell>
-                                <UITableCell>{row.basis}</UITableCell>
+                                <UITableCell>{row.collectionItem}</UITableCell>
+                                <UITableCell>{row.collectionPath}</UITableCell>
+                                <UITableCell>{row.collectionTarget}</UITableCell>
+                                <UITableCell>{row.collectionPeriod}</UITableCell>
+                                <UITableCell>{row.collectionManager}</UITableCell>
+                                <UITableCell>{row.collectionBasis}</UITableCell>
                               </>
                             )}
                             {phase === '보유이용' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
-                                <UITableCell>{row.fileName}</UITableCell>
-                                <UITableCell>{row.period}</UITableCell>
-                                <UITableCell>{row.basis}</UITableCell>
-                                <UITableCell>{row.purpose}</UITableCell>
+                                <UITableCell>{row.storageType}</UITableCell>
+                                <UITableCell>{row.encryptionItem}</UITableCell>
+                                <UITableCell>{row.usagePurpose}</UITableCell>
+                                <UITableCell>{row.usageItem}</UITableCell>
+                                <UITableCell>{row.personalInfoHandler}</UITableCell>
+                                <UITableCell>{row.usageMethod}</UITableCell>
                               </>
                             )}
                             {phase === '제공' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
+                                <UITableCell>{row.provisionPurpose}</UITableCell>
+                                <UITableCell>{row.provider}</UITableCell>
                                 <UITableCell>{row.recipient}</UITableCell>
-                                <UITableCell>{row.purpose}</UITableCell>
-                                <UITableCell>{row.items}</UITableCell>
-                                <UITableCell>{row.method}</UITableCell>
+                                <UITableCell>{row.provisionInfo}</UITableCell>
+                                <UITableCell>{row.provisionMethod}</UITableCell>
+                                <UITableCell>{row.provisionPeriod}</UITableCell>
+                                <UITableCell>{row.encryptionStatus}</UITableCell>
+                                <UITableCell>{row.provisionBasis}</UITableCell>
                               </>
                             )}
                             {phase === '파기' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
-                                <UITableCell>{row.items}</UITableCell>
-                                <UITableCell>{row.method}</UITableCell>
-                                <UITableCell>{row.cycle}</UITableCell>
+                                <UITableCell>{row.retentionPeriod}</UITableCell>
+                                <UITableCell>{row.disposalManager}</UITableCell>
+                                <UITableCell>{row.disposalProcedure}</UITableCell>
+                                <UITableCell>{row.separateStorageStatus}</UITableCell>
                               </>
                             )}
                           </UITableRow>
