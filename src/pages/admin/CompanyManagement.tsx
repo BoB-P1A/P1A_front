@@ -203,7 +203,7 @@ export default function CompanyManagement() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">전체 기업</CardTitle>
@@ -212,18 +212,6 @@ export default function CompanyManagement() {
           <CardContent>
             <div className="text-2xl font-bold">{companies.length}</div>
             <p className="text-xs text-muted-foreground">등록된 기업 수</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">활성 기업</CardTitle>
-            <Building2 className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.filter(c => c.status === 'active').length}
-            </div>
-            <p className="text-xs text-muted-foreground">활성화된 기업</p>
           </CardContent>
         </Card>
         <Card>
@@ -255,7 +243,6 @@ export default function CompanyManagement() {
                 <TableHead>사업자번호</TableHead>
                 <TableHead>대표자</TableHead>
                 <TableHead>사용자 수</TableHead>
-                <TableHead>상태</TableHead>
                 <TableHead>등록일</TableHead>
                 <TableHead className="text-right">작업</TableHead>
               </TableRow>
@@ -267,11 +254,6 @@ export default function CompanyManagement() {
                   <TableCell>{company.businessNumber}</TableCell>
                   <TableCell>{company.representative}</TableCell>
                   <TableCell>{company.userCount}명</TableCell>
-                  <TableCell>
-                    <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
-                      {company.status === 'active' ? '활성' : '비활성'}
-                    </Badge>
-                  </TableCell>
                   <TableCell>{company.createdAt}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
