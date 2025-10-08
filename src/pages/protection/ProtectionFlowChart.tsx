@@ -60,6 +60,11 @@ export default function ProtectionFlowChart() {
     if (savedFlowData) {
       setFlowDataByTask(JSON.parse(savedFlowData));
     }
+
+    const savedPersonalInfoTexts = localStorage.getItem('personalInfoTexts');
+    if (savedPersonalInfoTexts) {
+      setPersonalInfoTexts(JSON.parse(savedPersonalInfoTexts));
+    }
   }, []);
 
   const addIcon = (type: DraggableIcon['type']) => {
@@ -107,6 +112,7 @@ export default function ProtectionFlowChart() {
 
   const handleSave = () => {
     localStorage.setItem('flowChartData', JSON.stringify(flowDataByTask));
+    localStorage.setItem('personalInfoTexts', JSON.stringify(personalInfoTexts));
     alert('저장되었습니다.');
   };
 
@@ -349,7 +355,7 @@ export default function ProtectionFlowChart() {
         content = icon.text || '문서';
         break;
       case 'number':
-        // 숫자 아이콘 - 숫자만 입력 가능
+        // 숫자 아이콘 - 텍스트 입력 가능 (우측 텍스트 없음)
         return (
           <div
             key={icon.id}
@@ -365,20 +371,20 @@ export default function ProtectionFlowChart() {
             onClick={() => setSelectedIcon(icon.id)}
             onDoubleClick={() => setEditingText(icon.id)}
           >
-            <div className="bg-black text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">
-              {isEditing ? (
-                <Input
-                  value={icon.text}
-                  onChange={(e) => handleTextEdit(icon.id, e.target.value)}
-                  onBlur={() => setEditingText(null)}
-                  placeholder="1"
-                  className="w-8 h-8 text-center p-0"
-                  autoFocus
-                />
-              ) : (
-                <span>{icon.text || '1'}</span>
-              )}
-            </div>
+            {isEditing ? (
+              <Input
+                value={icon.text}
+                onChange={(e) => handleTextEdit(icon.id, e.target.value)}
+                onBlur={() => setEditingText(null)}
+                placeholder="텍스트 입력"
+                className="w-24 h-10 text-center"
+                autoFocus
+              />
+            ) : (
+              <div className="bg-black text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-sm px-2">
+                {icon.text || '1'}
+              </div>
+            )}
           </div>
         );
         break;
@@ -702,43 +708,61 @@ export default function ProtectionFlowChart() {
                             <div className="flex-1">
                               <ResizablePanelGroup direction="vertical">
                                 <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-b border-border p-2">
+                                  <div className="h-full border-b border-border p-2 relative">
                                     <textarea
-                                      className="w-full h-full resize-none border-none outline-none bg-transparent text-xs"
+                                      className="w-full h-full resize-none border-none outline-none bg-transparent text-xs focus:ring-0"
                                       placeholder="개인정보 입력..."
                                       value={personalInfoTexts[task]?.row1 || ''}
-                                      onChange={(e) => setPersonalInfoTexts(prev => ({
-                                        ...prev,
-                                        [task]: { ...prev[task], row1: e.target.value }
-                                      }))}
+                                      onChange={(e) => {
+                                        setPersonalInfoTexts(prev => ({
+                                          ...prev,
+                                          [task]: { 
+                                            row1: e.target.value,
+                                            row2: prev[task]?.row2 || '',
+                                            row3: prev[task]?.row3 || ''
+                                          }
+                                        }));
+                                      }}
                                     />
                                   </div>
                                 </ResizablePanel>
                                 <ResizableHandle className="opacity-0 pointer-events-none" />
                                 <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full border-b border-border p-2">
+                                  <div className="h-full border-b border-border p-2 relative">
                                     <textarea
-                                      className="w-full h-full resize-none border-none outline-none bg-transparent text-xs"
+                                      className="w-full h-full resize-none border-none outline-none bg-transparent text-xs focus:ring-0"
                                       placeholder="개인정보 입력..."
                                       value={personalInfoTexts[task]?.row2 || ''}
-                                      onChange={(e) => setPersonalInfoTexts(prev => ({
-                                        ...prev,
-                                        [task]: { ...prev[task], row2: e.target.value }
-                                      }))}
+                                      onChange={(e) => {
+                                        setPersonalInfoTexts(prev => ({
+                                          ...prev,
+                                          [task]: { 
+                                            row1: prev[task]?.row1 || '',
+                                            row2: e.target.value,
+                                            row3: prev[task]?.row3 || ''
+                                          }
+                                        }));
+                                      }}
                                     />
                                   </div>
                                 </ResizablePanel>
                                 <ResizableHandle className="opacity-0 pointer-events-none" />
                                 <ResizablePanel defaultSize={33.33} minSize={15}>
-                                  <div className="h-full p-2">
+                                  <div className="h-full p-2 relative">
                                     <textarea
-                                      className="w-full h-full resize-none border-none outline-none bg-transparent text-xs"
+                                      className="w-full h-full resize-none border-none outline-none bg-transparent text-xs focus:ring-0"
                                       placeholder="개인정보 입력..."
                                       value={personalInfoTexts[task]?.row3 || ''}
-                                      onChange={(e) => setPersonalInfoTexts(prev => ({
-                                        ...prev,
-                                        [task]: { ...prev[task], row3: e.target.value }
-                                      }))}
+                                      onChange={(e) => {
+                                        setPersonalInfoTexts(prev => ({
+                                          ...prev,
+                                          [task]: { 
+                                            row1: prev[task]?.row1 || '',
+                                            row2: prev[task]?.row2 || '',
+                                            row3: e.target.value
+                                          }
+                                        }));
+                                      }}
                                     />
                                   </div>
                                 </ResizablePanel>
