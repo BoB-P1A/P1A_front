@@ -507,7 +507,7 @@ export default function ProtectionFlowChart() {
       <div
         key={icon.id}
         className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
-        style={{ left: icon.x, top: icon.y }}
+        style={{ left: icon.x, top: icon.y, pointerEvents: 'auto' }}
         draggable
         onDragEnd={(e) => {
           const rect = canvasRef.current?.getBoundingClientRect();
@@ -698,7 +698,7 @@ export default function ProtectionFlowChart() {
                         <ResizableHandle withHandle />
 
                         {/* 처리 개인정보 열 */}
-                        <ResizablePanel defaultSize={18} minSize={10}>
+                        <ResizablePanel defaultSize={18} minSize={10} className="relative z-20">
                           <div className="h-full flex flex-col">
                             {/* 헤더 */}
                             <div className="h-12 bg-blue-100 border-b border-border flex items-center justify-center font-semibold text-sm text-center p-2">
@@ -775,7 +775,8 @@ export default function ProtectionFlowChart() {
                       {/* Icons overlay */}
                       <div
                         ref={canvasRef}
-                        className="absolute left-0 right-0 top-0 bottom-0 z-10 pointer-events-auto"
+                        className="absolute left-0 right-0 top-0 bottom-0 z-10"
+                        style={{ pointerEvents: 'none' }}
                         onClick={(e) => {
                           if (e.target === e.currentTarget) {
                             setSelectedIcon(null);
