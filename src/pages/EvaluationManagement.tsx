@@ -205,7 +205,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="area">평가영역</Label>
                 <Input 
                   id="area" 
-                  placeholder="예: 개인정보 처리단계별 보호조치"
+                  placeholder="예: 3. 개인정보 처리단계별 보호조치"
                   value={formData.area || ''}
                   onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                 />
@@ -214,7 +214,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="field">평가분야</Label>
                 <Input 
                   id="field" 
-                  placeholder="예: 개인정보 수집"
+                  placeholder="예: 3.1. 수집"
                   value={formData.field || ''}
                   onChange={(e) => setFormData({ ...formData, field: e.target.value })}
                 />
@@ -223,7 +223,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="subField">세부분야</Label>
                 <Input 
                   id="subField" 
-                  placeholder="예: 개인정보보안관리 등록"
+                  placeholder="예: 개인정보 수집의 적합성"
                   value={formData.subField || ''}
                   onChange={(e) => setFormData({ ...formData, subField: e.target.value })}
                 />
@@ -232,7 +232,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="no">No.</Label>
                 <Input 
                   id="no" 
-                  placeholder="예: 2.2.2"
+                  placeholder="예: 3.1.1"
                   value={formData.no || ''}
                   onChange={(e) => setFormData({ ...formData, no: e.target.value })}
                 />
@@ -241,7 +241,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="item">평가항목</Label>
                 <Textarea 
                   id="item" 
-                  placeholder="평가항목의 내용을 입력하세요"
+                  placeholder="예: 개인정보를 수집하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 수집하도록 계획하고 있습니까?"
                   className="min-h-[100px]"
                   value={formData.item || ''}
                   onChange={(e) => setFormData({ ...formData, item: e.target.value })}
