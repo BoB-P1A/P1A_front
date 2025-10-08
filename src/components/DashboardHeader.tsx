@@ -27,7 +27,7 @@ export function DashboardHeader() {
 
   const mockNotifications = [
     { id: 1, title: '새로운 영향평가 요청', time: '5분 전', type: 'info' },
-    { id: 2, title: '위험도 산정 완료', time: '1시간 전', type: 'success' },
+    { id: 2, title: '체크리스트 수행 요청', time: '1시간 전', type: 'reception' },
     { id: 3, title: '체크리스트 미완료 항목 있음', time: '3시간 전', type: 'warning' },
   ];
 
@@ -66,7 +66,7 @@ export function DashboardHeader() {
                     <p className="text-xs text-muted-foreground">{notification.time}</p>
                   </div>
                   <Badge variant={notification.type === 'info' ? 'default' : 
-                                notification.type === 'success' ? 'secondary' : 'destructive'}>
+                                notification.type === 'reception' ? 'secondary' : 'destructive'}>
                     {notification.type}
                   </Badge>
                 </div>
