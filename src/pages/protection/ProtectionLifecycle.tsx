@@ -59,31 +59,37 @@ export default function ProtectionLifecycle() {
     }
 
     const evaluationItems = localStorage.getItem('evaluationItems');
-    if (evaluationItems) {
-      const parsed: EvaluationItem[] = JSON.parse(evaluationItems);
-      const filtered = parsed.filter(item => item.area === '3. 개인정보 처리단계별 보호조치');
-      
-      const savedData = localStorage.getItem('lifecycleData');
-      const savedItems = savedData ? JSON.parse(savedData) : [];
-      
-      const lifecycleItems: LifecycleItem[] = filtered.map(item => {
-        const saved = savedItems.find((s: LifecycleItem) => s.id === item.id);
-        return {
-          id: item.id,
-          taskName: saved?.taskName || '',
-          field: item.field,
-          subField: item.subField,
-          no: item.no,
-          item: item.item,
-          status: saved?.status || null,
-          evidence: saved?.evidence || '',
-          files: saved?.files || [],
-        };
-      });
-      
-      setItems(lifecycleItems);
-    }
+    // 항목 로드는 탭 변경 시 수행됩니다.
   }, []);
+
+  useEffect(() => {
+    if (!activeTab) return;
+
+    const evaluationItemsRaw = localStorage.getItem('evaluationItems');
+    const evaluationItems: EvaluationItem[] = evaluationItemsRaw ? JSON.parse(evaluationItemsRaw) : [];
+    const filtered = evaluationItems.filter(item => item.area === '3. 개인정보 처리단계별 보호조치');
+
+    const savedDataRaw = localStorage.getItem('lifecycleData');
+    const savedItems: LifecycleItem[] = savedDataRaw ? JSON.parse(savedDataRaw) : [];
+    const savedForTask = savedItems.filter((s) => s.taskName === activeTab);
+
+    const merged: LifecycleItem[] = filtered.map((item) => {
+      const saved = savedForTask.find((s) => s.id === item.id);
+      return {
+        id: item.id,
+        taskName: activeTab,
+        field: item.field,
+        subField: item.subField,
+        no: item.no,
+        item: item.item,
+        status: saved?.status ?? null,
+        evidence: saved?.evidence ?? '',
+        files: saved?.files ?? [],
+      };
+    });
+
+    setItems(merged);
+  }, [activeTab, tasks.length]);
 
   const handleStatusChange = (id: number, status: '이행' | '부분이행' | '미이행' | '해당없음') => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
@@ -131,11 +137,11 @@ export default function ProtectionLifecycle() {
   };
 
   const handleSave = () => {
-    const updatedItems = items.map(item => 
-      item.taskName === '' || item.taskName === activeTab ? { ...item, taskName: activeTab } : item
-    );
-    localStorage.setItem('lifecycleData', JSON.stringify(updatedItems));
-    setItems(updatedItems);
+    const savedRaw = localStorage.getItem('lifecycleData');
+    const savedAll: LifecycleItem[] = savedRaw ? JSON.parse(savedRaw) : [];
+    const others = savedAll.filter((s) => s.taskName !== activeTab);
+    const toSave = items.map((it) => ({ ...it, taskName: activeTab }));
+    localStorage.setItem('lifecycleData', JSON.stringify([...others, ...toSave]));
     setHasChanges(false);
   };
 

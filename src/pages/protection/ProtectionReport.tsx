@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Printer } from 'lucide-react';
-import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
+import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 
 export default function ProtectionReport() {
   const handleDownload = async () => {
@@ -324,6 +325,67 @@ export default function ProtectionReport() {
     window.print();
   };
 
+  const processingTasks = JSON.parse(localStorage.getItem('processingTasks') || '[]');
+  const flowTableData = JSON.parse(localStorage.getItem('flowTableData') || '{}');
+  const lifecycleData = JSON.parse(localStorage.getItem('lifecycleData') || '[]');
+  const improvements = JSON.parse(localStorage.getItem('protectionImprovements') || '{}');
+  const PHASES = ['수집','보유이용','제공','파기'] as const;
+
+  const criteriaByTask: { [key: string]: { [subField: string]: string[] } } = {};
+  lifecycleData.forEach((item: any) => {
+    if (item.status !== '해당없음') {
+      if (!criteriaByTask[item.taskName]) criteriaByTask[item.taskName] = {};
+      if (!criteriaByTask[item.taskName][item.subField]) criteriaByTask[item.taskName][item.subField] = [];
+      criteriaByTask[item.taskName][item.subField].push(item.no);
+    }
+  });
+
+  const riskItems = lifecycleData
+    .filter((item: any) => item.status === '부분이행' || item.status === '미이행')
+    .map((item: any) => {
+      const itemId = `${item.taskName}-${item.no}`;
+      const saved = improvements[itemId];
+      return {
+        taskName: item.taskName,
+        code: item.no,
+        evidence: item.evidence || '',
+        riskFactor: saved?.riskFactor || '',
+      };
+    });
+
+  const improvementsByTask: { [key: string]: string[] } = {};
+  lifecycleData.forEach((item: any) => {
+    if (item.status === '부분이행' || item.status === '미이행') {
+      const itemId = `${item.taskName}-${item.no}`;
+      const saved = improvements[itemId];
+      if (saved?.improvementPlan) {
+        if (!improvementsByTask[item.taskName]) improvementsByTask[item.taskName] = [];
+        improvementsByTask[item.taskName].push(`${item.no}: ${saved.improvementPlan}`);
+      }
+    }
+  });
+
+  const resultsByTask: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
+  lifecycleData.forEach((item: any) => {
+    if (!resultsByTask[item.taskName]) resultsByTask[item.taskName] = {};
+    if (!resultsByTask[item.taskName][item.field]) {
+      resultsByTask[item.taskName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+    }
+    if (item.status) resultsByTask[item.taskName][item.field][item.status]++;
+  });
+
+  const flowByPhase: Record<string, any[]> = { 수집: [], 보유이용: [], 제공: [], 파기: [] };
+  Object.keys(flowTableData).forEach((taskName) => {
+    const task = flowTableData[taskName];
+    if (!task) return;
+    PHASES.forEach((p) => {
+      const rows = task[p];
+      if (rows && Array.isArray(rows)) {
+        rows.forEach((row: any) => flowByPhase[p].push({ taskName, ...row }));
+      }
+    });
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -402,6 +464,212 @@ export default function ProtectionReport() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 1. 개인정보 처리 흐름분석 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>1. 개인정보 처리 흐름분석</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* 1.1 처리업무표 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">1.1 개인정보 처리업무표</h3>
+            <div className="overflow-x-auto">
+              <UITable>
+                <UITableHeader>
+                  <UITableRow>
+                    <UITableHead>평가업무명</UITableHead>
+                    <UITableHead>처리 목적</UITableHead>
+                    <UITableHead>처리 개인정보</UITableHead>
+                    <UITableHead>주관부서</UITableHead>
+                  </UITableRow>
+                </UITableHeader>
+                <UITableBody>
+                  {processingTasks.map((t: any, idx: number) => (
+                    <UITableRow key={idx}>
+                      <UITableCell>{t.taskName}</UITableCell>
+                      <UITableCell>{t.purpose}</UITableCell>
+                      <UITableCell>{t.personalInfo}</UITableCell>
+                      <UITableCell>{t.department}</UITableCell>
+                    </UITableRow>
+                  ))}
+                </UITableBody>
+              </UITable>
+            </div>
+          </div>
+
+          {/* 1.2 흐름표 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">1.2 개인정보 흐름표</h3>
+            {PHASES.map((phase) => {
+              const rows = flowByPhase[phase];
+              if (!rows || rows.length === 0) return null;
+              const headers = phase === '수집'
+                ? ['업무명','수집항목','수집방법','수집근거']
+                : phase === '보유이용'
+                ? ['업무명','개인정보파일명','보유기간','보유근거','이용목적']
+                : phase === '제공'
+                ? ['업무명','제공받는 자','제공목적','제공항목','제공방법']
+                : ['업무명','파기항목','파기방법','파기주기'];
+              return (
+                <div key={phase} className="space-y-2">
+                  <h4 className="font-medium">{phase} 단계</h4>
+                  <div className="overflow-x-auto">
+                    <UITable>
+                      <UITableHeader>
+                        <UITableRow>
+                          {headers.map((h) => <UITableHead key={h}>{h}</UITableHead>)}
+                        </UITableRow>
+                      </UITableHeader>
+                      <UITableBody>
+                        {rows.map((row: any, i: number) => (
+                          <UITableRow key={i}>
+                            {phase === '수집' && (
+                              <>
+                                <UITableCell>{row.taskName}</UITableCell>
+                                <UITableCell>{row.items}</UITableCell>
+                                <UITableCell>{row.method}</UITableCell>
+                                <UITableCell>{row.basis}</UITableCell>
+                              </>
+                            )}
+                            {phase === '보유이용' && (
+                              <>
+                                <UITableCell>{row.taskName}</UITableCell>
+                                <UITableCell>{row.fileName}</UITableCell>
+                                <UITableCell>{row.period}</UITableCell>
+                                <UITableCell>{row.basis}</UITableCell>
+                                <UITableCell>{row.purpose}</UITableCell>
+                              </>
+                            )}
+                            {phase === '제공' && (
+                              <>
+                                <UITableCell>{row.taskName}</UITableCell>
+                                <UITableCell>{row.recipient}</UITableCell>
+                                <UITableCell>{row.purpose}</UITableCell>
+                                <UITableCell>{row.items}</UITableCell>
+                                <UITableCell>{row.method}</UITableCell>
+                              </>
+                            )}
+                            {phase === '파기' && (
+                              <>
+                                <UITableCell>{row.taskName}</UITableCell>
+                                <UITableCell>{row.items}</UITableCell>
+                                <UITableCell>{row.method}</UITableCell>
+                                <UITableCell>{row.cycle}</UITableCell>
+                              </>
+                            )}
+                          </UITableRow>
+                        ))}
+                      </UITableBody>
+                    </UITable>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 1.3 흐름도 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">1.3 개인정보 흐름도</h3>
+            <p className="text-sm text-muted-foreground">각 처리업무별 흐름도는 "개인정보 흐름도" 페이지에서 관리됩니다.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 2. 영향평가 기준 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>2. 영향평가 기준</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Object.keys(criteriaByTask).map((task) => (
+            <div key={task}>
+              <p className="font-semibold">[{task}]</p>
+              <ul className="list-disc pl-6">
+                {Object.keys(criteriaByTask[task]).map((sub) => (
+                  <li key={sub}>
+                    {sub} ({criteriaByTask[task][sub].join(', ')})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* 3. 침해요인 분석 표 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>3. 평가기준에 따른 개인정보 침해요인 분석·평가</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <UITable>
+              <UITableHeader>
+                <UITableRow>
+                  <UITableHead>개인정보 처리업무명</UITableHead>
+                  <UITableHead>질의문 코드</UITableHead>
+                  <UITableHead>평가 근거 및 의견</UITableHead>
+                  <UITableHead>침해요인</UITableHead>
+                </UITableRow>
+              </UITableHeader>
+              <UITableBody>
+                {riskItems.map((r: any, i: number) => (
+                  <UITableRow key={i}>
+                    <UITableCell>{r.taskName}</UITableCell>
+                    <UITableCell>{r.code}</UITableCell>
+                    <UITableCell>{r.evidence}</UITableCell>
+                    <UITableCell>{r.riskFactor}</UITableCell>
+                  </UITableRow>
+                ))}
+              </UITableBody>
+            </UITable>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. 개선 조치 방안 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>4. 주요 위험요소에 따른 개선 조치 방안</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Object.keys(improvementsByTask).map((task) => (
+            <div key={task}>
+              <p className="font-semibold">[{task}]</p>
+              <ul className="list-disc pl-6">
+                {improvementsByTask[task].map((plan, idx) => (
+                  <li key={idx}>- {plan}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* 5. 평가결과 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>5. 평가결과</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Object.keys(resultsByTask).map((task) => (
+            <div key={task} className="space-y-1">
+              <p className="font-semibold">[{task}]</p>
+              <ul className="list-disc pl-6">
+                {Object.keys(resultsByTask[task]).map((field) => {
+                  const c = resultsByTask[task][field];
+                  const total = c.이행 + c.부분이행 + c.미이행;
+                  const rate = total > 0 ? (((c.이행 + c.부분이행 * 0.5) / total) * 100).toFixed(1) : '0.0';
+                  return (
+                    <li key={field}>{field}: 이행 {c.이행}건, 부분이행 {c.부분이행}건, 미이행 {c.미이행}건, 해당없음 {c.해당없음}건 (이행률: {rate}%)</li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

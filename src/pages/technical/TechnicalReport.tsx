@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Printer } from 'lucide-react';
-import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
+import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 
 export default function TechnicalReport() {
   const handleDownload = async () => {
@@ -191,6 +192,54 @@ export default function TechnicalReport() {
     window.print();
   };
 
+  const technicalData = JSON.parse(localStorage.getItem('technicalData') || '[]');
+  const improvements = JSON.parse(localStorage.getItem('technicalImprovements') || '{}');
+
+  const criteriaBySystem: { [key: string]: { [subField: string]: string[] } } = {};
+  technicalData.forEach((item: any) => {
+    if (item.status !== '해당없음') {
+      if (!criteriaBySystem[item.systemName]) criteriaBySystem[item.systemName] = {};
+      if (!criteriaBySystem[item.systemName][item.subField]) {
+        criteriaBySystem[item.systemName][item.subField] = [];
+      }
+      criteriaBySystem[item.systemName][item.subField].push(item.no);
+    }
+  });
+
+  const riskItems = technicalData
+    .filter((item: any) => item.status === '부분이행' || item.status === '미이행')
+    .map((item: any) => {
+      const itemId = `${item.systemName}-${item.no}`;
+      const saved = improvements[itemId];
+      return {
+        systemName: item.systemName,
+        code: item.no,
+        evidence: item.evidence || '',
+        riskFactor: saved?.riskFactor || '',
+      };
+    });
+
+  const improvementsBySystem: { [key: string]: string[] } = {};
+  technicalData.forEach((item: any) => {
+    if (item.status === '부분이행' || item.status === '미이행') {
+      const itemId = `${item.systemName}-${item.no}`;
+      const saved = improvements[itemId];
+      if (saved?.improvementPlan) {
+        if (!improvementsBySystem[item.systemName]) improvementsBySystem[item.systemName] = [];
+        improvementsBySystem[item.systemName].push(`${item.no}: ${saved.improvementPlan}`);
+      }
+    }
+  });
+
+  const resultsBySystem: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
+  technicalData.forEach((item: any) => {
+    if (!resultsBySystem[item.systemName]) resultsBySystem[item.systemName] = {};
+    if (!resultsBySystem[item.systemName][item.field]) {
+      resultsBySystem[item.systemName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+    }
+    if (item.status) resultsBySystem[item.systemName][item.field][item.status]++;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -258,6 +307,101 @@ export default function TechnicalReport() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 1. 영향평가 기준 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>1. 영향평가 기준</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Object.keys(criteriaBySystem).map((sys) => (
+            <div key={sys}>
+              <p className="font-semibold">[{sys}]</p>
+              <ul className="list-disc pl-6">
+                {Object.keys(criteriaBySystem[sys]).map((sub) => (
+                  <li key={sub}>
+                    {sub} ({criteriaBySystem[sys][sub].join(', ')})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* 2. 침해요인 분석 표 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>2. 평가기준에 따른 개인정보 침해요인 분석·평가</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <UITable>
+              <UITableHeader>
+                <UITableRow>
+                  <UITableHead>시스템명</UITableHead>
+                  <UITableHead>질의문 코드</UITableHead>
+                  <UITableHead>평가 근거 및 의견</UITableHead>
+                  <UITableHead>침해요인</UITableHead>
+                </UITableRow>
+              </UITableHeader>
+              <UITableBody>
+                {riskItems.map((r: any, i: number) => (
+                  <UITableRow key={i}>
+                    <UITableCell>{r.systemName}</UITableCell>
+                    <UITableCell>{r.code}</UITableCell>
+                    <UITableCell>{r.evidence}</UITableCell>
+                    <UITableCell>{r.riskFactor}</UITableCell>
+                  </UITableRow>
+                ))}
+              </UITableBody>
+            </UITable>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. 개선 조치 방안 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>3. 주요 위험요소에 따른 개선 조치 방안</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Object.keys(improvementsBySystem).map((sys) => (
+            <div key={sys}>
+              <p className="font-semibold">[{sys}]</p>
+              <ul className="list-disc pl-6">
+                {improvementsBySystem[sys].map((plan, idx) => (
+                  <li key={idx}>- {plan}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* 4. 평가결과 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>4. 평가결과</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Object.keys(resultsBySystem).map((sys) => (
+            <div key={sys} className="space-y-1">
+              <p className="font-semibold">[{sys}]</p>
+              <ul className="list-disc pl-6">
+                {Object.keys(resultsBySystem[sys]).map((field) => {
+                  const c = resultsBySystem[sys][field];
+                  const total = c.이행 + c.부분이행 + c.미이행;
+                  const rate = total > 0 ? (((c.이행 + c.부분이행 * 0.5) / total) * 100).toFixed(1) : '0.0';
+                  return (
+                    <li key={field}>{field}: 이행 {c.이행}건, 부분이행 {c.부분이행}건, 미이행 {c.미이행}건, 해당없음 {c.해당없음}건 (이행률: {rate}%)</li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

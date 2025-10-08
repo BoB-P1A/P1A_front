@@ -87,6 +87,34 @@ export default function TechnicalAdminChecklist() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!activeTab) return;
+
+    const evaluationItemsRaw = localStorage.getItem('evaluationItems');
+    const evaluationItems: EvaluationItem[] = evaluationItemsRaw ? JSON.parse(evaluationItemsRaw) : [];
+    const filtered = evaluationItems.filter(item => item.area === '4. 대상시스템의 기술적 보호조치');
+
+    const savedDataRaw = localStorage.getItem('technicalData');
+    const savedItems: TechnicalItem[] = savedDataRaw ? JSON.parse(savedDataRaw) : [];
+    const savedForSystem = savedItems.filter((s) => s.systemName === activeTab);
+
+    const merged: TechnicalItem[] = filtered.map((item) => {
+      const saved = savedForSystem.find((s) => s.id === item.id);
+      return {
+        id: item.id,
+        systemName: activeTab,
+        field: item.field,
+        subField: item.subField,
+        no: item.no,
+        item: item.item,
+        status: saved?.status ?? null,
+        evidence: saved?.evidence ?? '',
+        files: saved?.files ?? [],
+      };
+    });
+
+    setItems(merged);
+  }, [activeTab, systems.length]);
   const handleStatusChange = (id: number, status: '이행' | '부분이행' | '미이행' | '해당없음') => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     setHasChanges(true);
@@ -133,12 +161,11 @@ export default function TechnicalAdminChecklist() {
   };
 
   const handleSave = () => {
-    const updatedItems = items.map(item => ({
-      ...item,
-      systemName: activeTab
-    }));
-    localStorage.setItem('technicalData', JSON.stringify(updatedItems));
-    setItems(updatedItems);
+    const savedRaw = localStorage.getItem('technicalData');
+    const savedAll: TechnicalItem[] = savedRaw ? JSON.parse(savedRaw) : [];
+    const others = savedAll.filter((s) => s.systemName !== activeTab);
+    const toSave = items.map((it) => ({ ...it, systemName: activeTab }));
+    localStorage.setItem('technicalData', JSON.stringify([...others, ...toSave]));
     setHasChanges(false);
   };
 
@@ -191,7 +218,7 @@ export default function TechnicalAdminChecklist() {
   };
 
   const getItemsForSystem = (systemName: string) => {
-    return items;
+    return systemName === activeTab ? items : [];
   };
 
   return (
@@ -216,7 +243,7 @@ export default function TechnicalAdminChecklist() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label htmlFor="systemName">시스템명</Label>
                   <Input
                     id="systemName" 

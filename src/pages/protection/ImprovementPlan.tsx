@@ -45,15 +45,22 @@ export default function ImprovementPlan() {
   const [taskNames, setTaskNames] = useState<string[]>([]);
 
   useEffect(() => {
-    const taskTableData = localStorage.getItem('taskTableData');
-    if (taskTableData) {
-      const tasks = JSON.parse(taskTableData);
-      const names = tasks.map((t: any) => t.taskName);
-      setTaskNames(names);
-      if (names.length > 0 && activeTab === '전체') {
-        setActiveTab('전체');
+    const stored = localStorage.getItem('processingTasks');
+    const tasks = stored ? JSON.parse(stored) : [];
+    const names = tasks.map((t: any) => t.taskName).filter(Boolean);
+    setTaskNames(names);
+  }, []);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'processingTasks') {
+        const tasks = e.newValue ? JSON.parse(e.newValue) : [];
+        const names = tasks.map((t: any) => t.taskName).filter(Boolean);
+        setTaskNames(names);
       }
-    }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   useEffect(() => {
@@ -140,6 +147,7 @@ export default function ImprovementPlan() {
   const filteredItems = activeTab === '전체' 
     ? items 
     : items.filter(item => item.taskName === activeTab);
+
 
   return (
     <div className="space-y-6">
