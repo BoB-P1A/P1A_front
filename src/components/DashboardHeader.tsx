@@ -86,7 +86,7 @@ export function DashboardHeader() {
             <DropdownMenuLabel>
               <div>
                 <p className="font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-xs text-muted-foreground">{user?.id}</p>
                 <Badge variant="outline" className="mt-1">
                   {user?.role === 'admin' ? '관리자' : 
                    user?.role === 'developer' ? '개발팀' : '개인정보팀'}
