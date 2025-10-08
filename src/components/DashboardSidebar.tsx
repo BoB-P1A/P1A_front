@@ -57,9 +57,9 @@ const getMenuItems = (userRole?: string) => {
       icon: Shield,
       items: [
         { title: '처리업무표 입력', url: '/protection/task-table', icon: Table },
-        { title: 'Lifecycle Checklist', url: '/protection/lifecycle', icon: CheckSquare },
         { title: '개인정보 흐름표', url: '/protection/flow-table', icon: GitBranch },
         { title: '개인정보 흐름도', url: '/protection/flowchart', icon: PieChart },
+        { title: 'Lifecycle Checklist', url: '/protection/lifecycle', icon: CheckSquare },
         { title: '침해요인별 개선방안', url: '/protection/improvement-plan', icon: AlertTriangle },
         { title: '결과보고서', url: '/protection/report', icon: FileCheck },
       ],

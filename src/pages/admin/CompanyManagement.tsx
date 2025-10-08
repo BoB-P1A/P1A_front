@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,16 +57,80 @@ export default function CompanyManagement() {
     },
   ]);
 
+  useEffect(() => {
+    // Save to localStorage whenever companies change
+    localStorage.setItem('companies', JSON.stringify(companies));
+  }, [companies]);
+
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    businessNumber: '',
+    representative: '',
+    address: '',
+  });
+
+  const handleOpenDialog = (company?: Company) => {
+    if (company) {
+      setEditingCompany(company);
+      setFormData({
+        name: company.name,
+        businessNumber: company.businessNumber,
+        representative: company.representative,
+        address: company.address,
+      });
+    } else {
+      setEditingCompany(null);
+      setFormData({
+        name: '',
+        businessNumber: '',
+        representative: '',
+        address: '',
+      });
+    }
+    setIsDialogOpen(true);
+  };
 
   const handleSave = () => {
+    if (!formData.name || !formData.businessNumber || !formData.representative || !formData.address) {
+      alert('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    if (editingCompany) {
+      // 수정
+      setCompanies(companies.map(c => 
+        c.id === editingCompany.id 
+          ? { ...c, ...formData }
+          : c
+      ));
+    } else {
+      // 추가
+      const newCompany: Company = {
+        id: Math.max(...companies.map(c => c.id), 0) + 1,
+        ...formData,
+        userCount: 0,
+        status: 'active',
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setCompanies([...companies, newCompany]);
+    }
+    
     setIsDialogOpen(false);
     setEditingCompany(null);
+    setFormData({
+      name: '',
+      businessNumber: '',
+      representative: '',
+      address: '',
+    });
   };
 
   const handleDelete = (id: number) => {
-    setCompanies(companies.filter(company => company.id !== id));
+    if (confirm('정말 삭제하시겠습니까?')) {
+      setCompanies(companies.filter(company => company.id !== id));
+    }
   };
 
   return (
@@ -80,7 +144,7 @@ export default function CompanyManagement() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingCompany(null)}>
+            <Button onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" />
               기업 추가
             </Button>
@@ -97,19 +161,39 @@ export default function CompanyManagement() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name">기업명</Label>
-                <Input id="name" placeholder="기업명을 입력하세요" />
+                <Input 
+                  id="name" 
+                  placeholder="기업명을 입력하세요" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                />
               </div>
               <div>
                 <Label htmlFor="businessNumber">사업자등록번호</Label>
-                <Input id="businessNumber" placeholder="000-00-00000" />
+                <Input 
+                  id="businessNumber" 
+                  placeholder="000-00-00000" 
+                  value={formData.businessNumber}
+                  onChange={(e) => setFormData({...formData, businessNumber: e.target.value})}
+                />
               </div>
               <div>
                 <Label htmlFor="representative">대표자</Label>
-                <Input id="representative" placeholder="대표자명을 입력하세요" />
+                <Input 
+                  id="representative" 
+                  placeholder="대표자명을 입력하세요" 
+                  value={formData.representative}
+                  onChange={(e) => setFormData({...formData, representative: e.target.value})}
+                />
               </div>
               <div>
                 <Label htmlFor="address">주소</Label>
-                <Input id="address" placeholder="주소를 입력하세요" />
+                <Input 
+                  id="address" 
+                  placeholder="주소를 입력하세요" 
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                />
               </div>
               <Button onClick={handleSave} className="w-full">
                 저장
@@ -194,10 +278,7 @@ export default function CompanyManagement() {
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => {
-                          setEditingCompany(company);
-                          setIsDialogOpen(true);
-                        }}
+                        onClick={() => handleOpenDialog(company)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

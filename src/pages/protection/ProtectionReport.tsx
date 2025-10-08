@@ -407,65 +407,6 @@ export default function ProtectionReport() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            종합 결과 요약
-          </CardTitle>
-          <CardDescription>
-            개인정보 처리단계별 보호조치 전체 프로세스의 결과를 요약합니다
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">1. 개인정보 처리 흐름분석</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                - 개인정보 처리업무표 전체<br/>
-                - 개인정보 흐름표 (수집/보유이용/제공/파기)<br/>
-                - 평가업무별 개인정보 흐름도
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">2. 영향평가 기준</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                각 평가업무별 세부분야와 평가번호가 포함됩니다
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">3. 평가기준에 따른 개인정보 침해요인 분석･평가</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                질의문 코드, 평가 근거 및 의견, 침해요인 분석 내용이 포함됩니다
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">4. 주요 위험요소에 따른 개선 조치 방안</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                각 평가업무별 개선방안이 포함됩니다
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">5. 평가결과</h3>
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                평가분야별 이행/부분이행/미이행/해당없음 건수 및 이행률이 포함됩니다
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* 1. 개인정보 처리 흐름분석 */}
       <Card>

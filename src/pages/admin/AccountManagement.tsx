@@ -29,14 +29,21 @@ import {
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { UserRole } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 interface Account {
   id: string;
   name: string;
-  email: string;
+  username: string;
+  password: string;
   role: UserRole;
   company: string;
   createdAt: string;
+}
+
+interface Company {
+  id: number;
+  name: string;
 }
 
 export default function AccountManagement() {
@@ -44,7 +51,8 @@ export default function AccountManagement() {
     {
       id: 'admin',
       name: '관리자',
-      email: 'admin@pia.com',
+      username: 'admin',
+      password: 'admin1234',
       role: 'admin',
       company: 'PIA Corp',
       createdAt: '2024-01-01',
@@ -52,7 +60,8 @@ export default function AccountManagement() {
     {
       id: 'developer',
       name: '김개발',
-      email: 'dev@pia.com',
+      username: 'developer',
+      password: 'dev1234',
       role: 'developer',
       company: 'PIA Corp',
       createdAt: '2024-01-15',
@@ -60,7 +69,8 @@ export default function AccountManagement() {
     {
       id: 'privacy',
       name: '박개인정보',
-      email: 'privacy@pia.com',
+      username: 'privacy',
+      password: 'privacy1234',
       role: 'privacy-team',
       company: 'PIA Corp',
       createdAt: '2024-01-20',
@@ -68,15 +78,33 @@ export default function AccountManagement() {
     {
       id: 'plan',
       name: '최기획',
-      email: 'plan@pia.com',
+      username: 'planning',
+      password: 'plan1234',
       role: 'planning-team',
       company: 'PIA Corp',
       createdAt: '2024-01-10',
     },
   ]);
 
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    username: '',
+    password: '',
+    role: '' as UserRole | '',
+    company: '',
+  });
+
+  useEffect(() => {
+    // Load companies from localStorage
+    const companiesData = localStorage.getItem('companies');
+    if (companiesData) {
+      const parsedCompanies = JSON.parse(companiesData);
+      setCompanies(parsedCompanies.map((c: any) => ({ id: c.id, name: c.name })));
+    }
+  }, []);
 
   const getRoleDisplayName = (role: UserRole) => {
     switch (role) {
@@ -96,13 +124,68 @@ export default function AccountManagement() {
     }
   };
 
+  const handleOpenDialog = (account?: Account) => {
+    if (account) {
+      setEditingAccount(account);
+      setFormData({
+        name: account.name,
+        username: account.username,
+        password: account.password,
+        role: account.role,
+        company: account.company,
+      });
+    } else {
+      setEditingAccount(null);
+      setFormData({
+        name: '',
+        username: '',
+        password: '',
+        role: '',
+        company: '',
+      });
+    }
+    setIsDialogOpen(true);
+  };
+
   const handleSave = () => {
+    if (!formData.name || !formData.username || !formData.password || !formData.role || !formData.company) {
+      alert('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    if (editingAccount) {
+      // 수정
+      setAccounts(accounts.map(a => 
+        a.id === editingAccount.id 
+          ? { ...a, ...formData, role: formData.role as UserRole }
+          : a
+      ));
+    } else {
+      // 추가
+      const newAccount: Account = {
+        id: Date.now().toString(),
+        ...formData,
+        role: formData.role as UserRole,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setAccounts([...accounts, newAccount]);
+    }
+    
     setIsDialogOpen(false);
     setEditingAccount(null);
+    setFormData({
+      name: '',
+      username: '',
+      password: '',
+      role: '',
+      company: '',
+    });
   };
 
   const handleDelete = (id: string) => {
-    setAccounts(accounts.filter(account => account.id !== id));
+    if (confirm('정말 삭제하시겠습니까?')) {
+      setAccounts(accounts.filter(account => account.id !== id));
+    }
   };
 
   return (
@@ -116,7 +199,7 @@ export default function AccountManagement() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingAccount(null)}>
+            <Button onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" />
               계정 생성
             </Button>
@@ -133,15 +216,50 @@ export default function AccountManagement() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name">이름</Label>
-                <Input id="name" placeholder="이름을 입력하세요" />
+                <Input 
+                  id="name" 
+                  placeholder="이름을 입력하세요" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                />
               </div>
               <div>
-                <Label htmlFor="email">이메일</Label>
-                <Input id="email" type="email" placeholder="email@example.com" />
+                <Label htmlFor="username">아이디</Label>
+                <Input 
+                  id="username" 
+                  placeholder="아이디를 입력하세요" 
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">비밀번호</Label>
+                <Input 
+                  id="password" 
+                  type="password"
+                  placeholder="비밀번호를 입력하세요" 
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="company">기업</Label>
+                <Select value={formData.company} onValueChange={(value) => setFormData({...formData, company: value})}>
+                  <SelectTrigger id="company">
+                    <SelectValue placeholder="기업 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((company) => (
+                      <SelectItem key={company.id} value={company.name}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="role">역할</Label>
-                <Select>
+                <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value as UserRole})}>
                   <SelectTrigger id="role">
                     <SelectValue placeholder="역할 선택" />
                   </SelectTrigger>
@@ -152,10 +270,6 @@ export default function AccountManagement() {
                     <SelectItem value="planning-team">사업주관팀</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label htmlFor="company">회사</Label>
-                <Input id="company" placeholder="회사명을 입력하세요" />
               </div>
               <Button onClick={handleSave} className="w-full">
                 저장
@@ -177,9 +291,9 @@ export default function AccountManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>이름</TableHead>
-                <TableHead>이메일</TableHead>
+                <TableHead>아이디</TableHead>
+                <TableHead>기업</TableHead>
                 <TableHead>역할</TableHead>
-                <TableHead>회사</TableHead>
                 <TableHead>생성일</TableHead>
                 <TableHead className="text-right">작업</TableHead>
               </TableRow>
@@ -188,23 +302,20 @@ export default function AccountManagement() {
               {accounts.map((account) => (
                 <TableRow key={account.id}>
                   <TableCell className="font-medium">{account.name}</TableCell>
-                  <TableCell>{account.email}</TableCell>
+                  <TableCell>{account.username}</TableCell>
+                  <TableCell>{account.company}</TableCell>
                   <TableCell>
                     <Badge variant={getRoleBadgeVariant(account.role)}>
                       {getRoleDisplayName(account.role)}
                     </Badge>
                   </TableCell>
-                  <TableCell>{account.company}</TableCell>
                   <TableCell>{account.createdAt}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => {
-                          setEditingAccount(account);
-                          setIsDialogOpen(true);
-                        }}
+                        onClick={() => handleOpenDialog(account)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
