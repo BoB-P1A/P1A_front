@@ -25,50 +25,75 @@ import { Plus, Edit, Trash2, Building2 } from 'lucide-react';
 interface Company {
   id: number;
   name: string;
-  businessNumber: string;
-  representative: string;
-  address: string;
-  userCount: number;
+  managerName: string;
+  managerPhone: string;
   status: 'active' | 'inactive';
   createdAt: string;
 }
 
 export default function CompanyManagement() {
-  const [companies, setCompanies] = useState<Company[]>([
-    {
-      id: 1,
-      name: 'PIA Corp',
-      businessNumber: '123-45-67890',
-      representative: '홍길동',
-      address: '서울시 강남구 테헤란로 123',
-      userCount: 15,
-      status: 'active',
-      createdAt: '2024-01-01',
-    },
-    {
-      id: 2,
-      name: '테크기업',
-      businessNumber: '987-65-43210',
-      representative: '김철수',
-      address: '서울시 서초구 서초대로 456',
-      userCount: 8,
-      status: 'active',
-      createdAt: '2024-01-15',
-    },
-  ]);
+  const [companies, setCompanies] = useState<Company[]>(() => {
+    const saved = localStorage.getItem('companies');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return [];
+      }
+    }
+    return [
+      {
+        id: 1,
+        name: 'PIA Corp',
+        managerName: '홍길동',
+        managerPhone: '010-1234-5678',
+        status: 'active',
+        createdAt: '2024-01-01',
+      },
+      {
+        id: 2,
+        name: '테크기업',
+        managerName: '김철수',
+        managerPhone: '010-9876-5432',
+        status: 'active',
+        createdAt: '2024-01-15',
+      },
+    ];
+  });
+
+  const [accounts, setAccounts] = useState<any[]>([]);
 
   useEffect(() => {
     // Save to localStorage whenever companies change
     localStorage.setItem('companies', JSON.stringify(companies));
   }, [companies]);
 
+  useEffect(() => {
+    // Load accounts from localStorage
+    const savedAccounts = localStorage.getItem('accounts');
+    if (savedAccounts) {
+      try {
+        setAccounts(JSON.parse(savedAccounts));
+      } catch {
+        setAccounts([]);
+      }
+    }
+  }, []);
+
+  const getAccountCount = (companyName: string) => {
+    return accounts.filter(account => account.company === companyName).length;
+  };
+
+  const getTotalAccountCount = () => {
+    return accounts.length;
+  };
+
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    businessNumber: '',
-    representative: '',
-    address: '',
+    managerName: '',
+    managerPhone: '',
   });
 
   const handleOpenDialog = (company?: Company) => {
@@ -76,24 +101,22 @@ export default function CompanyManagement() {
       setEditingCompany(company);
       setFormData({
         name: company.name,
-        businessNumber: company.businessNumber,
-        representative: company.representative,
-        address: company.address,
+        managerName: company.managerName,
+        managerPhone: company.managerPhone,
       });
     } else {
       setEditingCompany(null);
       setFormData({
         name: '',
-        businessNumber: '',
-        representative: '',
-        address: '',
+        managerName: '',
+        managerPhone: '',
       });
     }
     setIsDialogOpen(true);
   };
 
   const handleSave = () => {
-    if (!formData.name || !formData.businessNumber || !formData.representative || !formData.address) {
+    if (!formData.name || !formData.managerName || !formData.managerPhone) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
@@ -110,7 +133,6 @@ export default function CompanyManagement() {
       const newCompany: Company = {
         id: Math.max(...companies.map(c => c.id), 0) + 1,
         ...formData,
-        userCount: 0,
         status: 'active',
         createdAt: new Date().toISOString().split('T')[0],
       };
@@ -121,9 +143,8 @@ export default function CompanyManagement() {
     setEditingCompany(null);
     setFormData({
       name: '',
-      businessNumber: '',
-      representative: '',
-      address: '',
+      managerName: '',
+      managerPhone: '',
     });
   };
 
@@ -169,30 +190,21 @@ export default function CompanyManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="businessNumber">사업자등록번호</Label>
+                <Label htmlFor="managerName">담당자 이름</Label>
                 <Input 
-                  id="businessNumber" 
-                  placeholder="000-00-00000" 
-                  value={formData.businessNumber}
-                  onChange={(e) => setFormData({...formData, businessNumber: e.target.value})}
+                  id="managerName" 
+                  placeholder="담당자 이름을 입력하세요" 
+                  value={formData.managerName}
+                  onChange={(e) => setFormData({...formData, managerName: e.target.value})}
                 />
               </div>
               <div>
-                <Label htmlFor="representative">대표자</Label>
+                <Label htmlFor="managerPhone">담당자 연락처</Label>
                 <Input 
-                  id="representative" 
-                  placeholder="대표자명을 입력하세요" 
-                  value={formData.representative}
-                  onChange={(e) => setFormData({...formData, representative: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="address">주소</Label>
-                <Input 
-                  id="address" 
-                  placeholder="주소를 입력하세요" 
-                  value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  id="managerPhone" 
+                  placeholder="010-0000-0000" 
+                  value={formData.managerPhone}
+                  onChange={(e) => setFormData({...formData, managerPhone: e.target.value})}
                 />
               </div>
               <Button onClick={handleSave} className="w-full">
@@ -221,7 +233,7 @@ export default function CompanyManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {companies.reduce((acc, c) => acc + c.userCount, 0)}
+              {getTotalAccountCount()}
             </div>
             <p className="text-xs text-muted-foreground">모든 기업의 사용자</p>
           </CardContent>
@@ -240,9 +252,9 @@ export default function CompanyManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>기업명</TableHead>
-                <TableHead>사업자번호</TableHead>
-                <TableHead>대표자</TableHead>
-                <TableHead>사용자 수</TableHead>
+                <TableHead>담당자 이름</TableHead>
+                <TableHead>담당자 연락처</TableHead>
+                <TableHead>계정 개수</TableHead>
                 <TableHead>등록일</TableHead>
                 <TableHead className="text-right">작업</TableHead>
               </TableRow>
@@ -251,9 +263,9 @@ export default function CompanyManagement() {
               {companies.map((company) => (
                 <TableRow key={company.id}>
                   <TableCell className="font-medium">{company.name}</TableCell>
-                  <TableCell>{company.businessNumber}</TableCell>
-                  <TableCell>{company.representative}</TableCell>
-                  <TableCell>{company.userCount}명</TableCell>
+                  <TableCell>{company.managerName}</TableCell>
+                  <TableCell>{company.managerPhone}</TableCell>
+                  <TableCell>{getAccountCount(company.name)}개</TableCell>
                   <TableCell>{company.createdAt}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
