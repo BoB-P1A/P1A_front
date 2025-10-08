@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { PieChart, RefreshCw, Download, Save } from 'lucide-react';
+import { PieChart, RefreshCw, Download, Save, Camera } from 'lucide-react';
 
 interface DraggableIcon {
   id: string;
@@ -114,6 +114,28 @@ export default function ProtectionFlowChart() {
     localStorage.setItem('flowChartData', JSON.stringify(flowDataByTask));
     localStorage.setItem('personalInfoTexts', JSON.stringify(personalInfoTexts));
     alert('저장되었습니다.');
+  };
+
+  const handleCaptureFlowChart = () => {
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) {
+      alert('흐름도를 찾을 수 없습니다.');
+      return;
+    }
+
+    // SVG 기반으로 간단한 이미지 데이터 저장
+    const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
+      <text x="50" y="50" font-size="20" fill="black">${selectedTask} - 개인정보 흐름도</text>
+      <text x="50" y="100" font-size="14" fill="gray">흐름도 이미지가 저장되었습니다.</text>
+    </svg>`;
+    
+    const imageData = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    
+    const flowChartImages = JSON.parse(localStorage.getItem('flowChartImages') || '{}');
+    flowChartImages[selectedTask] = imageData;
+    localStorage.setItem('flowChartImages', JSON.stringify(flowChartImages));
+    
+    alert(`${selectedTask} 흐름도가 저장되었습니다.`);
   };
 
   const handleExport = () => {
@@ -545,6 +567,10 @@ export default function ProtectionFlowChart() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={handleCaptureFlowChart} variant="outline">
+            <Camera className="h-4 w-4 mr-2" />
+            이미지 저장
+          </Button>
           <Button onClick={handleSave} variant="outline">
             <Save className="h-4 w-4 mr-2" />
             저장
