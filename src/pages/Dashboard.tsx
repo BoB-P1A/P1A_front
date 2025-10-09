@@ -61,7 +61,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/task-table'}>
                 <FileText className="h-5 w-5 mb-2 text-pia-primary" />
-                <span className="text-sm">처리업무표 입력</span>
+                <span className="text-sm">개인정보 처리 업무표</span>
               </Button>
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/lifecycle'}>
                 <CheckSquare className="h-5 w-5 mb-2 text-pia-secondary" />

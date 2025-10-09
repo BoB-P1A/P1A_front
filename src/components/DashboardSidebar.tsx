@@ -56,7 +56,7 @@ const getMenuItems = (userRole?: string) => {
       title: '개인정보 처리단계별 보호조치',
       icon: Shield,
       items: [
-        { title: '처리업무표 입력', url: '/protection/task-table', icon: Table },
+        { title: '개인정보 처리 업무표', url: '/protection/task-table', icon: Table },
         { title: '개인정보 흐름표', url: '/protection/flow-table', icon: GitBranch },
         { title: '개인정보 흐름도', url: '/protection/flowchart', icon: PieChart },
         { title: 'Lifecycle Checklist', url: '/protection/lifecycle', icon: CheckSquare },

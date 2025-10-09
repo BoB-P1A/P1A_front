@@ -87,7 +87,7 @@ export default function TaskTable() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">처리업무표 입력</h1>
+          <h1 className="text-3xl font-bold text-primary">개인정보 처리 업무표</h1>
           <p className="text-muted-foreground mt-2">
             개인정보 처리업무를 표 형태로 입력하고 관리합니다
           </p>
