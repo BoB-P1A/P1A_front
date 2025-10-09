@@ -40,9 +40,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Auth Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/find-id" element={<FindId />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/find-id" element={<FindId />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Protected Routes */}
             <Route path="/" element={
