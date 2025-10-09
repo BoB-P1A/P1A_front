@@ -1,6 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'admin' | 'user' | 'evaluator' | 'developer' | 'privacy-team' | 'planning-team';
 
@@ -10,19 +8,13 @@ export interface User {
   email: string;
   role: UserRole;
   company?: string;
-  fullName?: string;
-  companyName?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => void;
+  isLoading: boolean;
 }
 
 interface LoginCredentials {
@@ -32,120 +24,135 @@ interface LoginCredentials {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Mock users for development
+const mockUsers: Record<string, { password: string; user: User }> = {
+  'admin': {
+    password: 'admin123',
+    user: {
+      id: 'admin',
+      name: '관리자',
+      email: 'admin@pia.com',
+      role: 'admin',
+      company: 'PIA Corp'
+    }
+  },
+  'developer': {
+    password: 'dev123',
+    user: {
+      id: 'developer',
+      name: '김개발',
+      email: 'dev@pia.com',
+      role: 'developer',
+      company: 'PIA Corp'
+    }
+  },
+  'privacy': {
+    password: 'privacy123',
+    user: {
+      id: 'privacy',
+      name: '박개인정보',
+      email: 'privacy@pia.com',
+      role: 'privacy-team',
+      company: 'PIA Corp'
+    }
+  },
+  'planning': {
+    password: 'plan123',
+    user: {
+      id: 'planning',
+      name: '김기획',
+      email: 'planning@pia.com',
+      role: 'planning-team',
+      company: 'PIA Corp'
+    }
+  },
+  'plan': {
+    password: 'plan123',
+    user: {
+      id: 'plan',
+      name: '최기획',
+      email: 'plan@pia.com',
+      role: 'planning-team',
+      company: 'PIA Corp'
+    }
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        
-        if (session?.user) {
-          // Fetch user profile and role
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, company_name')
-            .eq('id', session.user.id)
-            .single();
-
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .single();
-
-          setUser({
-            id: session.user.id,
-            name: profile?.full_name || '',
-            email: session.user.email!,
-            role: (roleData?.role as UserRole) || 'user',
-            fullName: profile?.full_name,
-            companyName: profile?.company_name,
-            company: profile?.company_name,
-          });
-        } else {
-          setUser(null);
-        }
+    // Check for saved user session
+    const savedUser = localStorage.getItem('pia-user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Failed to parse saved user:', error);
+        localStorage.removeItem('pia-user');
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        // Fetch user data
-        Promise.all([
-          supabase.from('profiles').select('full_name, company_name').eq('id', session.user.id).single(),
-          supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
-        ]).then(([profileResult, roleResult]) => {
-          setUser({
-            id: session.user.id,
-            name: profileResult.data?.full_name || '',
-            email: session.user.email!,
-            role: (roleResult.data?.role as UserRole) || 'user',
-            fullName: profileResult.data?.full_name,
-            companyName: profileResult.data?.company_name,
-            company: profileResult.data?.company_name,
-          });
-          setIsLoading(false);
-        });
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setIsLoading(false);
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const login = async (credentials: LoginCredentials): Promise<boolean> => {
+    setIsLoading(true);
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName || ''
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // First check mock users
+    let mockUser = mockUsers[credentials.id];
+    
+    // If not in mock users, check AccountManagement accounts
+    if (!mockUser) {
+      const accountsData = localStorage.getItem('accounts');
+      if (accountsData) {
+        try {
+          const accounts = JSON.parse(accountsData);
+          const account = accounts.find((acc: any) => acc.username === credentials.id);
+          if (account && account.password === credentials.password) {
+            mockUser = {
+              password: account.password,
+              user: {
+                id: account.id,
+                name: account.name,
+                email: account.username + '@company.com',
+                role: account.role,
+                company: account.company
+              }
+            };
+          }
+        } catch (error) {
+          console.error('Failed to parse accounts:', error);
         }
       }
-    });
+    }
     
-    return { error };
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    if (mockUser && mockUser.password === credentials.password) {
+      setUser(mockUser.user);
+      localStorage.setItem('pia-user', JSON.stringify(mockUser.user));
+      setIsLoading(false);
+      return true;
+    }
     
-    return { error };
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-  };
-
-  // Legacy methods for backward compatibility
-  const login = async (credentials: LoginCredentials): Promise<boolean> => {
-    // Try to sign in with id as email
-    const { error } = await signIn(credentials.id, credentials.password);
-    return !error;
+    setIsLoading(false);
+    return false;
   };
 
   const logout = () => {
-    signOut();
+    setUser(null);
+    localStorage.removeItem('pia-user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signOut, login, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      isLoading
+    }}>
       {children}
     </AuthContext.Provider>
   );

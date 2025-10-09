@@ -8,7 +8,6 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
-import SignUp from "./pages/auth/SignUp";
 import FindId from "./pages/auth/FindId";
 import ResetPassword from "./pages/auth/ResetPassword";
 
@@ -42,7 +41,6 @@ const App = () => (
           <Routes>
             {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
         <Route path="/find-id" element={<FindId />} />
         <Route path="/reset-password" element={<ResetPassword />} />
             

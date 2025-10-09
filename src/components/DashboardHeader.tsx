@@ -21,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 
 export function DashboardHeader() {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -130,7 +130,7 @@ export function DashboardHeader() {
               </Dialog>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut} className="text-destructive">
+            <DropdownMenuItem onClick={logout} className="text-destructive">
               로그아웃
             </DropdownMenuItem>
           </DropdownMenuContent>
