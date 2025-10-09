@@ -8,8 +8,6 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { PieChart, RefreshCw, Download, Save, Camera, Trash, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface DraggableIcon {
   id: string;
@@ -160,133 +158,157 @@ export default function ProtectionFlowChart() {
     setEditingText(null);
   };
 
-  const sanitizeForStorage = (str: string): string => {
-    return str
-      .replace(/\s+/g, '-')
-      .replace(/[^a-zA-Z0-9가-힣-]/g, '')
-      .replace(/^-+|-+$/g, '');
+  const handleSave = () => {
+    setCompanyData(user?.company, 'flowChartData', flowDataByTask);
+    setCompanyData(user?.company, 'personalInfoTexts', personalInfoTexts);
+    alert('저장되었습니다.');
   };
 
-  const handleSave = async () => {
-    try {
-      // 1. 흐름도 데이터를 localStorage에 저장 (로컬 편집 지속)
-      setCompanyData(user?.company, 'flowChartData', flowDataByTask);
-      setCompanyData(user?.company, 'personalInfoTexts', personalInfoTexts);
-
-      // 2. 현재 선택된 task의 이미지를 생성하여 Supabase Storage에 저장
-      const icons = flowDataByTask[selectedTask]?.icons || [];
-      if (icons.length === 0) {
-        toast.success('흐름도 데이터가 저장되었습니다.');
-        return;
-      }
-
-      const canvasElement = canvasRef.current;
-      if (!canvasElement) {
-        toast.error('캔버스를 찾을 수 없습니다.');
-        return;
-      }
-
-      // html2canvas로 이미지 캡처
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(canvasElement, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        useCORS: true,
-      });
-
-      // Canvas를 Blob으로 변환
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((b) => resolve(b!), 'image/png');
-      });
-
-      // 파일명 생성 (URL-safe)
-      const companyId = sanitizeForStorage(user?.company || 'unknown');
-      const taskName = sanitizeForStorage(selectedTask);
-      const fileName = `${companyId}/${taskName}_${Date.now()}.png`;
-
-      // Supabase Storage에 업로드
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('flowchart-images')
-        .upload(fileName, blob, {
-          contentType: 'image/png',
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        toast.error('이미지 업로드에 실패했습니다.');
-        return;
-      }
-
-      // 공개 URL 가져오기
-      const { data: urlData } = supabase.storage
-        .from('flowchart-images')
-        .getPublicUrl(fileName);
-
-      // flow_charts 테이블에 저장
-      const { error: dbError } = await (supabase as any)
-        .from('flow_charts')
-        .upsert({
-          company_id: user?.company || 'unknown',
-          task_name: selectedTask,
-          phase: 'all',
-          storage_path: urlData.publicUrl,
-        }, {
-          onConflict: 'company_id,task_name,phase'
-        });
-
-      if (dbError) {
-        console.error('Database error:', dbError);
-        toast.error('데이터베이스 저장에 실패했습니다.');
-        return;
-      }
-
-      toast.success(`${selectedTask} 흐름도가 저장되었습니다.`);
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error('저장 중 오류가 발생했습니다.');
-    }
-  };
-
-
-  const handleExport = async () => {
+  const handleCaptureFlowChart = () => {
     const icons = flowDataByTask[selectedTask]?.icons || [];
     if (icons.length === 0) {
-      toast.error('내보낼 흐름도 아이콘이 없습니다.');
+      alert('저장할 흐름도 아이콘이 없습니다.');
       return;
     }
 
+    // SVG로 흐름도 렌더링
+    let svgElements = '';
+    
+    icons.forEach(icon => {
+      const x = icon.x;
+      const y = icon.y;
+      const text = icon.text || '';
+      
+      switch (icon.type) {
+        case 'handler':
+          svgElements += `<rect x="${x}" y="${y}" width="120" height="40" fill="#9ca3af" stroke="#4b5563" stroke-width="2" rx="4"/>
+            <text x="${x + 60}" y="${y + 25}" text-anchor="middle" fill="white" font-size="14">${text || '개인정보취급자'}</text>`;
+          break;
+        case 'subject':
+          svgElements += `<rect x="${x}" y="${y}" width="120" height="40" fill="white" stroke="#4b5563" stroke-width="2" rx="4"/>
+            <text x="${x + 60}" y="${y + 25}" text-anchor="middle" fill="black" font-size="14">${text || '정보주체'}</text>`;
+          break;
+        case 'db-encrypt':
+          svgElements += `<rect x="${x}" y="${y}" width="120" height="40" fill="#f97316" stroke="#ea580c" stroke-width="2" rx="4"/>
+            <text x="${x + 60}" y="${y + 25}" text-anchor="middle" fill="white" font-weight="bold" font-size="14">${text || 'DB 암호화'}</text>`;
+          break;
+        case 'online-process':
+          svgElements += `<rect x="${x}" y="${y}" width="140" height="50" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="${x + 70}" y="${y + 30}" text-anchor="middle" fill="black" font-size="13">${text || '온라인 처리업무'}</text>`;
+          break;
+        case 'offline-process':
+          svgElements += `<rect x="${x}" y="${y}" width="140" height="50" fill="white" stroke="#1f2937" stroke-width="2" stroke-dasharray="5,5"/>
+            <text x="${x + 70}" y="${y + 30}" text-anchor="middle" fill="black" font-size="13">${text || '오프라인 처리업무'}</text>`;
+          break;
+        case 'mixed-process':
+          svgElements += `<rect x="${x}" y="${y}" width="140" height="50" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5"/>
+            <text x="${x + 70}" y="${y + 30}" text-anchor="middle" fill="black" font-size="13">${text || '온/오프라인 처리업무'}</text>`;
+          break;
+        case 'system-db':
+          svgElements += `<ellipse cx="${x + 50}" cy="${y + 15}" rx="40" ry="12" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
+            <rect x="${x + 10}" y="${y + 15}" width="80" height="50" fill="#fef08a"/>
+            <line x1="${x + 10}" y1="${y + 15}" x2="${x + 10}" y2="${y + 65}" stroke="#ca8a04" stroke-width="2"/>
+            <line x1="${x + 90}" y1="${y + 15}" x2="${x + 90}" y2="${y + 65}" stroke="#ca8a04" stroke-width="2"/>
+            <ellipse cx="${x + 50}" cy="${y + 65}" rx="40" ry="12" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
+            <text x="${x + 50}" y="${y + 45}" text-anchor="middle" fill="black" font-weight="bold" font-size="13">${text || '시스템 DB'}</text>`;
+          break;
+        case 'cabinet':
+          svgElements += `<polygon points="${x + 15},${y + 15} ${x + 65},${y + 15} ${x + 75},${y + 5} ${x + 25},${y + 5}" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <rect x="${x + 15}" y="${y + 15}" width="50" height="45" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <polygon points="${x + 65},${y + 15} ${x + 75},${y + 5} ${x + 75},${y + 50} ${x + 65},${y + 60}" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/>
+            <text x="${x + 40}" y="${y + 40}" text-anchor="middle" fill="black" font-weight="bold" font-size="13">${text || '보관'}</text>`;
+          break;
+        case 'arrow-solid':
+          svgElements += `<line x1="${x}" y1="${y}" x2="${x + 60}" y2="${y}" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>`;
+          break;
+        case 'arrow-dashed':
+          svgElements += `<line x1="${x}" y1="${y}" x2="${x + 60}" y2="${y}" stroke="black" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>`;
+          break;
+        case 'arrow-red':
+          svgElements += `<line x1="${x}" y1="${y}" x2="${x + 60}" y2="${y}" stroke="red" stroke-width="3" marker-end="url(#arrowhead-red)"/>`;
+          break;
+        default:
+          svgElements += `<rect x="${x}" y="${y}" width="100" height="35" fill="#e5e7eb" stroke="#6b7280" stroke-width="2" rx="4"/>
+            <text x="${x + 50}" y="${y + 22}" text-anchor="middle" fill="black" font-size="12">${text || icon.type}</text>`;
+      }
+    });
+    
+    const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="black"/>
+        </marker>
+        <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="red"/>
+        </marker>
+      </defs>
+      <rect width="1400" height="900" fill="white"/>
+      <text x="20" y="30" font-size="20" font-weight="bold" fill="black">${selectedTask} - 개인정보 흐름도</text>
+      <g transform="translate(0, 50)">
+        ${svgElements}
+      </g>
+    </svg>`;
+    
+    const imageData = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    
+    const flowChartImages = JSON.parse(localStorage.getItem('flowChartImages') || '{}');
+    flowChartImages[selectedTask] = imageData;
+    localStorage.setItem('flowChartImages', JSON.stringify(flowChartImages));
+    
+    alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
+  };
+
+  const handleExport = () => {
+    const icons = flowDataByTask[selectedTask]?.icons || [];
+    if (icons.length === 0) {
+      alert('내보낼 흐름도 아이콘이 없습니다.');
+      return;
+    }
+
+    // 캔버스 요소를 html2canvas로 캡처
     const canvasElement = canvasRef.current;
     if (!canvasElement) {
-      toast.error('캔버스를 찾을 수 없습니다.');
+      alert('캔버스를 찾을 수 없습니다.');
       return;
     }
 
-    try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(canvasElement, {
+    import('html2canvas').then((module) => {
+      const html2canvas = module.default;
+      html2canvas(canvasElement, {
         backgroundColor: '#ffffff',
         scale: 2,
         logging: false,
         useCORS: true,
+      }).then((canvas) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const imageUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `개인정보_흐름도_${selectedTask}.png`;
+            link.click();
+            URL.revokeObjectURL(imageUrl);
+            
+            // Also save to localStorage for report
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const base64 = e.target?.result as string;
+              const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
+              flowChartImages[selectedTask] = base64;
+              setCompanyData(user?.company, 'flowChartImages', flowChartImages);
+              alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
+            };
+            reader.readAsDataURL(blob);
+          }
+        }, 'image/png');
+      }).catch((error: Error) => {
+        console.error('Error capturing canvas:', error);
+        alert('이미지 생성 중 오류가 발생했습니다.');
       });
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const imageUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = imageUrl;
-          link.download = `개인정보_흐름도_${selectedTask}.png`;
-          link.click();
-          URL.revokeObjectURL(imageUrl);
-          toast.success('흐름도가 다운로드되었습니다.');
-        }
-      }, 'image/png');
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('이미지 생성 중 오류가 발생했습니다.');
-    }
+    }).catch((error: Error) => {
+      console.error('Error loading html2canvas:', error);
+      alert('이미지 생성 라이브러리를 불러오는데 실패했습니다.');
+    });
   };
 
   const renderIcon = (icon: DraggableIcon) => {
@@ -715,6 +737,10 @@ export default function ProtectionFlowChart() {
           <Button onClick={handleReset} variant="outline">
             <RotateCcw className="h-4 w-4 mr-2" />
             초기화
+          </Button>
+          <Button onClick={handleCaptureFlowChart} variant="outline">
+            <Camera className="h-4 w-4 mr-2" />
+            이미지 저장
           </Button>
           <Button onClick={handleSave} variant="outline">
             <Save className="h-4 w-4 mr-2" />
