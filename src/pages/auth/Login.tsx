@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Login() {
-  const [credentials, setCredentials] = useState({ id: '', password: '' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user, login } = useAuth();
+  const { user, signIn } = useAuth();
   const { toast } = useToast();
 
   if (user) {
@@ -21,9 +22,9 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
 
-    const success = await login(credentials);
+    const { error } = await signIn(email, password);
     
-    if (success) {
+    if (!error) {
       toast({
         title: "로그인 성공",
         description: "환영합니다!",
@@ -31,7 +32,7 @@ export default function Login() {
     } else {
       toast({
         title: "로그인 실패",
-        description: "아이디 또는 비밀번호를 확인해주세요.",
+        description: "이메일 또는 비밀번호를 확인해주세요.",
         variant: "destructive",
       });
     }
@@ -52,13 +53,13 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="id">아이디</Label>
+              <Label htmlFor="email">이메일</Label>
               <Input
-                id="id"
-                type="text"
-                placeholder="아이디를 입력하세요"
-                value={credentials.id}
-                onChange={(e) => setCredentials(prev => ({ ...prev, id: e.target.value }))}
+                id="email"
+                type="email"
+                placeholder="이메일을 입력하세요"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -68,8 +69,8 @@ export default function Login() {
                 id="password"
                 type="password"
                 placeholder="비밀번호를 입력하세요"
-                value={credentials.password}
-                onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
@@ -94,16 +95,10 @@ export default function Login() {
               <Link to="/reset-password" className="text-accent hover:underline">
                 비밀번호 재설정
               </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-xs text-muted-foreground mb-2">테스트 계정:</p>
-            <div className="text-xs space-y-1">
-              <p>관리자: admin / admin123</p>
-              <p>개발팀: developer / dev123</p>
-              <p>개인정보팀: privacy / privacy123</p>
-              <p>사업주관팀: plan / plan123</p>
+              <span className="text-muted-foreground">|</span>
+              <Link to="/signup" className="text-accent hover:underline">
+                회원가입
+              </Link>
             </div>
           </div>
         </CardContent>
