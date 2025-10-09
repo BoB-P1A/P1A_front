@@ -6,10 +6,44 @@ import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, T
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ProtectionReport() {
   const { user } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [flowChartImages, setFlowChartImages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const loadFlowChartImages = async () => {
+      if (!user?.company) return;
+
+      try {
+        const { data, error } = await (supabase as any)
+          .from('flow_charts')
+          .select('task_name, storage_path')
+          .eq('company_id', user.company);
+
+        if (error) {
+          console.error('Error loading flow charts:', error);
+          return;
+        }
+
+        const images: Record<string, string> = {};
+        if (data && data.length > 0) {
+          data.forEach((row: any) => {
+            if (row.task_name && row.storage_path) {
+              images[row.task_name] = row.storage_path;
+            }
+          });
+        }
+        setFlowChartImages(images);
+      } catch (error) {
+        console.error('Error loading flow charts:', error);
+      }
+    };
+
+    loadFlowChartImages();
+  }, [user?.company, refreshKey]);
 
   useEffect(() => {
     const handleStorageUpdate = (e: Event) => {
@@ -190,8 +224,7 @@ export default function ProtectionReport() {
         })
       );
 
-      // Load flow chart images
-      const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
+      // Load flow chart images from state
       const taskNames = Object.keys(flowChartImages);
       
       if (taskNames.length > 0) {
@@ -204,12 +237,14 @@ export default function ProtectionReport() {
             })
           );
           
-          const imageData = flowChartImages[taskName];
-          if (imageData) {
+          const imageUrl = flowChartImages[taskName];
+          if (imageUrl) {
             try {
-              // Convert base64 to buffer for docx
-              const base64Data = imageData.split(',')[1];
-              const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+              // Fetch image from URL
+              const response = await fetch(imageUrl);
+              const blob = await response.blob();
+              const arrayBuffer = await blob.arrayBuffer();
+              const imageBuffer = new Uint8Array(arrayBuffer);
               
               sections.push(
                 new Paragraph({
@@ -604,24 +639,23 @@ export default function ProtectionReport() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">1.3 개인정보 흐름도</h3>
             {(() => {
-              const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
               const taskNames = processingTasks.map((t: any) => t.taskName).filter((name: string) => name.trim() !== '');
               
               if (Object.keys(flowChartImages).length === 0) {
-                return <p className="text-sm text-muted-foreground">각 처리업무별 흐름도는 "개인정보 흐름도" 페이지에서 "이미지 저장" 버튼을 클릭하여 저장하세요.</p>;
+                return <p className="text-sm text-muted-foreground">각 처리업무별 흐름도는 "개인정보 흐름도" 페이지에서 "저장" 버튼을 클릭하여 저장하세요.</p>;
               }
               
               return (
                 <div className="space-y-6">
                   {taskNames.map((taskName: string) => {
-                    const imageData = flowChartImages[taskName];
-                    if (!imageData) return null;
+                    const imageUrl = flowChartImages[taskName];
+                    if (!imageUrl) return null;
                     
                     return (
                       <div key={taskName} className="space-y-2">
                         <h4 className="font-semibold">[{taskName}]</h4>
                         <img 
-                          src={imageData} 
+                          src={imageUrl} 
                           alt={`${taskName} 흐름도`}
                           className="w-full border rounded-lg bg-white p-4"
                         />
