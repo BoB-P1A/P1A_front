@@ -14,16 +14,442 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      evaluation_requests: {
+        Row: {
+          assignee_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          request_date: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          request_date?: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          request_date?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_charts: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_data: string | null
+          phase: string
+          storage_path: string | null
+          task_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_data?: string | null
+          phase: string
+          storage_path?: string | null
+          task_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_data?: string | null
+          phase?: string
+          storage_path?: string | null
+          task_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_charts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_tables: {
+        Row: {
+          activity: string | null
+          company_id: string
+          created_at: string
+          data_items: string | null
+          id: string
+          location: string | null
+          phase: string
+          responsible_person: string | null
+          security_measures: string | null
+          step_number: number | null
+          task_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity?: string | null
+          company_id: string
+          created_at?: string
+          data_items?: string | null
+          id?: string
+          location?: string | null
+          phase: string
+          responsible_person?: string | null
+          security_measures?: string | null
+          step_number?: number | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity?: string | null
+          company_id?: string
+          created_at?: string
+          data_items?: string | null
+          id?: string
+          location?: string | null
+          phase?: string
+          responsible_person?: string | null
+          security_measures?: string | null
+          step_number?: number | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_tables_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_tables_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "processing_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      improvements: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          improvement_plan: string | null
+          related_law: string | null
+          risk_factor: string | null
+          source_id: string
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          improvement_plan?: string | null
+          related_law?: string | null
+          risk_factor?: string | null
+          source_id: string
+          source_type: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          improvement_plan?: string | null
+          related_law?: string | null
+          risk_factor?: string | null
+          source_id?: string
+          source_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "improvements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processing_tasks: {
+        Row: {
+          company_id: string
+          created_at: string
+          department: string | null
+          id: string
+          personal_info_items: string | null
+          purpose: string | null
+          responsible_person: string | null
+          retention_period: string | null
+          task_name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          department?: string | null
+          id?: string
+          personal_info_items?: string | null
+          purpose?: string | null
+          responsible_person?: string | null
+          retention_period?: string | null
+          task_name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          department?: string | null
+          id?: string
+          personal_info_items?: string | null
+          purpose?: string | null
+          responsible_person?: string | null
+          retention_period?: string | null
+          task_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      protection_lifecycle: {
+        Row: {
+          company_id: string
+          created_at: string
+          evaluation_item: string
+          evidence: string | null
+          field: string
+          files: Json | null
+          id: string
+          item_code: string
+          status: string | null
+          task_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          evaluation_item: string
+          evidence?: string | null
+          field: string
+          files?: Json | null
+          id?: string
+          item_code: string
+          status?: string | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          evaluation_item?: string
+          evidence?: string | null
+          field?: string
+          files?: Json | null
+          id?: string
+          item_code?: string
+          status?: string | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protection_lifecycle_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protection_lifecycle_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "processing_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_evaluations: {
+        Row: {
+          category: string
+          code: string
+          company_id: string
+          created_at: string
+          evidence: string | null
+          files: Json | null
+          id: string
+          question: string
+          status: string | null
+          system_name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          code: string
+          company_id: string
+          created_at?: string
+          evidence?: string | null
+          files?: Json | null
+          id?: string
+          question: string
+          status?: string | null
+          system_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          company_id?: string
+          created_at?: string
+          evidence?: string | null
+          files?: Json | null
+          id?: string
+          question?: string
+          status?: string | null
+          system_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_evaluations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "admin"
+        | "user"
+        | "evaluator"
+        | "developer"
+        | "privacy-team"
+        | "planning-team"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +576,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "admin",
+        "user",
+        "evaluator",
+        "developer",
+        "privacy-team",
+        "planning-team",
+      ],
+    },
   },
 } as const
