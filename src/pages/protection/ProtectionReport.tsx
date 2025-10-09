@@ -6,57 +6,12 @@ import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, T
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, getCompanyStorageKey } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 
 export default function ProtectionReport() {
   const { user } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [flowChartImages, setFlowChartImages] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const loadFlowChartImages = async () => {
-      try {
-        const companyId = user?.company || 'default';
-
-        // Load flowchart images from database
-        const { data: flowCharts } = await supabase
-          .from('flow_charts')
-          .select('*')
-          .eq('company_id', companyId)
-          .eq('phase', 'flowchart');
-
-        if (flowCharts) {
-          const images: Record<string, string> = {};
-          
-          // Load images from storage
-          for (const chart of flowCharts) {
-            if (chart.storage_path) {
-              const { data } = supabase.storage
-                .from('flowchart-images')
-                .getPublicUrl(chart.storage_path);
-              
-              if (data?.publicUrl) {
-                images[chart.task_name || ''] = data.publicUrl;
-              }
-            } else if (chart.image_data) {
-              // Fallback to legacy base64 data
-              images[chart.task_name || ''] = chart.image_data;
-            }
-          }
-          
-          setFlowChartImages(images);
-        }
-        
-        // Also check localStorage for backwards compatibility
-        const localImages = getCompanyData(user?.company, 'flowChartImages', {});
-        setFlowChartImages(prev => ({ ...localImages, ...prev }));
-      } catch (error) {
-        console.error('Error loading flowchart images:', error);
-      }
-    };
-
-    loadFlowChartImages();
-
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
       const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
@@ -71,7 +26,6 @@ export default function ProtectionReport() {
           customEvent.detail?.key === lifecycleKey ||
           customEvent.detail?.key === improvementsKey) {
         setRefreshKey(prev => prev + 1);
-        loadFlowChartImages();
       }
     };
 
@@ -236,7 +190,8 @@ export default function ProtectionReport() {
         })
       );
 
-      // Load flow chart images from state
+      // Load flow chart images
+      const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
       const taskNames = Object.keys(flowChartImages);
       
       if (taskNames.length > 0) {
@@ -249,23 +204,12 @@ export default function ProtectionReport() {
             })
           );
           
-          const imageUrl = flowChartImages[taskName];
-          if (imageUrl) {
+          const imageData = flowChartImages[taskName];
+          if (imageData) {
             try {
-              // Fetch image and convert to buffer
-              let imageBuffer: Uint8Array;
-              
-              if (imageUrl.startsWith('data:image')) {
-                // Base64 image
-                const base64Data = imageUrl.split(',')[1];
-                imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-              } else {
-                // URL image - fetch and convert
-                const response = await fetch(imageUrl);
-                const blob = await response.blob();
-                const arrayBuffer = await blob.arrayBuffer();
-                imageBuffer = new Uint8Array(arrayBuffer);
-              }
+              // Convert base64 to buffer for docx
+              const base64Data = imageData.split(',')[1];
+              const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
               
               sections.push(
                 new Paragraph({
@@ -660,26 +604,26 @@ export default function ProtectionReport() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">1.3 개인정보 흐름도</h3>
             {(() => {
+              const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
               const taskNames = processingTasks.map((t: any) => t.taskName).filter((name: string) => name.trim() !== '');
               
               if (Object.keys(flowChartImages).length === 0) {
-                return <p className="text-sm text-muted-foreground">각 처리업무별 흐름도는 "개인정보 흐름도" 페이지에서 "저장" 버튼을 클릭하여 저장하세요.</p>;
+                return <p className="text-sm text-muted-foreground">각 처리업무별 흐름도는 "개인정보 흐름도" 페이지에서 "이미지 저장" 버튼을 클릭하여 저장하세요.</p>;
               }
               
               return (
                 <div className="space-y-6">
                   {taskNames.map((taskName: string) => {
-                    const imageUrl = flowChartImages[taskName];
-                    if (!imageUrl) return null;
+                    const imageData = flowChartImages[taskName];
+                    if (!imageData) return null;
                     
                     return (
                       <div key={taskName} className="space-y-2">
                         <h4 className="font-semibold">[{taskName}]</h4>
                         <img 
-                          src={imageUrl} 
+                          src={imageData} 
                           alt={`${taskName} 흐름도`}
                           className="w-full border rounded-lg bg-white p-4"
-                          crossOrigin="anonymous"
                         />
                       </div>
                     );
