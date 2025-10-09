@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Download, Trash2 } from 'lucide-react';
+import { Upload, Download, Trash2, RotateCcw, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 
@@ -183,10 +183,16 @@ export default function ProtectionLifecycle() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Lifecycle Checklist</h1>
+        <h1 className="text-3xl font-bold text-primary">Lifecycle Checklist</h1>
         <div className="space-x-2">
-          <Button variant="outline" onClick={handleReset}>초기화</Button>
-          <Button onClick={handleSave} disabled={!hasChanges}>저장</Button>
+          <Button variant="outline" onClick={handleReset}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            초기화
+          </Button>
+          <Button onClick={handleSave} disabled={!hasChanges}>
+            <Save className="mr-2 h-4 w-4" />
+            저장
+          </Button>
         </div>
       </div>
 

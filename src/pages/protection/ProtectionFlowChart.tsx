@@ -740,15 +740,15 @@ export default function ProtectionFlowChart() {
           </Button>
           <Button onClick={handleCaptureFlowChart} variant="outline">
             <Camera className="h-4 w-4 mr-2" />
-            이미지 저장
+            보고서에 반영
           </Button>
-          <Button onClick={handleSave} variant="outline">
+          <Button onClick={handleSave}>
             <Save className="h-4 w-4 mr-2" />
             저장
           </Button>
-          <Button onClick={handleExport} className="bg-pia-secondary hover:bg-pia-secondary-light">
+          <Button onClick={handleExport} variant="secondary">
             <Download className="h-4 w-4 mr-2" />
-            내보내기
+            다운로드
           </Button>
         </div>
       </div>

@@ -170,7 +170,7 @@ export default function ImprovementPlan() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">침해요인별 개선방안</h1>
+          <h1 className="text-3xl font-bold text-primary">개인정보 처리단계별 보호조치 침해요인별 개선방안</h1>
           <p className="text-muted-foreground mt-2">
             식별된 침해요인과 개선방안을 관리합니다
           </p>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Download, Printer } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, AlignmentType, HeadingLevel } from 'docx';
 import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
@@ -212,9 +212,6 @@ export default function TechnicalReport() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
   const technicalData = getCompanyData(user?.company, 'technicalData', []);
   const improvements = getCompanyData(user?.company, 'technicalImprovements', {});
@@ -274,11 +271,7 @@ export default function TechnicalReport() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
-            인쇄
-          </Button>
-          <Button onClick={handleDownload}>
+          <Button variant="secondary" onClick={handleDownload}>
             <Download className="mr-2 h-4 w-4" />
             다운로드
           </Button>
