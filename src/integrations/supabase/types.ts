@@ -113,15 +113,7 @@ export type Database = {
           task_name?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "flow_charts_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       flow_tables: {
         Row: {

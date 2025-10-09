@@ -160,6 +160,16 @@ export default function ProtectionFlowChart() {
     setEditingText(null);
   };
 
+  // Helper function to create URL-safe string for storage
+  const sanitizeForStorage = (str: string) => {
+    return str
+      .replace(/\s+/g, '-')           // Replace spaces with hyphens
+      .replace(/[^\w\-가-힣]/g, '')    // Remove special characters except Korean, alphanumeric, hyphen
+      .replace(/\-+/g, '-')            // Replace multiple hyphens with single hyphen
+      .replace(/^-+|-+$/g, '')         // Remove leading/trailing hyphens
+      .trim();
+  };
+
   const handleSave = async () => {
     try {
       const icons = flowDataByTask[selectedTask]?.icons || [];
@@ -193,9 +203,10 @@ export default function ProtectionFlowChart() {
         canvas.toBlob((b) => resolve(b!), 'image/png');
       });
 
-      // 3. Use company name as ID (since we're using localStorage auth)
-      const companyId = user?.company || 'default';
-      const fileName = `${companyId}/${selectedTask}_${Date.now()}.png`;
+      // 3. Create URL-safe storage path
+      const companyId = sanitizeForStorage(user?.company || 'default');
+      const taskName = sanitizeForStorage(selectedTask);
+      const fileName = `${companyId}/${taskName}_${Date.now()}.png`;
 
       // 4. Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
@@ -216,11 +227,11 @@ export default function ProtectionFlowChart() {
         .from('flowchart-images')
         .getPublicUrl(fileName);
 
-      // 6. Save to database (using company name as id)
+      // 6. Save to database (using original company name as id)
       const { error: dbError } = await supabase
         .from('flow_charts')
         .upsert({
-          company_id: companyId,
+          company_id: user?.company || 'default',
           task_name: selectedTask,
           phase: 'flowchart',
           storage_path: fileName,
@@ -242,6 +253,9 @@ export default function ProtectionFlowChart() {
         const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
         flowChartImages[selectedTask] = base64;
         setCompanyData(user?.company, 'flowChartImages', flowChartImages);
+        
+        // Trigger storage update event
+        window.dispatchEvent(new Event('storageUpdate'));
       };
       reader.readAsDataURL(blob);
 
