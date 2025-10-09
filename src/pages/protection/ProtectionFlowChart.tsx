@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { PieChart, RefreshCw, Trash, RotateCcw, Save } from 'lucide-react';
+import { PieChart, RefreshCw, Trash, RotateCcw, Save, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -168,7 +168,7 @@ export default function ProtectionFlowChart() {
         return;
       }
 
-      // 1. Save flowchart data to localStorage (for backwards compatibility)
+      // 1. Save flowchart data to localStorage
       setCompanyData(user?.company, 'flowChartData', flowDataByTask);
       setCompanyData(user?.company, 'personalInfoTexts', personalInfoTexts);
 
@@ -193,19 +193,8 @@ export default function ProtectionFlowChart() {
         canvas.toBlob((b) => resolve(b!), 'image/png');
       });
 
-      // 3. Get company ID from companies table
-      const { data: companiesData } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('created_by', user?.id)
-        .single();
-
-      if (!companiesData) {
-        toast.error('회사 정보를 찾을 수 없습니다.');
-        return;
-      }
-
-      const companyId = companiesData.id;
+      // 3. Use company name as ID (since we're using localStorage auth)
+      const companyId = user?.company || 'default';
       const fileName = `${companyId}/${selectedTask}_${Date.now()}.png`;
 
       // 4. Upload to Supabase Storage
@@ -227,7 +216,7 @@ export default function ProtectionFlowChart() {
         .from('flowchart-images')
         .getPublicUrl(fileName);
 
-      // 6. Save to database
+      // 6. Save to database (using company name as id)
       const { error: dbError } = await supabase
         .from('flow_charts')
         .upsert({
@@ -260,6 +249,47 @@ export default function ProtectionFlowChart() {
     } catch (error) {
       console.error('Error saving flowchart:', error);
       toast.error('흐름도 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const icons = flowDataByTask[selectedTask]?.icons || [];
+      if (icons.length === 0) {
+        toast.error('내보낼 흐름도 아이콘이 없습니다.');
+        return;
+      }
+
+      const canvasElement = canvasRef.current;
+      if (!canvasElement) {
+        toast.error('캔버스를 찾을 수 없습니다.');
+        return;
+      }
+
+      toast.info('이미지를 다운로드하고 있습니다...');
+
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(canvasElement, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        useCORS: true,
+      });
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const imageUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = imageUrl;
+          link.download = `개인정보_흐름도_${selectedTask}.png`;
+          link.click();
+          URL.revokeObjectURL(imageUrl);
+          toast.success('이미지가 다운로드되었습니다.');
+        }
+      }, 'image/png');
+    } catch (error) {
+      console.error('Error exporting flowchart:', error);
+      toast.error('이미지 다운로드 중 오류가 발생했습니다.');
     }
   };
 
@@ -695,6 +725,10 @@ export default function ProtectionFlowChart() {
           <Button onClick={handleSave} className="bg-pia-secondary hover:bg-pia-secondary-light">
             <Save className="h-4 w-4 mr-2" />
             저장
+          </Button>
+          <Button onClick={handleExport} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            내보내기
           </Button>
         </div>
       </div>

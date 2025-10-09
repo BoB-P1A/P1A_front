@@ -16,20 +16,13 @@ export default function ProtectionReport() {
   useEffect(() => {
     const loadFlowChartImages = async () => {
       try {
-        // Get company ID
-        const { data: companiesData } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('created_by', user?.id)
-          .single();
-
-        if (!companiesData) return;
+        const companyId = user?.company || 'default';
 
         // Load flowchart images from database
         const { data: flowCharts } = await supabase
           .from('flow_charts')
           .select('*')
-          .eq('company_id', companiesData.id)
+          .eq('company_id', companyId)
           .eq('phase', 'flowchart');
 
         if (flowCharts) {
@@ -84,7 +77,7 @@ export default function ProtectionReport() {
 
     window.addEventListener('storageUpdate', handleStorageUpdate);
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, [user?.company, user?.id]);
+  }, [user?.company]);
   const handleDownload = async () => {
     try {
       // Load data from company storage
