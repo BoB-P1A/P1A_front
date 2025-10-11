@@ -230,7 +230,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="field">평가분야</Label>
                 <Input 
                   id="field" 
-                  placeholder="예: 1.1 수집"
+                  placeholder="예: 3.1. 수집"
                   value={formData.field || ''}
                   onChange={(e) => setFormData({ ...formData, field: e.target.value })}
                 />
@@ -248,7 +248,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="no">No.</Label>
                 <Input 
                   id="no" 
-                  placeholder="예: 1.1.1"
+                  placeholder="예: 3.1.1"
                   value={formData.no || ''}
                   onChange={(e) => setFormData({ ...formData, no: e.target.value })}
                 />
