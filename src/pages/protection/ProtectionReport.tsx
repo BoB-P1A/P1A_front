@@ -101,8 +101,8 @@ export default function ProtectionReport() {
         })
       );
 
-      const phases = ['수집', '보유이용', '제공', '파기'];
-      const phaseKeyMap: Record<string, string> = { 수집: 'collection', 보유이용: 'storage', 제공: 'provision', 파기: 'disposal' };
+      const phases = ['수집', '보유', '이용', '제공', '파기'];
+      const phaseKeyMap: Record<string, string> = { 수집: 'collection', 보유: 'storage', 이용: 'usage', 제공: 'provision', 파기: 'disposal' };
       phases.forEach(phase => {
         sections.push(
           new Paragraph({
@@ -123,12 +123,14 @@ export default function ProtectionReport() {
         if (phaseData.length > 0) {
           const headers =
             phase === '수집'
-              ? ['업무명', '수집 항목', '수집 경로', '수집 대상', '수집 주기', '수집 담당자', '수집 근거']
-              : phase === '보유이용'
-              ? ['업무명', '보유 형태', '암호화 항목', '이용 목적', '이용 항목', '개인정보취급자', '이용 방법']
+              ? ['업무명', '세부업무명', '수집대상', '수집경로', '수집시스템', '수집항목', '수집주기', '수집담당자', '수집근거', '온라인여부', '암호화여부']
+              : phase === '보유'
+              ? ['업무명', '세부업무명', '입력시스템', '보유공간', '보유항목', '암호화항목', '온라인여부', '암호화여부']
+              : phase === '이용'
+              ? ['업무명', '세부업무명', '보유공간', '이용시스템', '이용항목', '이용목적', '이용방법', '개인정보취급자', '온라인여부', '암호화여부']
               : phase === '제공'
-              ? ['업무명', '제공 목적', '제공자', '수신자', '제공 정보', '제공 방법', '제공 주기', '암호화 여부', '제공근거']
-              : ['업무명', '보관 기간', '파기 담당자', '파기 절차', '분리보관 여부'];
+              ? ['업무명', '세부업무명', '보유공간', '제공시스템', '제공자', '수신자', '제공항목', '제공목적', '제공방법', '제공주기', '암호화방법', '제공근거', '제공시스템온라인', '제공시스템암호화', '수신자온라인', '수신자암호화']
+              : ['업무명', '세부업무명', '보유공간', '파기시스템', '파기주기', '파기항목', '보관기간', '파기담당자', '파기절차', '분리보관공간', '파기온라인', '분리보관여부', '분리보관온라인', '분리보관암호화'];
 
           const flowRows = [
             new TableRow({
@@ -139,41 +141,75 @@ export default function ProtectionReport() {
                 phase === '수집'
                   ? [
                       new TableCell({ children: [new Paragraph(row.taskName || '')] }),
-                      new TableCell({ children: [new Paragraph(row.collectionItem || '')] }),
-                      new TableCell({ children: [new Paragraph(row.collectionPath || '')] }),
+                      new TableCell({ children: [new Paragraph(row.detailTask || '')] }),
                       new TableCell({ children: [new Paragraph(row.collectionTarget || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionPath || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionSystem || '')] }),
+                      new TableCell({ children: [new Paragraph(row.collectionItem || '')] }),
                       new TableCell({ children: [new Paragraph(row.collectionPeriod || '')] }),
                       new TableCell({ children: [new Paragraph(row.collectionManager || '')] }),
                       new TableCell({ children: [new Paragraph(row.collectionBasis || '')] }),
+                      new TableCell({ children: [new Paragraph(row.isOnline || '')] }),
+                      new TableCell({ children: [new Paragraph(row.isEncrypted || '')] }),
                     ]
-                  : phase === '보유이용'
+                  : phase === '보유'
                   ? [
                       new TableCell({ children: [new Paragraph(row.taskName || '')] }),
-                      new TableCell({ children: [new Paragraph(row.storageType || '')] }),
+                      new TableCell({ children: [new Paragraph(row.detailTask || '')] }),
+                      new TableCell({ children: [new Paragraph(row.inputSystem || '')] }),
+                      new TableCell({ children: [new Paragraph(row.storageSpace || '')] }),
+                      new TableCell({ children: [new Paragraph(row.storageItem || '')] }),
                       new TableCell({ children: [new Paragraph(row.encryptionItem || '')] }),
-                      new TableCell({ children: [new Paragraph(row.usagePurpose || '')] }),
+                      new TableCell({ children: [new Paragraph(row.isOnline || '')] }),
+                      new TableCell({ children: [new Paragraph(row.isEncrypted || '')] }),
+                    ]
+                  : phase === '이용'
+                  ? [
+                      new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                      new TableCell({ children: [new Paragraph(row.detailTask || '')] }),
+                      new TableCell({ children: [new Paragraph(row.storageSpace || '')] }),
+                      new TableCell({ children: [new Paragraph(row.usageSystem || '')] }),
                       new TableCell({ children: [new Paragraph(row.usageItem || '')] }),
-                      new TableCell({ children: [new Paragraph(row.personalInfoHandler || '')] }),
+                      new TableCell({ children: [new Paragraph(row.usagePurpose || '')] }),
                       new TableCell({ children: [new Paragraph(row.usageMethod || '')] }),
+                      new TableCell({ children: [new Paragraph(row.personalInfoHandler || '')] }),
+                      new TableCell({ children: [new Paragraph(row.isOnline || '')] }),
+                      new TableCell({ children: [new Paragraph(row.isEncrypted || '')] }),
                     ]
                   : phase === '제공'
                   ? [
                       new TableCell({ children: [new Paragraph(row.taskName || '')] }),
-                      new TableCell({ children: [new Paragraph(row.provisionPurpose || '')] }),
+                      new TableCell({ children: [new Paragraph(row.detailTask || '')] }),
+                      new TableCell({ children: [new Paragraph(row.storageSpace || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionSystem || '')] }),
                       new TableCell({ children: [new Paragraph(row.provider || '')] }),
                       new TableCell({ children: [new Paragraph(row.recipient || '')] }),
-                      new TableCell({ children: [new Paragraph(row.provisionInfo || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionItem || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionPurpose || '')] }),
                       new TableCell({ children: [new Paragraph(row.provisionMethod || '')] }),
                       new TableCell({ children: [new Paragraph(row.provisionPeriod || '')] }),
-                      new TableCell({ children: [new Paragraph(row.encryptionStatus || '')] }),
+                      new TableCell({ children: [new Paragraph(row.encryptionMethod || '')] }),
                       new TableCell({ children: [new Paragraph(row.provisionBasis || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionSystemOnline || '')] }),
+                      new TableCell({ children: [new Paragraph(row.provisionSystemEncrypted || '')] }),
+                      new TableCell({ children: [new Paragraph(row.recipientOnline || '')] }),
+                      new TableCell({ children: [new Paragraph(row.recipientEncrypted || '')] }),
                     ]
                   : [
                       new TableCell({ children: [new Paragraph(row.taskName || '')] }),
+                      new TableCell({ children: [new Paragraph(row.detailTask || '')] }),
+                      new TableCell({ children: [new Paragraph(row.storageSpace || '')] }),
+                      new TableCell({ children: [new Paragraph(row.disposalSystem || '')] }),
+                      new TableCell({ children: [new Paragraph(row.disposalPeriod || '')] }),
+                      new TableCell({ children: [new Paragraph(row.disposalItem || '')] }),
                       new TableCell({ children: [new Paragraph(row.retentionPeriod || '')] }),
                       new TableCell({ children: [new Paragraph(row.disposalManager || '')] }),
                       new TableCell({ children: [new Paragraph(row.disposalProcedure || '')] }),
-                      new TableCell({ children: [new Paragraph(row.separateStorageStatus || '')] }),
+                      new TableCell({ children: [new Paragraph(row.separateStorageSpace || '')] }),
+                      new TableCell({ children: [new Paragraph(row.disposalOnline || '')] }),
+                      new TableCell({ children: [new Paragraph(row.hasSeparateStorage || '')] }),
+                      new TableCell({ children: [new Paragraph(row.separateStorageOnline || '')] }),
+                      new TableCell({ children: [new Paragraph(row.separateStorageEncrypted || '')] }),
                     ],
             }))
           ];
@@ -432,7 +468,7 @@ export default function ProtectionReport() {
   const flowTableData = getCompanyData(user?.company, 'flowTableData', {});
   const lifecycleData = getCompanyData(user?.company, 'lifecycleData', []);
   const improvements = getCompanyData(user?.company, 'protectionImprovements', {});
-  const PHASES = ['수집','보유이용','제공','파기'] as const;
+  const PHASES = ['수집','보유','이용','제공','파기'] as const;
 
   const criteriaByTask: { [key: string]: { [subField: string]: string[] } } = {};
   lifecycleData.forEach((item: any) => {
@@ -477,12 +513,13 @@ export default function ProtectionReport() {
     if (item.status) resultsByTask[item.taskName][item.field][item.status]++;
   });
 
-  const flowByPhase: Record<string, any[]> = { 수집: [], 보유이용: [], 제공: [], 파기: [] };
+  const flowByPhase: Record<string, any[]> = { 수집: [], 보유: [], 이용: [], 제공: [], 파기: [] };
   Object.keys(flowTableData).forEach((taskName) => {
     const task = flowTableData[taskName];
     if (!task) return;
     (task.collection || []).forEach((row: any) => flowByPhase['수집'].push({ taskName, ...row }));
-    (task.storage || []).forEach((row: any) => flowByPhase['보유이용'].push({ taskName, ...row }));
+    (task.storage || []).forEach((row: any) => flowByPhase['보유'].push({ taskName, ...row }));
+    (task.usage || []).forEach((row: any) => flowByPhase['이용'].push({ taskName, ...row }));
     (task.provision || []).forEach((row: any) => flowByPhase['제공'].push({ taskName, ...row }));
     (task.disposal || []).forEach((row: any) => flowByPhase['파기'].push({ taskName, ...row }));
   });
@@ -546,12 +583,14 @@ export default function ProtectionReport() {
               if (!rows || rows.length === 0) return null;
               const headers =
                 phase === '수집'
-                  ? ['업무명','수집 항목','수집 경로','수집 대상','수집 주기','수집 담당자','수집 근거']
-                  : phase === '보유이용'
-                  ? ['업무명','보유 형태','암호화 항목','이용 목적','이용 항목','개인정보취급자','이용 방법']
+                  ? ['업무명','세부업무명','수집대상','수집경로','수집시스템','수집항목','수집주기','수집담당자','수집근거','온라인여부','암호화여부']
+                  : phase === '보유'
+                  ? ['업무명','세부업무명','입력시스템','보유공간','보유항목','암호화항목','온라인여부','암호화여부']
+                  : phase === '이용'
+                  ? ['업무명','세부업무명','보유공간','이용시스템','이용항목','이용목적','이용방법','개인정보취급자','온라인여부','암호화여부']
                   : phase === '제공'
-                  ? ['업무명','제공 목적','제공자','수신자','제공 정보','제공 방법','제공 주기','암호화 여부','제공근거']
-                  : ['업무명','보관 기간','파기 담당자','파기 절차','분리보관 여부'];
+                  ? ['업무명','세부업무명','보유공간','제공시스템','제공자','수신자','제공항목','제공목적','제공방법','제공주기','암호화방법','제공근거','제공시스템온라인','제공시스템암호화','수신자온라인','수신자암호화']
+                  : ['업무명','세부업무명','보유공간','파기시스템','파기주기','파기항목','보관기간','파기담당자','파기절차','분리보관공간','파기온라인','분리보관여부','분리보관온라인','분리보관암호화'];
               return (
                 <div key={phase} className="space-y-2">
                   <h4 className="font-medium">{phase} 단계</h4>
@@ -568,45 +607,80 @@ export default function ProtectionReport() {
                             {phase === '수집' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
-                                <UITableCell>{row.collectionItem}</UITableCell>
-                                <UITableCell>{row.collectionPath}</UITableCell>
+                                <UITableCell>{row.detailTask}</UITableCell>
                                 <UITableCell>{row.collectionTarget}</UITableCell>
+                                <UITableCell>{row.collectionPath}</UITableCell>
+                                <UITableCell>{row.collectionSystem}</UITableCell>
+                                <UITableCell>{row.collectionItem}</UITableCell>
                                 <UITableCell>{row.collectionPeriod}</UITableCell>
                                 <UITableCell>{row.collectionManager}</UITableCell>
                                 <UITableCell>{row.collectionBasis}</UITableCell>
+                                <UITableCell>{row.isOnline}</UITableCell>
+                                <UITableCell>{row.isEncrypted}</UITableCell>
                               </>
                             )}
-                            {phase === '보유이용' && (
+                            {phase === '보유' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
-                                <UITableCell>{row.storageType}</UITableCell>
+                                <UITableCell>{row.detailTask}</UITableCell>
+                                <UITableCell>{row.inputSystem}</UITableCell>
+                                <UITableCell>{row.storageSpace}</UITableCell>
+                                <UITableCell>{row.storageItem}</UITableCell>
                                 <UITableCell>{row.encryptionItem}</UITableCell>
-                                <UITableCell>{row.usagePurpose}</UITableCell>
+                                <UITableCell>{row.isOnline}</UITableCell>
+                                <UITableCell>{row.isEncrypted}</UITableCell>
+                              </>
+                            )}
+                            {phase === '이용' && (
+                              <>
+                                <UITableCell>{row.taskName}</UITableCell>
+                                <UITableCell>{row.detailTask}</UITableCell>
+                                <UITableCell>{row.storageSpace}</UITableCell>
+                                <UITableCell>{row.usageSystem}</UITableCell>
                                 <UITableCell>{row.usageItem}</UITableCell>
-                                <UITableCell>{row.personalInfoHandler}</UITableCell>
+                                <UITableCell>{row.usagePurpose}</UITableCell>
                                 <UITableCell>{row.usageMethod}</UITableCell>
+                                <UITableCell>{row.personalInfoHandler}</UITableCell>
+                                <UITableCell>{row.isOnline}</UITableCell>
+                                <UITableCell>{row.isEncrypted}</UITableCell>
                               </>
                             )}
                             {phase === '제공' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
-                                <UITableCell>{row.provisionPurpose}</UITableCell>
+                                <UITableCell>{row.detailTask}</UITableCell>
+                                <UITableCell>{row.storageSpace}</UITableCell>
+                                <UITableCell>{row.provisionSystem}</UITableCell>
                                 <UITableCell>{row.provider}</UITableCell>
                                 <UITableCell>{row.recipient}</UITableCell>
-                                <UITableCell>{row.provisionInfo}</UITableCell>
+                                <UITableCell>{row.provisionItem}</UITableCell>
+                                <UITableCell>{row.provisionPurpose}</UITableCell>
                                 <UITableCell>{row.provisionMethod}</UITableCell>
                                 <UITableCell>{row.provisionPeriod}</UITableCell>
-                                <UITableCell>{row.encryptionStatus}</UITableCell>
+                                <UITableCell>{row.encryptionMethod}</UITableCell>
                                 <UITableCell>{row.provisionBasis}</UITableCell>
+                                <UITableCell>{row.provisionSystemOnline}</UITableCell>
+                                <UITableCell>{row.provisionSystemEncrypted}</UITableCell>
+                                <UITableCell>{row.recipientOnline}</UITableCell>
+                                <UITableCell>{row.recipientEncrypted}</UITableCell>
                               </>
                             )}
                             {phase === '파기' && (
                               <>
                                 <UITableCell>{row.taskName}</UITableCell>
+                                <UITableCell>{row.detailTask}</UITableCell>
+                                <UITableCell>{row.storageSpace}</UITableCell>
+                                <UITableCell>{row.disposalSystem}</UITableCell>
+                                <UITableCell>{row.disposalPeriod}</UITableCell>
+                                <UITableCell>{row.disposalItem}</UITableCell>
                                 <UITableCell>{row.retentionPeriod}</UITableCell>
                                 <UITableCell>{row.disposalManager}</UITableCell>
                                 <UITableCell>{row.disposalProcedure}</UITableCell>
-                                <UITableCell>{row.separateStorageStatus}</UITableCell>
+                                <UITableCell>{row.separateStorageSpace}</UITableCell>
+                                <UITableCell>{row.disposalOnline}</UITableCell>
+                                <UITableCell>{row.hasSeparateStorage}</UITableCell>
+                                <UITableCell>{row.separateStorageOnline}</UITableCell>
+                                <UITableCell>{row.separateStorageEncrypted}</UITableCell>
                               </>
                             )}
                           </UITableRow>
