@@ -248,7 +248,7 @@ export default function SecurityActionPlan() {
                       id={`period-${item.id}`}
                       value={item.actionPeriod}
                       onChange={(e) => handleFieldChange(item.id, 'actionPeriod', e.target.value)}
-                      placeholder="예: 2024-01-01 ~ 2024-12-31"
+                      placeholder="조치 기간을 입력하세요"
                       className="mt-1"
                     />
                   </div>

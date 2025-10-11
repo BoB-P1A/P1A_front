@@ -7,7 +7,8 @@ import {
   AlertCircle, 
   Shield,
   PieChart,
-  Table
+  Table,
+  ClipboardList
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -58,14 +59,10 @@ export default function Dashboard() {
           {/* 개인정보 처리단계별 보호조치 */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg text-primary">개인정보 처리단계별 보호조치</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/task-table'}>
                 <FileText className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">개인정보 처리 업무표</span>
-              </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/lifecycle'}>
-                <CheckSquare className="h-5 w-5 mb-2 text-pia-secondary" />
-                <span className="text-sm">Lifecycle Checklist</span>
               </Button>
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/flow-table'}>
                 <Table className="h-5 w-5 mb-2 text-accent" />
@@ -75,12 +72,20 @@ export default function Dashboard() {
                 <PieChart className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">개인정보 흐름도</span>
               </Button>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/lifecycle'}>
+                <CheckSquare className="h-5 w-5 mb-2 text-pia-secondary" />
+                <span className="text-sm">Lifecycle Checklist</span>
+              </Button>
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/improvement-plan'}>
                 <AlertCircle className="h-5 w-5 mb-2 text-destructive" />
-                <span className="text-sm">침해요인별 개선방안</span>
+                <span className="text-sm">침해요인별 개선 가이드</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/action-plan'}>
+                <ClipboardList className="h-5 w-5 mb-2 text-pia-secondary" />
+                <span className="text-sm">조치 계획 수립</span>
               </Button>
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/protection/report'}>
-                <FileText className="h-5 w-5 mb-2 text-pia-secondary" />
+                <FileText className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">결과보고서</span>
               </Button>
             </div>
@@ -89,17 +94,44 @@ export default function Dashboard() {
           {/* 기술적 보호조치 */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg text-primary">기술적 보호조치</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/technical/checklist'}>
                 <CheckSquare className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">Admin Checklist</span>
               </Button>
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/technical/improvement-plan'}>
                 <AlertCircle className="h-5 w-5 mb-2 text-destructive" />
-                <span className="text-sm">침해요인별 개선방안</span>
+                <span className="text-sm">침해요인별 개선 가이드</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/technical/action-plan'}>
+                <ClipboardList className="h-5 w-5 mb-2 text-pia-secondary" />
+                <span className="text-sm">조치 계획 수립</span>
               </Button>
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/technical/report'}>
-                <FileText className="h-5 w-5 mb-2 text-pia-secondary" />
+                <FileText className="h-5 w-5 mb-2 text-pia-primary" />
+                <span className="text-sm">결과보고서</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* 보안성 검토 */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-lg text-primary">보안성 검토</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/security/checklist'}>
+                <CheckSquare className="h-5 w-5 mb-2 text-pia-primary" />
+                <span className="text-sm">보안성 검토 Checklist</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/security/improvement-plan'}>
+                <AlertCircle className="h-5 w-5 mb-2 text-destructive" />
+                <span className="text-sm">침해요인별 개선 가이드</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/security/action-plan'}>
+                <ClipboardList className="h-5 w-5 mb-2 text-pia-secondary" />
+                <span className="text-sm">조치 계획 수립</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => window.location.href = '/security/report'}>
+                <FileText className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">결과보고서</span>
               </Button>
             </div>

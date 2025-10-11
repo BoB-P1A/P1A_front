@@ -123,35 +123,61 @@ export default function TechnicalReport() {
         sections.push(new DocxTable({ rows: riskRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
       }
 
-      // 3. 주요 위험요소에 따른 개선 조치 방안
+      // 3. 주요 위험요소에 따른 개선 조치 계획
       sections.push(
         new Paragraph({
-          text: '3. 주요 위험요소에 따른 개선 조치 방안',
+          text: '3. 주요 위험요소에 따른 개선 조치 계획',
           heading: HeadingLevel.HEADING_2,
           spacing: { before: 400, after: 200 }
         })
       );
 
-      const improvementsBySystem: { [key: string]: string[] } = {};
-      technicalData.forEach((item: any) => {
-        if (item.status === '부분이행' || item.status === '미이행') {
-          const itemId = `${item.systemName}-${item.no}`;
-          const saved = improvements[itemId];
-          if (saved?.improvementPlan) {
-            if (!improvementsBySystem[item.systemName]) improvementsBySystem[item.systemName] = [];
-            improvementsBySystem[item.systemName].push(`${item.no}: ${saved.improvementPlan}`);
-          }
+      const actionPlans = getCompanyData(user?.company, 'technicalActionPlans', {});
+      const actionPlansBySystem: { [key: string]: any[] } = {};
+      
+      Object.keys(actionPlans).forEach(id => {
+        const plan = actionPlans[id];
+        if (plan && plan.systemName) {
+          if (!actionPlansBySystem[plan.systemName]) actionPlansBySystem[plan.systemName] = [];
+          actionPlansBySystem[plan.systemName].push(plan);
         }
       });
 
-      Object.keys(improvementsBySystem).forEach(systemName => {
+      Object.keys(actionPlansBySystem).forEach(systemName => {
         sections.push(new Paragraph({
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${systemName}]`, bold: true })]
         }));
-        improvementsBySystem[systemName].forEach(plan => {
-          sections.push(new Paragraph({ text: `- ${plan}` }));
-        });
+
+        const planRows = [
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph('질의문 코드')] }),
+              new TableCell({ children: [new Paragraph('질의문')] }),
+              new TableCell({ children: [new Paragraph('취약점')] }),
+              new TableCell({ children: [new Paragraph('개선 가이드')] }),
+              new TableCell({ children: [new Paragraph('조치 방안')] }),
+              new TableCell({ children: [new Paragraph('조치 기간')] }),
+              new TableCell({ children: [new Paragraph('부서')] }),
+              new TableCell({ children: [new Paragraph('담당자')] }),
+              new TableCell({ children: [new Paragraph('조치 일시')] }),
+            ]
+          }),
+          ...actionPlansBySystem[systemName].map(plan => new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph(plan.code || '')] }),
+              new TableCell({ children: [new Paragraph(plan.question || '')] }),
+              new TableCell({ children: [new Paragraph(plan.evidence || '')] }),
+              new TableCell({ children: [new Paragraph(plan.improvementGuide || '')] }),
+              new TableCell({ children: [new Paragraph(plan.actionPlan || '')] }),
+              new TableCell({ children: [new Paragraph(plan.actionPeriod || '')] }),
+              new TableCell({ children: [new Paragraph(plan.department || '')] }),
+              new TableCell({ children: [new Paragraph(plan.manager || '')] }),
+              new TableCell({ children: [new Paragraph(plan.actionDate || '')] }),
+            ]
+          }))
+        ];
+        sections.push(new DocxTable({ rows: planRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
       });
 
       // 4. 평가결과
@@ -331,22 +357,62 @@ export default function TechnicalReport() {
         </CardContent>
       </Card>
 
-      {/* 3. 개선 조치 방안 */}
+      {/* 3. 개선 조치 계획 */}
       <Card>
         <CardHeader>
-          <CardTitle>3. 주요 위험요소에 따른 개선 조치 방안</CardTitle>
+          <CardTitle>3. 주요 위험요소에 따른 개선 조치 계획</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {Object.keys(improvementsBySystem).map((sys) => (
-            <div key={sys}>
-              <p className="font-semibold">[{sys}]</p>
-              <ul className="list-disc pl-6">
-                {improvementsBySystem[sys].map((plan, idx) => (
-                  <li key={idx}>{plan}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        <CardContent className="space-y-4">
+          {(() => {
+            const actionPlans = getCompanyData(user?.company, 'technicalActionPlans', {});
+            const actionPlansBySystem: { [key: string]: any[] } = {};
+            
+            Object.keys(actionPlans).forEach(id => {
+              const plan = actionPlans[id];
+              if (plan && plan.systemName) {
+                if (!actionPlansBySystem[plan.systemName]) actionPlansBySystem[plan.systemName] = [];
+                actionPlansBySystem[plan.systemName].push(plan);
+              }
+            });
+
+            return Object.keys(actionPlansBySystem).map((sys) => (
+              <div key={sys} className="space-y-2">
+                <p className="font-semibold">[{sys}]</p>
+                <div className="overflow-x-auto">
+                  <UITable>
+                    <UITableHeader>
+                      <UITableRow>
+                        <UITableHead>질의문 코드</UITableHead>
+                        <UITableHead>질의문</UITableHead>
+                        <UITableHead>취약점</UITableHead>
+                        <UITableHead>개선 가이드</UITableHead>
+                        <UITableHead>조치 방안</UITableHead>
+                        <UITableHead>조치 기간</UITableHead>
+                        <UITableHead>부서</UITableHead>
+                        <UITableHead>담당자</UITableHead>
+                        <UITableHead>조치 일시</UITableHead>
+                      </UITableRow>
+                    </UITableHeader>
+                    <UITableBody>
+                      {actionPlansBySystem[sys].map((plan, idx) => (
+                        <UITableRow key={idx}>
+                          <UITableCell>{plan.code}</UITableCell>
+                          <UITableCell>{plan.question}</UITableCell>
+                          <UITableCell>{plan.evidence}</UITableCell>
+                          <UITableCell>{plan.improvementGuide}</UITableCell>
+                          <UITableCell>{plan.actionPlan}</UITableCell>
+                          <UITableCell>{plan.actionPeriod}</UITableCell>
+                          <UITableCell>{plan.department}</UITableCell>
+                          <UITableCell>{plan.manager}</UITableCell>
+                          <UITableCell>{plan.actionDate}</UITableCell>
+                        </UITableRow>
+                      ))}
+                    </UITableBody>
+                  </UITable>
+                </div>
+              </div>
+            ));
+          })()}
         </CardContent>
       </Card>
 
