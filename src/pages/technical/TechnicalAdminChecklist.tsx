@@ -65,7 +65,7 @@ export default function TechnicalAdminChecklist() {
       }
 
       const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
-      const filtered = evaluationItems.filter((item: any) => item.area === '4. 대상시스템의 기술적 보호조치');
+      const filtered = evaluationItems.filter((item: any) => item.area === '2. 대상시스템의 기술적 보호조치');
       
       const savedData = getCompanyData(user?.company, 'technicalData', []);
       
@@ -106,7 +106,7 @@ export default function TechnicalAdminChecklist() {
     if (!activeTab) return;
 
     const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
-    const filtered = evaluationItems.filter((item: any) => item.area === '4. 대상시스템의 기술적 보호조치');
+    const filtered = evaluationItems.filter((item: any) => item.area === '2. 대상시스템의 기술적 보호조치');
 
     const savedItems: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
     const savedForSystem = savedItems.filter((s) => s.systemName === activeTab);
