@@ -583,6 +583,11 @@ export default function ProtectionReport() {
               if (!rows || rows.length === 0) return null;
               
               const renderHeader = (text: string) => {
+                // 보유, 이용 단계는 줄바꿈 없음
+                if (phase === '보유' || phase === '이용') {
+                  return text;
+                }
+                
                 const breaks: Record<string, string[]> = {
                   '세부업무명': ['세부', '업무명'],
                   '수집대상': ['수집', '대상'],
@@ -603,11 +608,11 @@ export default function ProtectionReport() {
                   '파기주기': ['파기', '주기'],
                   '파기항목': ['파기', '항목'],
                   '파기담당자': ['파기', '담당자'],
-                  '분리보관공간': ['분리보관', '공간'],
+                  '분리보관공간': ['분리', '보관', '공간'],
                   '파기온라인': ['파기', '온라인'],
-                  '분리보관여부': ['분리보관', '여부'],
-                  '분리보관온라인': ['분리보관', '온라인'],
-                  '분리보관암호화': ['분리보관', '암호화'],
+                  '분리보관여부': ['분리', '보관', '여부'],
+                  '분리보관온라인': ['분리', '보관', '온라인'],
+                  '분리보관암호화': ['분리', '보관', '암호화'],
                 };
                 
                 const parts = breaks[text];
