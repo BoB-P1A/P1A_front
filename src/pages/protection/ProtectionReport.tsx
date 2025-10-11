@@ -243,33 +243,83 @@ export default function ProtectionReport() {
           const imageData = flowChartImages[taskName];
           if (imageData) {
             try {
-              // Convert base64 to buffer for docx
-              const base64Data = imageData.split(',')[1];
-              const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+              // Convert SVG to PNG if needed
+              const isPng = imageData.includes('data:image/png');
               
-              sections.push(
-                new Paragraph({
-                  children: [
-                    new ImageRun({
-                      data: imageBuffer,
-                      transformation: {
-                        width: 600,
-                        height: 385,
-                      },
-                      type: 'png',
-                    } as any)
-                  ],
-                  spacing: { after: 200 }
-                })
-              );
+              if (isPng) {
+                // Already PNG format
+                const base64Data = imageData.split(',')[1];
+                const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+                
+                sections.push(
+                  new Paragraph({
+                    children: [
+                      new ImageRun({
+                        data: imageBuffer,
+                        transformation: {
+                          width: 600,
+                          height: 385,
+                        },
+                        type: 'png',
+                      } as any)
+                    ],
+                    spacing: { after: 200 }
+                  })
+                );
+              } else {
+                // SVG format - convert to PNG
+                const img = new Image();
+                const canvas = document.createElement('canvas');
+                canvas.width = 1400;
+                canvas.height = 900;
+                const ctx = canvas.getContext('2d');
+                
+                await new Promise((resolve, reject) => {
+                  img.onload = () => {
+                    ctx?.drawImage(img, 0, 0);
+                    canvas.toBlob((blob) => {
+                      if (blob) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const pngBase64 = reader.result as string;
+                          const base64Data = pngBase64.split(',')[1];
+                          const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+                          
+                          sections.push(
+                            new Paragraph({
+                              children: [
+                                new ImageRun({
+                                  data: imageBuffer,
+                                  transformation: {
+                                    width: 600,
+                                    height: 385,
+                                  },
+                                  type: 'png',
+                                } as any)
+                              ],
+                              spacing: { after: 200 }
+                            })
+                          );
+                          resolve(null);
+                        };
+                        reader.readAsDataURL(blob);
+                      } else {
+                        reject(new Error('Failed to create blob'));
+                      }
+                    }, 'image/png');
+                  };
+                  img.onerror = reject;
+                  img.src = imageData;
+                });
+              }
             } catch (error) {
               console.error('Error adding image to document:', error);
-              sections.push(new Paragraph({ text: '(이미지 삽입 오류)' }));
+              sections.push(new Paragraph({ text: `(${taskName} 이미지 삽입 오류)` }));
             }
           }
         }
       } else {
-        sections.push(new Paragraph({ text: '저장된 흐름도 이미지가 없습니다.' }));
+        sections.push(new Paragraph({ text: '저장된 흐름도 이미지가 없습니다. 흐름도 페이지에서 "저장" 버튼을 눌러주세요.' }));
       }
 
       // 2. 영향평가 기준

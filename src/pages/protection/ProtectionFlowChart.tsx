@@ -158,20 +158,9 @@ export default function ProtectionFlowChart() {
     setEditingText(null);
   };
 
-  const handleSave = () => {
-    setCompanyData(user?.company, 'flowChartData', flowDataByTask);
-    setCompanyData(user?.company, 'personalInfoTexts', personalInfoTexts);
-    alert('저장되었습니다.');
-  };
+  const generateFlowChartImage = (taskName: string, icons: DraggableIcon[]): string | null => {
+    if (icons.length === 0) return null;
 
-  const handleCaptureFlowChart = () => {
-    const icons = flowDataByTask[selectedTask]?.icons || [];
-    if (icons.length === 0) {
-      alert('저장할 흐름도 아이콘이 없습니다.');
-      return;
-    }
-
-    // SVG로 흐름도 렌더링
     let svgElements = '';
     
     icons.forEach(icon => {
@@ -227,6 +216,48 @@ export default function ProtectionFlowChart() {
         case 'arrow-red':
           svgElements += `<line x1="${x}" y1="${y}" x2="${x + 60}" y2="${y}" stroke="red" stroke-width="3" marker-end="url(#arrowhead-red)"/>`;
           break;
+        case 'external-system':
+          svgElements += `<rect x="${x}" y="${y}" width="120" height="40" fill="#bfdbfe" stroke="#2563eb" stroke-width="2" rx="4"/>
+            <text x="${x + 60}" y="${y + 25}" text-anchor="middle" fill="black" font-size="13">${text || '외부시스템'}</text>`;
+          break;
+        case 'internal-system':
+          svgElements += `<rect x="${x}" y="${y}" width="120" height="40" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" rx="4"/>
+            <text x="${x + 60}" y="${y + 25}" text-anchor="middle" fill="black" font-size="13">${text || '내부시스템'}</text>`;
+          break;
+        case 'online-destroy':
+          svgElements += `<rect x="${x}" y="${y}" width="100" height="35" fill="#fecaca" stroke="#dc2626" stroke-width="2" rx="4"/>
+            <text x="${x + 50}" y="${y + 22}" text-anchor="middle" fill="black" font-size="12">${text || '온라인파기'}</text>`;
+          break;
+        case 'offline-destroy':
+          svgElements += `<rect x="${x}" y="${y}" width="100" height="35" fill="white" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,5" rx="4"/>
+            <text x="${x + 50}" y="${y + 22}" text-anchor="middle" fill="black" font-size="12">${text || '오프라인파기'}</text>`;
+          break;
+        case 'online-system':
+          svgElements += `<rect x="${x}" y="${y}" width="100" height="35" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" rx="4"/>
+            <text x="${x + 50}" y="${y + 22}" text-anchor="middle" fill="black" font-size="12">${text || '온라인시스템'}</text>`;
+          break;
+        case 'offline-task':
+          svgElements += `<rect x="${x}" y="${y}" width="100" height="35" fill="white" stroke="#6b7280" stroke-width="2" stroke-dasharray="5,5" rx="4"/>
+            <text x="${x + 50}" y="${y + 22}" text-anchor="middle" fill="black" font-size="12">${text || '오프라인업무'}</text>`;
+          break;
+        case 'burst':
+          svgElements += `<polygon points="${x + 50},${y} ${x + 60},${y + 15} ${x + 80},${y + 15} ${x + 65},${y + 30} ${x + 70},${y + 50} ${x + 50},${y + 40} ${x + 30},${y + 50} ${x + 35},${y + 30} ${x + 20},${y + 15} ${x + 40},${y + 15}" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
+            <text x="${x + 50}" y="${y + 30}" text-anchor="middle" fill="black" font-weight="bold" font-size="11">${text || '!!'}</text>`;
+          break;
+        case 'pc':
+          svgElements += `<rect x="${x}" y="${y}" width="80" height="50" fill="#e5e7eb" stroke="#4b5563" stroke-width="2" rx="4"/>
+            <rect x="${x + 10}" y="${y + 50}" width="60" height="8" fill="#9ca3af" stroke="#4b5563" stroke-width="1"/>
+            <text x="${x + 40}" y="${y + 30}" text-anchor="middle" fill="black" font-size="11">${text || 'PC'}</text>`;
+          break;
+        case 'file':
+          svgElements += `<polygon points="${x + 10},${y} ${x + 70},${y} ${x + 70},${y + 10} ${x + 80},${y + 10} ${x + 80},${y + 60} ${x + 10},${y + 60}" fill="white" stroke="#6b7280" stroke-width="2"/>
+            <polygon points="${x + 70},${y} ${x + 70},${y + 10} ${x + 80},${y + 10}" fill="#e5e7eb" stroke="#6b7280" stroke-width="2"/>
+            <text x="${x + 45}" y="${y + 35}" text-anchor="middle" fill="black" font-size="11">${text || '문서'}</text>`;
+          break;
+        case 'number':
+          svgElements += `<circle cx="${x + 20}" cy="${y + 20}" r="18" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="${x + 20}" y="${y + 27}" text-anchor="middle" fill="white" font-weight="bold" font-size="16">${text || '1'}</text>`;
+          break;
         default:
           svgElements += `<rect x="${x}" y="${y}" width="100" height="35" fill="#e5e7eb" stroke="#6b7280" stroke-width="2" rx="4"/>
             <text x="${x + 50}" y="${y + 22}" text-anchor="middle" fill="black" font-size="12">${text || icon.type}</text>`;
@@ -243,19 +274,54 @@ export default function ProtectionFlowChart() {
         </marker>
       </defs>
       <rect width="1400" height="900" fill="white"/>
-      <text x="20" y="30" font-size="20" font-weight="bold" fill="black">${selectedTask} - 개인정보 흐름도</text>
+      <text x="20" y="30" font-size="20" font-weight="bold" fill="black">${taskName} - 개인정보 흐름도</text>
       <g transform="translate(0, 50)">
         ${svgElements}
       </g>
     </svg>`;
     
-    const imageData = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const handleSave = () => {
+    // 흐름도 데이터 저장
+    setCompanyData(user?.company, 'flowChartData', flowDataByTask);
+    setCompanyData(user?.company, 'personalInfoTexts', personalInfoTexts);
     
-    const flowChartImages = JSON.parse(localStorage.getItem('flowChartImages') || '{}');
-    flowChartImages[selectedTask] = imageData;
-    localStorage.setItem('flowChartImages', JSON.stringify(flowChartImages));
+    // 모든 작업의 흐름도 이미지 자동 생성 및 저장
+    const flowChartImages: Record<string, string> = {};
+    taskNames.forEach((taskName) => {
+      const icons = flowDataByTask[taskName]?.icons || [];
+      if (icons.length > 0) {
+        const imageData = generateFlowChartImage(taskName, icons);
+        if (imageData) {
+          flowChartImages[taskName] = imageData;
+        }
+      }
+    });
     
-    alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
+    // 이미지 데이터 저장
+    if (Object.keys(flowChartImages).length > 0) {
+      setCompanyData(user?.company, 'flowChartImages', flowChartImages);
+    }
+    
+    alert('저장되었습니다. 모든 흐름도 이미지가 보고서에 자동으로 반영됩니다.');
+  };
+
+  const handleCaptureFlowChart = () => {
+    const icons = flowDataByTask[selectedTask]?.icons || [];
+    if (icons.length === 0) {
+      alert('저장할 흐름도 아이콘이 없습니다.');
+      return;
+    }
+
+    const imageData = generateFlowChartImage(selectedTask, icons);
+    if (imageData) {
+      const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
+      flowChartImages[selectedTask] = imageData;
+      setCompanyData(user?.company, 'flowChartImages', flowChartImages);
+      alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
+    }
   };
 
   const handleExport = () => {
