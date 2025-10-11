@@ -598,7 +598,7 @@ export default function ProtectionReport() {
                     <UITable>
                       <UITableHeader>
                         <UITableRow>
-                          {headers.map((h) => <UITableHead key={h} className="whitespace-nowrap">{h}</UITableHead>)}
+                          {headers.map((h) => <UITableHead key={h} className="break-keep">{h}</UITableHead>)}
                         </UITableRow>
                       </UITableHeader>
                       <UITableBody>
