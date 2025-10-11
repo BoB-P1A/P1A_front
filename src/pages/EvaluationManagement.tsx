@@ -36,7 +36,7 @@ interface EvaluationItem {
 export default function EvaluationManagement() {
   const { user } = useAuth();
   const [items, setItems] = useState<EvaluationItem[]>(() => {
-    const DATA_VERSION = '1.1'; // 데이터 버전
+    const DATA_VERSION = '1.2'; // 데이터 버전
     const savedVersion = getCompanyData(user?.company, 'evaluationItemsVersion', null);
     const saved = getCompanyData(user?.company, 'evaluationItems', null);
     
@@ -178,7 +178,7 @@ export default function EvaluationManagement() {
     });
     setItems(updatedItems);
     setCompanyData(user?.company, 'evaluationItems', updatedItems);
-    setCompanyData(user?.company, 'evaluationItemsVersion', '1.1');
+    setCompanyData(user?.company, 'evaluationItemsVersion', '1.2');
     setIsDialogOpen(false);
     setEditingItem(null);
     setFormData({});
