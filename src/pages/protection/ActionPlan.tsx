@@ -123,6 +123,11 @@ export default function ActionPlan() {
     const actionPlans: { [key: string]: any } = {};
     items.forEach(item => {
       actionPlans[item.id] = {
+        taskName: item.taskName,
+        code: item.code,
+        question: item.question,
+        evidence: item.evidence,
+        improvementGuide: item.improvementGuide,
         actionPlan: item.actionPlan,
         actionPeriod: item.actionPeriod,
         department: item.department,

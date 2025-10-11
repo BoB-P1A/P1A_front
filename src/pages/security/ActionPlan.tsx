@@ -124,6 +124,11 @@ export default function SecurityActionPlan() {
     const actionPlans: { [key: string]: any } = {};
     items.forEach(item => {
       actionPlans[item.id] = {
+        targetName: item.targetName,
+        code: item.code,
+        question: item.question,
+        evidence: item.evidence,
+        improvementGuide: item.improvementGuide,
         actionPlan: item.actionPlan,
         actionPeriod: item.actionPeriod,
         department: item.department,
