@@ -97,6 +97,36 @@ export default function SecurityReport() {
       sections.push(new DocxTable({ rows: actionRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
     });
 
+    // 4. 평가결과
+    sections.push(new Paragraph({ text: '4. 평가결과', heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
+    const resultsByTarget: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
+    securityData.forEach((item: any) => {
+      if (!resultsByTarget[item.targetName]) resultsByTarget[item.targetName] = {};
+      if (!resultsByTarget[item.targetName][item.field]) {
+        resultsByTarget[item.targetName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+      }
+      if (item.status) {
+        resultsByTarget[item.targetName][item.field][item.status]++;
+      }
+    });
+
+    Object.keys(resultsByTarget).forEach(targetName => {
+      sections.push(new Paragraph({
+        spacing: { before: 200, after: 100 },
+        children: [new TextRun({ text: `[${targetName}]`, bold: true })]
+      }));
+
+      Object.keys(resultsByTarget[targetName]).forEach(field => {
+        const counts = resultsByTarget[targetName][field];
+        const total = counts.이행 + counts.부분이행 + counts.미이행;
+        const rate = total > 0 ? ((counts.이행 + counts.부분이행 * 0.5) / total * 100).toFixed(1) : '0.0';
+        
+        sections.push(new Paragraph({
+          text: `${field}: 이행 ${counts.이행}건, 부분이행 ${counts.부분이행}건, 미이행 ${counts.미이행}건, 해당없음 ${counts.해당없음}건 (이행률: ${rate}%)`
+        }));
+      });
+    });
+
     const doc = new Document({ sections: [{ children: sections }] });
     const blob = await Packer.toBlob(doc);
     const url = window.URL.createObjectURL(blob);
@@ -138,6 +168,15 @@ export default function SecurityReport() {
         actionsByTarget[item.targetName].push({ code: item.no, question: item.item, evidence: item.evidence, guide: savedImprovement?.improvementPlan || '', ...savedAction });
       }
     }
+  });
+
+  const resultsByTarget: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
+  securityData.forEach((item: any) => {
+    if (!resultsByTarget[item.targetName]) resultsByTarget[item.targetName] = {};
+    if (!resultsByTarget[item.targetName][item.field]) {
+      resultsByTarget[item.targetName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+    }
+    if (item.status) resultsByTarget[item.targetName][item.field][item.status]++;
   });
 
   return (
@@ -238,6 +277,29 @@ export default function SecurityReport() {
                   </TableBody>
                 </Table>
               </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>4. 평가결과</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Object.keys(resultsByTarget).map((target) => (
+            <div key={target} className="space-y-1">
+              <p className="font-semibold">[{target}]</p>
+              {Object.keys(resultsByTarget[target]).map((field) => {
+                const counts = resultsByTarget[target][field];
+                const total = counts.이행 + counts.부분이행 + counts.미이행;
+                const rate = total > 0 ? ((counts.이행 + counts.부분이행 * 0.5) / total * 100).toFixed(1) : '0.0';
+                return (
+                  <p key={field} className="text-sm">
+                    {field}: 이행 {counts.이행}건, 부분이행 {counts.부분이행}건, 미이행 {counts.미이행}건, 해당없음 {counts.해당없음}건 (이행률: {rate}%)
+                  </p>
+                );
+              })}
             </div>
           ))}
         </CardContent>
