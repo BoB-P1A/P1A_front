@@ -35,7 +35,8 @@ export default function SecurityChecklist() {
   useEffect(() => {
     const loadEvaluationItems = () => {
       const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
-      const securityItems = evaluationItems.filter((item: any) => item.area === '3. 보안성 검토');
+      // 평가영역이 '3'으로 시작하는 항목들을 필터링 (예: '3. 보안성 검토')
+      const securityItems = evaluationItems.filter((item: any) => item.area?.startsWith('3.'));
       
       const targets = getCompanyData(user?.company, 'securityTargets', []);
       const savedData = getCompanyData(user?.company, 'securityData', []);

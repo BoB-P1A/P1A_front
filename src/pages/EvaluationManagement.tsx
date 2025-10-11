@@ -221,7 +221,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="area">평가영역</Label>
                 <Input 
                   id="area" 
-                  placeholder="예: 3. 개인정보 처리단계별 보호조치"
+                  placeholder="예: 1. 개인정보 처리단계별 보호조치"
                   value={formData.area || ''}
                   onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                 />

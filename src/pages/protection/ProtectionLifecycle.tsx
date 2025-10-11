@@ -81,7 +81,8 @@ export default function ProtectionLifecycle() {
     if (!activeTab) return;
 
     const evaluationItems: EvaluationItem[] = getCompanyData(user?.company, 'evaluationItems', []);
-    const filtered = evaluationItems.filter(item => item.area === '1. 개인정보 처리단계별 보호조치');
+    // 평가영역이 '1'로 시작하는 항목들을 필터링 (예: '1. 개인정보 처리단계별 보호조치')
+    const filtered = evaluationItems.filter(item => item.area?.startsWith('1.'));
 
     const savedItems: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
     const savedForTask = savedItems.filter((s) => s.taskName === activeTab);
