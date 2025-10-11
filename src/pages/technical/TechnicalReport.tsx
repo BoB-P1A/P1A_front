@@ -67,7 +67,16 @@ export default function TechnicalReport() {
         }
       });
 
-      Object.keys(criteriaBySystem).forEach(systemName => {
+      // Sort by systems order
+      const systems = getCompanyData(user?.company, 'technicalSystems', []);
+      const systemOrder = systems.map((s: any) => s.name);
+      const sortedSystemNames = Object.keys(criteriaBySystem).sort((a, b) => {
+        const indexA = systemOrder.indexOf(a);
+        const indexB = systemOrder.indexOf(b);
+        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+      });
+
+      sortedSystemNames.forEach(systemName => {
         sections.push(new Paragraph({
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${systemName}]`, bold: true })]
@@ -143,7 +152,14 @@ export default function TechnicalReport() {
         }
       });
 
-      Object.keys(actionPlansBySystem).forEach(systemName => {
+      // Sort by systems order
+      const sortedActionSystemNames = Object.keys(actionPlansBySystem).sort((a, b) => {
+        const indexA = systemOrder.indexOf(a);
+        const indexB = systemOrder.indexOf(b);
+        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+      });
+
+      sortedActionSystemNames.forEach(systemName => {
         sections.push(new Paragraph({
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${systemName}]`, bold: true })]
@@ -200,7 +216,14 @@ export default function TechnicalReport() {
         }
       });
 
-      Object.keys(resultsBySystem).forEach(systemName => {
+      // Sort by systems order
+      const sortedResultSystemNames = Object.keys(resultsBySystem).sort((a, b) => {
+        const indexA = systemOrder.indexOf(a);
+        const indexB = systemOrder.indexOf(b);
+        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+      });
+
+      sortedResultSystemNames.forEach(systemName => {
         sections.push(new Paragraph({
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${systemName}]`, bold: true })]
@@ -311,18 +334,28 @@ export default function TechnicalReport() {
           <CardTitle>1. 영향평가 기준</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {Object.keys(criteriaBySystem).map((sys) => (
-            <div key={sys}>
-              <p className="font-semibold">[{sys}]</p>
-              <ul className="list-disc pl-6">
-                {Object.keys(criteriaBySystem[sys]).map((sub) => (
-                  <li key={sub}>
-                    {sub} ({criteriaBySystem[sys][sub].join(', ')})
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {(() => {
+            const systems = getCompanyData(user?.company, 'technicalSystems', []);
+            const systemOrder = systems.map((s: any) => s.name);
+            const sortedSystemNames = Object.keys(criteriaBySystem).sort((a, b) => {
+              const indexA = systemOrder.indexOf(a);
+              const indexB = systemOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedSystemNames.map((sys) => (
+              <div key={sys}>
+                <p className="font-semibold">[{sys}]</p>
+                <ul className="list-disc pl-6">
+                  {Object.keys(criteriaBySystem[sys]).map((sub) => (
+                    <li key={sub}>
+                      {sub} ({criteriaBySystem[sys][sub].join(', ')})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ));
+          })()}
         </CardContent>
       </Card>
 
@@ -375,7 +408,15 @@ export default function TechnicalReport() {
               }
             });
 
-            return Object.keys(actionPlansBySystem).map((sys) => (
+            const systems = getCompanyData(user?.company, 'technicalSystems', []);
+            const systemOrder = systems.map((s: any) => s.name);
+            const sortedSystemNames = Object.keys(actionPlansBySystem).sort((a, b) => {
+              const indexA = systemOrder.indexOf(a);
+              const indexB = systemOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedSystemNames.map((sys) => (
               <div key={sys} className="space-y-2">
                 <p className="font-semibold">[{sys}]</p>
                 <div className="overflow-x-auto">

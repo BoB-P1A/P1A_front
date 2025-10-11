@@ -292,7 +292,15 @@ export default function ProtectionReport() {
         }
       });
 
-      Object.keys(criteriaByTask).forEach(taskName => {
+      // Sort by taskTableData order
+      const taskOrder = taskTableData.map((t: any) => t.taskName);
+      const sortedTaskNames = Object.keys(criteriaByTask).sort((a, b) => {
+        const indexA = taskOrder.indexOf(a);
+        const indexB = taskOrder.indexOf(b);
+        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+      });
+
+      sortedTaskNames.forEach(taskName => {
         sections.push(new Paragraph({
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${taskName}]`, bold: true })]
@@ -368,7 +376,15 @@ export default function ProtectionReport() {
         }
       });
 
-      Object.keys(actionPlansByTask).forEach(taskName => {
+      // Sort by taskTableData order
+      const taskOrderForAction = taskTableData.map((t: any) => t.taskName);
+      const sortedActionTaskNames = Object.keys(actionPlansByTask).sort((a, b) => {
+        const indexA = taskOrderForAction.indexOf(a);
+        const indexB = taskOrderForAction.indexOf(b);
+        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+      });
+
+      sortedActionTaskNames.forEach(taskName => {
         sections.push(new Paragraph({
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${taskName}]`, bold: true })]
@@ -425,7 +441,15 @@ export default function ProtectionReport() {
         }
       });
 
-      Object.keys(resultsByTask).forEach(taskName => {
+      // Sort by taskTableData order
+      const taskOrderForResults = taskTableData.map((t: any) => t.taskName);
+      const sortedResultTaskNames = Object.keys(resultsByTask).sort((a, b) => {
+        const indexA = taskOrderForResults.indexOf(a);
+        const indexB = taskOrderForResults.indexOf(b);
+        return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+      });
+
+      sortedResultTaskNames.forEach(taskName => {
         sections.push(new Paragraph({
           spacing: { before: 200, after: 100 },
           children: [new TextRun({ text: `[${taskName}]`, bold: true })]
@@ -780,18 +804,27 @@ export default function ProtectionReport() {
           <CardTitle>2. 영향평가 기준</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {Object.keys(criteriaByTask).map((task) => (
-            <div key={task}>
-              <p className="font-semibold">[{task}]</p>
-              <ul className="list-disc pl-6">
-                {Object.keys(criteriaByTask[task]).map((sub) => (
-                  <li key={sub}>
-                    {sub} ({criteriaByTask[task][sub].join(', ')})
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {(() => {
+            const taskOrder = processingTasks.map((t: any) => t.taskName);
+            const sortedTaskNames = Object.keys(criteriaByTask).sort((a, b) => {
+              const indexA = taskOrder.indexOf(a);
+              const indexB = taskOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedTaskNames.map((task) => (
+              <div key={task}>
+                <p className="font-semibold">[{task}]</p>
+                <ul className="list-disc pl-6">
+                  {Object.keys(criteriaByTask[task]).map((sub) => (
+                    <li key={sub}>
+                      {sub} ({criteriaByTask[task][sub].join(', ')})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ));
+          })()}
         </CardContent>
       </Card>
 
@@ -844,7 +877,14 @@ export default function ProtectionReport() {
               }
             });
 
-            return Object.keys(actionPlansByTask).map((task) => (
+            const taskOrder = processingTasks.map((t: any) => t.taskName);
+            const sortedTaskNames = Object.keys(actionPlansByTask).sort((a, b) => {
+              const indexA = taskOrder.indexOf(a);
+              const indexB = taskOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedTaskNames.map((task) => (
               <div key={task} className="space-y-2">
                 <p className="font-semibold">[{task}]</p>
                 <div className="overflow-x-auto">
@@ -891,21 +931,30 @@ export default function ProtectionReport() {
           <CardTitle>5. 평가결과</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {Object.keys(resultsByTask).map((task) => (
-            <div key={task} className="space-y-1">
-              <p className="font-semibold">[{task}]</p>
-              <ul className="list-disc pl-6">
-                {Object.keys(resultsByTask[task]).map((field) => {
-                  const c = resultsByTask[task][field];
-                  const total = c.이행 + c.부분이행 + c.미이행;
-                  const rate = total > 0 ? (((c.이행 + c.부분이행 * 0.5) / total) * 100).toFixed(1) : '0.0';
-                  return (
-                    <li key={field}>{field}: 이행 {c.이행}건, 부분이행 {c.부분이행}건, 미이행 {c.미이행}건, 해당없음 {c.해당없음}건 (이행률: {rate}%)</li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+          {(() => {
+            const taskOrder = processingTasks.map((t: any) => t.taskName);
+            const sortedTaskNames = Object.keys(resultsByTask).sort((a, b) => {
+              const indexA = taskOrder.indexOf(a);
+              const indexB = taskOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedTaskNames.map((task) => (
+              <div key={task} className="space-y-1">
+                <p className="font-semibold">[{task}]</p>
+                <ul className="list-disc pl-6">
+                  {Object.keys(resultsByTask[task]).map((field) => {
+                    const c = resultsByTask[task][field];
+                    const total = c.이행 + c.부분이행 + c.미이행;
+                    const rate = total > 0 ? (((c.이행 + c.부분이행 * 0.5) / total) * 100).toFixed(1) : '0.0';
+                    return (
+                      <li key={field}>{field}: 이행 {c.이행}건, 부분이행 {c.부분이행}건, 미이행 {c.미이행}건, 해당없음 {c.해당없음}건 (이행률: {rate}%)</li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ));
+          })()}
         </CardContent>
       </Card>
     </div>

@@ -27,7 +27,17 @@ export default function SecurityReport() {
         criteriaByTarget[item.targetName][item.subField].push(item.no);
       }
     });
-    Object.keys(criteriaByTarget).forEach(targetName => {
+    
+    // Sort by targets order
+    const targets = getCompanyData(user?.company, 'securityTargets', []);
+    const targetOrder = targets.map((t: any) => t.name);
+    const sortedTargetNames = Object.keys(criteriaByTarget).sort((a, b) => {
+      const indexA = targetOrder.indexOf(a);
+      const indexB = targetOrder.indexOf(b);
+      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+    });
+    
+    sortedTargetNames.forEach(targetName => {
       sections.push(new Paragraph({ spacing: { before: 200, after: 100 }, children: [new TextRun({ text: `[${targetName}]`, bold: true })] }));
       Object.keys(criteriaByTarget[targetName]).forEach(subField => {
         sections.push(new Paragraph({ text: `- ${subField} (${criteriaByTarget[targetName][subField].join(', ')})` }));
@@ -64,7 +74,15 @@ export default function SecurityReport() {
         }
       }
     });
-    Object.keys(actionsByTarget).forEach(targetName => {
+    
+    // Sort by targets order
+    const sortedActionTargetNames = Object.keys(actionsByTarget).sort((a, b) => {
+      const indexA = targetOrder.indexOf(a);
+      const indexB = targetOrder.indexOf(b);
+      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+    });
+    
+    sortedActionTargetNames.forEach(targetName => {
       sections.push(new Paragraph({ spacing: { before: 200, after: 100 }, children: [new TextRun({ text: `[${targetName}]`, bold: true })] }));
       const actionRows = [
         new TableRow({ 
@@ -110,7 +128,14 @@ export default function SecurityReport() {
       }
     });
 
-    Object.keys(resultsByTarget).forEach(targetName => {
+    // Sort by targets order
+    const sortedResultTargetNames = Object.keys(resultsByTarget).sort((a, b) => {
+      const indexA = targetOrder.indexOf(a);
+      const indexB = targetOrder.indexOf(b);
+      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+    });
+
+    sortedResultTargetNames.forEach(targetName => {
       sections.push(new Paragraph({
         spacing: { before: 200, after: 100 },
         children: [new TextRun({ text: `[${targetName}]`, bold: true })]
@@ -149,6 +174,9 @@ export default function SecurityReport() {
       criteriaByTarget[item.targetName][item.subField].push(item.no);
     }
   });
+
+  const targets = getCompanyData(user?.company, 'securityTargets', []);
+  const targetOrder = targets.map((t: any) => t.name);
 
   const riskItems = securityData.filter((item: any) => item.status === '부분이행' || item.status === '미이행')
     .map((item: any) => {
@@ -194,16 +222,24 @@ export default function SecurityReport() {
           <CardTitle>1. 영향평가 기준</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {Object.keys(criteriaByTarget).map((target) => (
-            <div key={target}>
-              <p className="font-semibold">[{target}]</p>
-              <ul className="list-disc pl-6">
-                {Object.keys(criteriaByTarget[target]).map((sub) => (
-                  <li key={sub}>{sub} ({criteriaByTarget[target][sub].join(', ')})</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {(() => {
+            const sortedTargetNames = Object.keys(criteriaByTarget).sort((a, b) => {
+              const indexA = targetOrder.indexOf(a);
+              const indexB = targetOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedTargetNames.map((target) => (
+              <div key={target}>
+                <p className="font-semibold">[{target}]</p>
+                <ul className="list-disc pl-6">
+                  {Object.keys(criteriaByTarget[target]).map((sub) => (
+                    <li key={sub}>{sub} ({criteriaByTarget[target][sub].join(', ')})</li>
+                  ))}
+                </ul>
+              </div>
+            ));
+          })()}
         </CardContent>
       </Card>
 
@@ -242,43 +278,51 @@ export default function SecurityReport() {
           <CardTitle>3. 주요 위험요소에 따른 개선 조치 계획</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {Object.keys(actionsByTarget).map((target) => (
-            <div key={target} className="space-y-2">
-              <p className="font-semibold">[{target}]</p>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <UITableRow>
-                      <TableHead>질의문 코드</TableHead>
-                      <TableHead>질의문</TableHead>
-                      <TableHead>취약점</TableHead>
-                      <TableHead>개선 가이드</TableHead>
-                      <TableHead>조치 방안</TableHead>
-                      <TableHead>조치 기간</TableHead>
-                      <TableHead>부서</TableHead>
-                      <TableHead>담당자</TableHead>
-                      <TableHead>조치 일시</TableHead>
-                    </UITableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {actionsByTarget[target].map((act: any, i: number) => (
-                      <UITableRow key={i}>
-                        <UITableCell>{act.code}</UITableCell>
-                        <UITableCell>{act.question}</UITableCell>
-                        <UITableCell>{act.evidence}</UITableCell>
-                        <UITableCell>{act.guide}</UITableCell>
-                        <UITableCell>{act.actionPlan}</UITableCell>
-                        <UITableCell>{act.actionPeriod}</UITableCell>
-                        <UITableCell>{act.department}</UITableCell>
-                        <UITableCell>{act.manager}</UITableCell>
-                        <UITableCell>{act.actionDate}</UITableCell>
+          {(() => {
+            const sortedActionTargetNames = Object.keys(actionsByTarget).sort((a, b) => {
+              const indexA = targetOrder.indexOf(a);
+              const indexB = targetOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedActionTargetNames.map((target) => (
+              <div key={target} className="space-y-2">
+                <p className="font-semibold">[{target}]</p>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <UITableRow>
+                        <TableHead>질의문 코드</TableHead>
+                        <TableHead>질의문</TableHead>
+                        <TableHead>취약점</TableHead>
+                        <TableHead>개선 가이드</TableHead>
+                        <TableHead>조치 방안</TableHead>
+                        <TableHead>조치 기간</TableHead>
+                        <TableHead>부서</TableHead>
+                        <TableHead>담당자</TableHead>
+                        <TableHead>조치 일시</TableHead>
                       </UITableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {actionsByTarget[target].map((act: any, i: number) => (
+                        <UITableRow key={i}>
+                          <UITableCell>{act.code}</UITableCell>
+                          <UITableCell>{act.question}</UITableCell>
+                          <UITableCell>{act.evidence}</UITableCell>
+                          <UITableCell>{act.guide}</UITableCell>
+                          <UITableCell>{act.actionPlan}</UITableCell>
+                          <UITableCell>{act.actionPeriod}</UITableCell>
+                          <UITableCell>{act.department}</UITableCell>
+                          <UITableCell>{act.manager}</UITableCell>
+                          <UITableCell>{act.actionDate}</UITableCell>
+                        </UITableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-            </div>
-          ))}
+            ));
+          })()}
         </CardContent>
       </Card>
 
@@ -287,21 +331,29 @@ export default function SecurityReport() {
           <CardTitle>4. 평가결과</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {Object.keys(resultsByTarget).map((target) => (
-            <div key={target} className="space-y-1">
-              <p className="font-semibold">[{target}]</p>
-              {Object.keys(resultsByTarget[target]).map((field) => {
-                const counts = resultsByTarget[target][field];
-                const total = counts.이행 + counts.부분이행 + counts.미이행;
-                const rate = total > 0 ? ((counts.이행 + counts.부분이행 * 0.5) / total * 100).toFixed(1) : '0.0';
-                return (
-                  <p key={field} className="text-sm">
-                    {field}: 이행 {counts.이행}건, 부분이행 {counts.부분이행}건, 미이행 {counts.미이행}건, 해당없음 {counts.해당없음}건 (이행률: {rate}%)
-                  </p>
-                );
-              })}
-            </div>
-          ))}
+          {(() => {
+            const sortedResultTargetNames = Object.keys(resultsByTarget).sort((a, b) => {
+              const indexA = targetOrder.indexOf(a);
+              const indexB = targetOrder.indexOf(b);
+              return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+            });
+
+            return sortedResultTargetNames.map((target) => (
+              <div key={target} className="space-y-1">
+                <p className="font-semibold">[{target}]</p>
+                {Object.keys(resultsByTarget[target]).map((field) => {
+                  const counts = resultsByTarget[target][field];
+                  const total = counts.이행 + counts.부분이행 + counts.미이행;
+                  const rate = total > 0 ? ((counts.이행 + counts.부분이행 * 0.5) / total * 100).toFixed(1) : '0.0';
+                  return (
+                    <p key={field} className="text-sm">
+                      {field}: 이행 {counts.이행}건, 부분이행 {counts.부분이행}건, 미이행 {counts.미이행}건, 해당없음 {counts.해당없음}건 (이행률: {rate}%)
+                    </p>
+                  );
+                })}
+              </div>
+            ));
+          })()}
         </CardContent>
       </Card>
     </div>
