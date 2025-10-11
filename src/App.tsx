@@ -21,10 +21,16 @@ import ProtectionLifecycle from "./pages/protection/ProtectionLifecycle";
 import ProtectionFlowTable from "./pages/protection/ProtectionFlowTable";
 import ProtectionFlowChart from "./pages/protection/ProtectionFlowChart";
 import ProtectionImprovementPlan from "./pages/protection/ImprovementPlan";
+import ProtectionActionPlan from "./pages/protection/ActionPlan";
 import ProtectionReport from "./pages/protection/ProtectionReport";
 import TechnicalAdminChecklist from "./pages/technical/TechnicalAdminChecklist";
 import TechnicalImprovementPlan from "./pages/technical/ImprovementPlan";
+import TechnicalActionPlan from "./pages/technical/ActionPlan";
 import TechnicalReport from "./pages/technical/TechnicalReport";
+import SecurityChecklist from "./pages/security/SecurityChecklist";
+import SecurityImprovementPlan from "./pages/security/ImprovementPlan";
+import SecurityActionPlan from "./pages/security/ActionPlan";
+import SecurityReport from "./pages/security/Report";
 import AccountManagement from "./pages/admin/AccountManagement";
 import CompanyManagement from "./pages/admin/CompanyManagement";
 import Dashboard from "./pages/Dashboard";
@@ -65,12 +71,20 @@ const App = () => (
               <Route path="protection/flow-table" element={<ProtectionFlowTable />} />
               <Route path="protection/flowchart" element={<ProtectionFlowChart />} />
               <Route path="protection/improvement-plan" element={<ProtectionImprovementPlan />} />
+              <Route path="protection/action-plan" element={<ProtectionActionPlan />} />
               <Route path="protection/report" element={<ProtectionReport />} />
               
               {/* 기술적 보호조치 */}
               <Route path="technical/checklist" element={<TechnicalAdminChecklist />} />
               <Route path="technical/improvement-plan" element={<TechnicalImprovementPlan />} />
+              <Route path="technical/action-plan" element={<TechnicalActionPlan />} />
               <Route path="technical/report" element={<TechnicalReport />} />
+
+              {/* 보안성 검토 */}
+              <Route path="security/checklist" element={<SecurityChecklist />} />
+              <Route path="security/improvement-plan" element={<SecurityImprovementPlan />} />
+              <Route path="security/action-plan" element={<SecurityActionPlan />} />
+              <Route path="security/report" element={<SecurityReport />} />
               
               {/* 관리자 페이지 (관리자만 접근 가능) */}
               <Route path="admin/accounts" element={

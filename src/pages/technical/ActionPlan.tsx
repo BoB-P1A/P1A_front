@@ -5,15 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Download, AlertTriangle, Save } from 'lucide-react';
+import { Download, ClipboardList, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
@@ -30,20 +22,23 @@ interface TechnicalItem {
   files: any[];
 }
 
-interface ImprovementItem {
+interface ActionPlanItem {
   id: string;
   systemName: string;
   code: string;
   question: string;
   evidence: string;
-  relatedLaw: string;
-  riskFactor: string;
-  improvementPlan: string;
+  improvementGuide: string;
+  actionPlan: string;
+  actionPeriod: string;
+  department: string;
+  manager: string;
+  actionDate: string;
 }
 
-export default function TechnicalImprovementPlan() {
+export default function TechnicalActionPlan() {
   const { user } = useAuth();
-  const [items, setItems] = useState<ImprovementItem[]>([]);
+  const [items, setItems] = useState<ActionPlanItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
   const [systemNames, setSystemNames] = useState<string[]>([]);
@@ -54,9 +49,6 @@ export default function TechnicalImprovementPlan() {
       if (systems.length > 0) {
         const names = systems.map((s: any) => s.name);
         setSystemNames(names);
-        if (activeTab === '전체') {
-          setActiveTab('전체');
-        }
       }
     };
 
@@ -75,39 +67,45 @@ export default function TechnicalImprovementPlan() {
   }, [user?.company]);
 
   useEffect(() => {
-    const loadImprovements = () => {
+    const loadActionPlans = () => {
       const parsed: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
       const filtered = parsed.filter(item => 
         item.status === '부분이행' || item.status === '미이행'
       );
 
-      const saved = getCompanyData(user?.company, 'technicalImprovements', {});
+      const savedImprovements = getCompanyData(user?.company, 'technicalImprovements', {});
+      const savedActionPlans = getCompanyData(user?.company, 'technicalActionPlans', {});
 
-      const improvementItems: ImprovementItem[] = filtered.map(item => {
+      const actionPlanItems: ActionPlanItem[] = filtered.map(item => {
         const itemId = `${item.systemName}-${item.no}`;
-        const savedItem = saved[itemId];
+        const savedImprovement = savedImprovements[itemId];
+        const savedActionPlan = savedActionPlans[itemId];
         return {
           id: itemId,
           systemName: item.systemName,
           code: item.no,
           question: item.item,
           evidence: item.evidence,
-          relatedLaw: savedItem?.relatedLaw || '',
-          riskFactor: savedItem?.riskFactor || '',
-          improvementPlan: savedItem?.improvementPlan || '',
+          improvementGuide: savedImprovement?.improvementPlan || '',
+          actionPlan: savedActionPlan?.actionPlan || '',
+          actionPeriod: savedActionPlan?.actionPeriod || '',
+          department: savedActionPlan?.department || '',
+          manager: savedActionPlan?.manager || '',
+          actionDate: savedActionPlan?.actionDate || '',
         };
       });
 
-      setItems(improvementItems);
+      setItems(actionPlanItems);
     };
 
-    loadImprovements();
+    loadActionPlans();
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
       const techDataKey = getCompanyStorageKey(user?.company, 'technicalData');
-      if (customEvent.detail?.key === techDataKey) {
-        loadImprovements();
+      const improvementsKey = getCompanyStorageKey(user?.company, 'technicalImprovements');
+      if (customEvent.detail?.key === techDataKey || customEvent.detail?.key === improvementsKey) {
+        loadActionPlans();
       }
     };
 
@@ -115,37 +113,25 @@ export default function TechnicalImprovementPlan() {
     return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, [user?.company]);
 
-  const handleRelatedLawChange = (id: string, value: string) => {
+  const handleFieldChange = (id: string, field: keyof ActionPlanItem, value: string) => {
     setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, relatedLaw: value } : item
-    ));
-    setHasChanges(true);
-  };
-
-  const handleRiskFactorChange = (id: string, value: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, riskFactor: value } : item
-    ));
-    setHasChanges(true);
-  };
-
-  const handleImprovementPlanChange = (id: string, value: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, improvementPlan: value } : item
+      item.id === id ? { ...item, [field]: value } : item
     ));
     setHasChanges(true);
   };
 
   const handleSave = () => {
-    const improvements: { [key: string]: { relatedLaw: string; riskFactor: string; improvementPlan: string } } = {};
+    const actionPlans: { [key: string]: any } = {};
     items.forEach(item => {
-      improvements[item.id] = {
-        relatedLaw: item.relatedLaw,
-        riskFactor: item.riskFactor,
-        improvementPlan: item.improvementPlan,
+      actionPlans[item.id] = {
+        actionPlan: item.actionPlan,
+        actionPeriod: item.actionPeriod,
+        department: item.department,
+        manager: item.manager,
+        actionDate: item.actionDate,
       };
     });
-    setCompanyData(user?.company, 'technicalImprovements', improvements);
+    setCompanyData(user?.company, 'technicalActionPlans', actionPlans);
     setHasChanges(false);
     toast.success('저장되었습니다');
   };
@@ -156,15 +142,18 @@ export default function TechnicalImprovementPlan() {
       '질의문 코드': item.code,
       '질의문': item.question,
       '취약점': item.evidence,
-      '관련 법률': item.relatedLaw,
-      '침해요인': item.riskFactor,
-      '개선 가이드': item.improvementPlan,
+      '개선 가이드': item.improvementGuide,
+      '조치 방안': item.actionPlan,
+      '조치 기간': item.actionPeriod,
+      '부서': item.department,
+      '담당자': item.manager,
+      '조치 일시': item.actionDate,
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '침해요인별 개선 가이드');
-    XLSX.writeFile(wb, '기술적_침해요인별_개선_가이드.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, '조치 계획 수립');
+    XLSX.writeFile(wb, '기술적_조치_계획_수립.xlsx');
   };
 
   const filteredItems = activeTab === '전체' 
@@ -175,9 +164,9 @@ export default function TechnicalImprovementPlan() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">기술적 보호조치 침해요인별 개선 가이드</h1>
+          <h1 className="text-3xl font-bold text-primary">기술적 보호조치 조치 계획 수립</h1>
           <p className="text-muted-foreground mt-2">
-            기술적 보호조치의 침해요인과 개선 가이드를 관리합니다
+            기술적 보호조치 침해요인에 대한 조치 계획을 수립하고 관리합니다
           </p>
         </div>
         <div className="space-x-2">
@@ -204,11 +193,11 @@ export default function TechnicalImprovementPlan() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-                기술적 침해요인 목록 및 개선 가이드
+                <ClipboardList className="h-5 w-5 text-primary" />
+                조치 계획 목록
               </CardTitle>
               <CardDescription>
-                기술적 보호조치 관련 침해요인과 개선 가이드를 확인하세요
+                각 침해요인에 대한 조치 계획을 수립하세요
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -237,38 +226,63 @@ export default function TechnicalImprovementPlan() {
                   </div>
 
                   <div>
-                    <Label htmlFor={`law-${item.id}`} className="font-semibold">관련 법률</Label>
-                    <Textarea
-                      id={`law-${item.id}`}
-                      value={item.relatedLaw}
-                      onChange={(e) => handleRelatedLawChange(item.id, e.target.value)}
-                      placeholder="관련 법률을 입력하세요"
-                      className="mt-1"
-                      rows={2}
-                    />
+                    <Label className="font-semibold">개선 가이드</Label>
+                    <Textarea value={item.improvementGuide} readOnly className="mt-1" rows={3} />
                   </div>
 
                   <div>
-                    <Label htmlFor={`risk-${item.id}`} className="font-semibold">침해요인</Label>
+                    <Label htmlFor={`action-${item.id}`} className="font-semibold">조치 방안</Label>
                     <Textarea
-                      id={`risk-${item.id}`}
-                      value={item.riskFactor}
-                      onChange={(e) => handleRiskFactorChange(item.id, e.target.value)}
-                      placeholder="침해요인을 입력하세요"
+                      id={`action-${item.id}`}
+                      value={item.actionPlan}
+                      onChange={(e) => handleFieldChange(item.id, 'actionPlan', e.target.value)}
+                      placeholder="조치 방안을 입력하세요"
                       className="mt-1"
                       rows={3}
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor={`plan-${item.id}`} className="font-semibold">개선 가이드</Label>
-                    <Textarea
-                      id={`plan-${item.id}`}
-                      value={item.improvementPlan}
-                      onChange={(e) => handleImprovementPlanChange(item.id, e.target.value)}
-                      placeholder="개선 가이드를 입력하세요"
+                    <Label htmlFor={`period-${item.id}`} className="font-semibold">조치 기간</Label>
+                    <Input
+                      id={`period-${item.id}`}
+                      value={item.actionPeriod}
+                      onChange={(e) => handleFieldChange(item.id, 'actionPeriod', e.target.value)}
+                      placeholder="예: 2024-01-01 ~ 2024-12-31"
                       className="mt-1"
-                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`dept-${item.id}`} className="font-semibold">부서</Label>
+                    <Input
+                      id={`dept-${item.id}`}
+                      value={item.department}
+                      onChange={(e) => handleFieldChange(item.id, 'department', e.target.value)}
+                      placeholder="담당 부서를 입력하세요"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`manager-${item.id}`} className="font-semibold">담당자</Label>
+                    <Input
+                      id={`manager-${item.id}`}
+                      value={item.manager}
+                      onChange={(e) => handleFieldChange(item.id, 'manager', e.target.value)}
+                      placeholder="담당자를 입력하세요"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`date-${item.id}`} className="font-semibold">조치 일시</Label>
+                    <Input
+                      id={`date-${item.id}`}
+                      value={item.actionDate}
+                      onChange={(e) => handleFieldChange(item.id, 'actionDate', e.target.value)}
+                      placeholder="조치 일시를 입력하세요"
+                      className="mt-1"
                     />
                   </div>
                 </CardContent>

@@ -5,22 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Download, AlertTriangle, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { toast } from 'sonner';
 
-interface LifecycleItem {
-  id: number;
-  taskName: string;
+interface SecurityItem {
+  id: number | string;
+  targetName: string;
   subField: string;
   no: string;
   item: string;
@@ -31,7 +24,7 @@ interface LifecycleItem {
 
 interface ImprovementItem {
   id: string;
-  taskName: string;
+  targetName: string;
   code: string;
   question: string;
   evidence: string;
@@ -40,50 +33,51 @@ interface ImprovementItem {
   improvementPlan: string;
 }
 
-export default function ImprovementPlan() {
+export default function SecurityImprovementPlan() {
   const { user } = useAuth();
   const [items, setItems] = useState<ImprovementItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
-  const [taskNames, setTaskNames] = useState<string[]>([]);
+  const [targetNames, setTargetNames] = useState<string[]>([]);
 
   useEffect(() => {
     const loadData = () => {
-      const tasks = getCompanyData(user?.company, 'processingTasks', []);
-      if (tasks.length > 0) {
-        const names = tasks.map((t: any) => t.taskName);
-        setTaskNames(names);
+      const targets = getCompanyData(user?.company, 'securityTargets', []);
+      if (targets.length > 0) {
+        const names = targets.map((t: any) => t.name);
+        setTargetNames(names);
       }
     };
 
     loadData();
 
-    const onStorage = (e: Event) => {
+    const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
-      if (customEvent.detail?.key === taskKey) {
+      const targetsKey = getCompanyStorageKey(user?.company, 'securityTargets');
+      if (customEvent.detail?.key === targetsKey) {
         loadData();
       }
     };
-    window.addEventListener('storageUpdate', onStorage);
-    return () => window.removeEventListener('storageUpdate', onStorage);
+
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, [user?.company]);
 
   useEffect(() => {
     const loadImprovements = () => {
-      const parsed: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
+      const parsed: SecurityItem[] = getCompanyData(user?.company, 'securityData', []);
       const filtered = parsed.filter(item => 
         item.status === '부분이행' || item.status === '미이행'
       );
 
-      const saved = getCompanyData(user?.company, 'protectionImprovements', {});
+      const saved = getCompanyData(user?.company, 'securityImprovements', {});
 
       const improvementItems: ImprovementItem[] = filtered.map(item => {
-        const itemId = `${item.taskName}-${item.no}`;
+        const itemId = `${item.targetName}-${item.no}`;
         const savedItem = saved[itemId];
         return {
           id: itemId,
-          taskName: item.taskName,
+          targetName: item.targetName,
           code: item.no,
           question: item.item,
           evidence: item.evidence,
@@ -100,8 +94,8 @@ export default function ImprovementPlan() {
 
     const handleStorageUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
-      const lifecycleKey = getCompanyStorageKey(user?.company, 'lifecycleData');
-      if (customEvent.detail?.key === lifecycleKey) {
+      const securityDataKey = getCompanyStorageKey(user?.company, 'securityData');
+      if (customEvent.detail?.key === securityDataKey) {
         loadImprovements();
       }
     };
@@ -140,13 +134,14 @@ export default function ImprovementPlan() {
         improvementPlan: item.improvementPlan,
       };
     });
-    setCompanyData(user?.company, 'protectionImprovements', improvements);
+    setCompanyData(user?.company, 'securityImprovements', improvements);
     setHasChanges(false);
+    toast.success('저장되었습니다');
   };
 
   const handleExportToExcel = () => {
     const exportData = filteredItems.map(item => ({
-      '개인정보 처리업무명': item.taskName,
+      '검토대상명': item.targetName,
       '질의문 코드': item.code,
       '질의문': item.question,
       '취약점': item.evidence,
@@ -158,21 +153,20 @@ export default function ImprovementPlan() {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '침해요인별 개선 가이드');
-    XLSX.writeFile(wb, '개인정보_침해요인별_개선_가이드.xlsx');
+    XLSX.writeFile(wb, '보안성검토_침해요인별_개선_가이드.xlsx');
   };
 
   const filteredItems = activeTab === '전체' 
     ? items 
-    : items.filter(item => item.taskName === activeTab);
-
+    : items.filter(item => item.targetName === activeTab);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">개인정보 처리단계별 보호조치 침해요인별 개선 가이드</h1>
+          <h1 className="text-3xl font-bold text-primary">보안성 검토 침해요인별 개선 가이드</h1>
           <p className="text-muted-foreground mt-2">
-            식별된 침해요인과 개선 가이드를 관리합니다
+            보안성 검토의 침해요인과 개선 가이드를 관리합니다
           </p>
         </div>
         <div className="space-x-2">
@@ -190,7 +184,7 @@ export default function ImprovementPlan() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="전체">전체</TabsTrigger>
-          {taskNames.map(name => (
+          {targetNames.map(name => (
             <TabsTrigger key={name} value={name}>{name}</TabsTrigger>
           ))}
         </TabsList>
@@ -200,10 +194,10 @@ export default function ImprovementPlan() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                침해요인 목록 및 개선 가이드
+                보안성 검토 침해요인 목록 및 개선 가이드
               </CardTitle>
               <CardDescription>
-                각 침해요인에 대한 현황과 개선 가이드를 확인하세요
+                보안성 검토 관련 침해요인과 개선 가이드를 확인하세요
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -212,8 +206,8 @@ export default function ImprovementPlan() {
               <Card key={item.id}>
                 <CardContent className="space-y-4 pt-6">
                   <div>
-                    <Label className="font-semibold">개인정보 처리업무명</Label>
-                    <Input value={item.taskName} readOnly className="mt-1" />
+                    <Label className="font-semibold">검토대상명</Label>
+                    <Input value={item.targetName} readOnly className="mt-1" />
                   </div>
 
                   <div>
@@ -274,7 +268,7 @@ export default function ImprovementPlan() {
                   <Card>
                     <CardContent className="py-8">
                       <p className="text-center text-muted-foreground">
-                        Lifecycle Checklist에서 부분이행 또는 미이행 항목이 있을 때 표시됩니다.
+                        보안성 검토 Checklist에서 부분이행 또는 미이행 항목이 있을 때 표시됩니다.
                       </p>
                     </CardContent>
                   </Card>

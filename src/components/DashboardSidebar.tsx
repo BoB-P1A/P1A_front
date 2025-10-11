@@ -60,7 +60,8 @@ const getMenuItems = (userRole?: string) => {
         { title: '개인정보 흐름표', url: '/protection/flow-table', icon: GitBranch },
         { title: '개인정보 흐름도', url: '/protection/flowchart', icon: PieChart },
         { title: 'Lifecycle Checklist', url: '/protection/lifecycle', icon: CheckSquare },
-        { title: '침해요인별 개선방안', url: '/protection/improvement-plan', icon: AlertTriangle },
+        { title: '침해요인별 개선 가이드', url: '/protection/improvement-plan', icon: AlertTriangle },
+        { title: '조치 계획 수립', url: '/protection/action-plan', icon: FileText },
         { title: '결과보고서', url: '/protection/report', icon: FileCheck },
       ],
     },
@@ -69,8 +70,19 @@ const getMenuItems = (userRole?: string) => {
       icon: Settings,
       items: [
         { title: 'Admin Checklist', url: '/technical/checklist', icon: CheckSquare },
-        { title: '침해요인별 개선방안', url: '/technical/improvement-plan', icon: AlertTriangle },
+        { title: '침해요인별 개선 가이드', url: '/technical/improvement-plan', icon: AlertTriangle },
+        { title: '조치 계획 수립', url: '/technical/action-plan', icon: FileText },
         { title: '결과보고서', url: '/technical/report', icon: FileCheck },
+      ],
+    },
+    {
+      title: '보안성 검토',
+      icon: Shield,
+      items: [
+        { title: '보안성 검토 Checklist', url: '/security/checklist', icon: CheckSquare },
+        { title: '침해요인별 개선 가이드', url: '/security/improvement-plan', icon: AlertTriangle },
+        { title: '조치 계획 수립', url: '/security/action-plan', icon: FileText },
+        { title: '결과보고서', url: '/security/report', icon: FileCheck },
       ],
     }
   );
