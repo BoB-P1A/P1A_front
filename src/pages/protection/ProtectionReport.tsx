@@ -296,7 +296,7 @@ export default function ProtectionReport() {
             children: [
               new TableCell({ children: [new Paragraph('처리업무명')] }),
               new TableCell({ children: [new Paragraph('질의문 코드')] }),
-              new TableCell({ children: [new Paragraph('평가 근거 및 의견')] }),
+              new TableCell({ children: [new Paragraph('취약점')] }),
               new TableCell({ children: [new Paragraph('침해요인')] }),
             ]
           }),
@@ -687,7 +687,7 @@ export default function ProtectionReport() {
                 <UITableRow>
                   <UITableHead>개인정보 처리업무명</UITableHead>
                   <UITableHead>질의문 코드</UITableHead>
-                  <UITableHead>평가 근거 및 의견</UITableHead>
+                  <UITableHead>취약점</UITableHead>
                   <UITableHead>침해요인</UITableHead>
                 </UITableRow>
               </UITableHeader>
