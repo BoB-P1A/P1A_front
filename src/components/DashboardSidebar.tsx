@@ -53,7 +53,7 @@ const getMenuItems = (userRole?: string) => {
 
   items.push(
     {
-      title: '개인정보 처리단계별 보호조치',
+      title: '처리단계별 보호조치',
       icon: Shield,
       items: [
         { title: '개인정보 처리 업무표', url: '/protection/task-table', icon: Table },
