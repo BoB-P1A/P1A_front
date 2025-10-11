@@ -111,8 +111,8 @@ export function DashboardSidebar() {
   const menuItems = getMenuItems(user?.role);
 
   return (
-    <Sidebar className="border-r border-sidebar-border">
-      <SidebarHeader className="p-6 border-b border-sidebar-border">
+    <Sidebar className="border-r border-sidebar-border w-[280px]">
+      <SidebarHeader className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-pia-secondary flex items-center justify-center">
             <span className="text-white font-bold text-sm">E</span>
@@ -148,9 +148,9 @@ export function DashboardSidebar() {
                             isGroupActiveState && "bg-sidebar-accent text-sidebar-accent-foreground"
                           )}
                         >
-                          <div className="flex items-center gap-2">
-                            <item.icon className="h-4 w-4" />
-                            {!collapsed && <span>{item.title}</span>}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <item.icon className="h-4 w-4 shrink-0" />
+                            {!collapsed && <span className="text-sm whitespace-nowrap">{item.title}</span>}
                           </div>
                           {!collapsed && (
                             <ChevronRight className={cn(
@@ -167,15 +167,15 @@ export function DashboardSidebar() {
                             {item.items.map((subItem) => (
                               <SidebarMenuSubItem key={subItem.url}>
                                 <SidebarMenuSubButton asChild>
-                                  <NavLink 
+                                   <NavLink 
                                     to={subItem.url}
                                     className={({ isActive }) => cn(
                                       "flex items-center gap-2",
                                       isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                                     )}
                                   >
-                                    <subItem.icon className="h-4 w-4" />
-                                    <span>{subItem.title}</span>
+                                    <subItem.icon className="h-4 w-4 shrink-0" />
+                                    <span className="text-sm whitespace-nowrap">{subItem.title}</span>
                                   </NavLink>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -198,8 +198,8 @@ export function DashboardSidebar() {
                         isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       )}
                     >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="text-sm whitespace-nowrap">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -220,9 +220,9 @@ export function DashboardSidebar() {
                         (isActive('/admin/accounts') || isActive('/admin/companies')) && "bg-sidebar-accent text-sidebar-accent-foreground"
                       )}
                     >
-                      <div className="flex items-center gap-2">
-                        <Crown className="h-4 w-4" />
-                        {!collapsed && <span>관리자 페이지</span>}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Crown className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span className="text-sm whitespace-nowrap">관리자 페이지</span>}
                       </div>
                       {!collapsed && (
                         <ChevronRight className={cn(
@@ -245,8 +245,8 @@ export function DashboardSidebar() {
                                 isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                               )}
                             >
-                              <Users className="h-4 w-4" />
-                              <span>계정 및 권한 관리</span>
+                              <Users className="h-4 w-4 shrink-0" />
+                              <span className="text-sm whitespace-nowrap">계정 및 권한 관리</span>
                             </NavLink>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
@@ -259,8 +259,8 @@ export function DashboardSidebar() {
                                 isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                               )}
                             >
-                              <Building2 className="h-4 w-4" />
-                              <span>기업 관리</span>
+                              <Building2 className="h-4 w-4 shrink-0" />
+                              <span className="text-sm whitespace-nowrap">기업 관리</span>
                             </NavLink>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
