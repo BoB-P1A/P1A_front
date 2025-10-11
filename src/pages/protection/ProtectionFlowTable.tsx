@@ -102,22 +102,39 @@ export default function ProtectionFlowTable() {
   const [taskNames, setTaskNames] = useState<string[]>(['회원가입', '고객상담']);
   const [selectedTask, setSelectedTask] = useState('회원가입');
   const [flowDataByTask, setFlowDataByTask] = useState<Record<string, TaskFlowData>>(() => {
-    return getCompanyData(user?.company, 'flowTableData', {
-      '회원가입': {
-        collection: [],
-        storage: [],
-        usage: [],
-        provision: [],
-        disposal: [],
-      },
-      '고객상담': {
-        collection: [],
-        storage: [],
-        usage: [],
-        provision: [],
-        disposal: [],
-      },
+    const savedData = getCompanyData(user?.company, 'flowTableData', {});
+    
+    // Ensure all data has the correct structure with new 'usage' key
+    const migratedData: Record<string, TaskFlowData> = {};
+    Object.keys(savedData).forEach(taskName => {
+      migratedData[taskName] = {
+        collection: savedData[taskName]?.collection || [],
+        storage: savedData[taskName]?.storage || [],
+        usage: savedData[taskName]?.usage || [], // New key
+        provision: savedData[taskName]?.provision || [],
+        disposal: savedData[taskName]?.disposal || [],
+      };
     });
+    
+    // Add default tasks if none exist
+    if (Object.keys(migratedData).length === 0) {
+      migratedData['회원가입'] = {
+        collection: [],
+        storage: [],
+        usage: [],
+        provision: [],
+        disposal: [],
+      };
+      migratedData['고객상담'] = {
+        collection: [],
+        storage: [],
+        usage: [],
+        provision: [],
+        disposal: [],
+      };
+    }
+    
+    return migratedData;
   });
 
   // 처리업무표에서 업무명 가져오기
@@ -188,35 +205,71 @@ export default function ProtectionFlowTable() {
         break;
     }
 
-    setFlowDataByTask(prev => ({
-      ...prev,
-      [selectedTask]: {
-        ...prev[selectedTask],
-        [stage]: [...prev[selectedTask][stage], newRow],
-      },
-    }));
+    setFlowDataByTask(prev => {
+      // Ensure the task exists with proper structure
+      const currentTask = prev[selectedTask] || {
+        collection: [],
+        storage: [],
+        usage: [],
+        provision: [],
+        disposal: [],
+      };
+      
+      // Ensure the stage array exists
+      const currentStageData = currentTask[stage] || [];
+      
+      return {
+        ...prev,
+        [selectedTask]: {
+          ...currentTask,
+          [stage]: [...currentStageData, newRow],
+        },
+      };
+    });
   };
 
   const handleDeleteRow = (stage: 'collection' | 'storage' | 'usage' | 'provision' | 'disposal', id: string) => {
-    setFlowDataByTask(prev => ({
-      ...prev,
-      [selectedTask]: {
-        ...prev[selectedTask],
-        [stage]: prev[selectedTask][stage].filter((item: any) => item.id !== id),
-      },
-    }));
+    setFlowDataByTask(prev => {
+      const currentTask = prev[selectedTask] || {
+        collection: [],
+        storage: [],
+        usage: [],
+        provision: [],
+        disposal: [],
+      };
+      const currentStageData = currentTask[stage] || [];
+      
+      return {
+        ...prev,
+        [selectedTask]: {
+          ...currentTask,
+          [stage]: currentStageData.filter((item: any) => item.id !== id),
+        },
+      };
+    });
   };
 
   const handleEdit = (stage: 'collection' | 'storage' | 'usage' | 'provision' | 'disposal', id: string, field: string, value: string) => {
-    setFlowDataByTask(prev => ({
-      ...prev,
-      [selectedTask]: {
-        ...prev[selectedTask],
-        [stage]: prev[selectedTask][stage].map((item: any) => 
-          item.id === id ? { ...item, [field]: value } : item
-        ),
-      },
-    }));
+    setFlowDataByTask(prev => {
+      const currentTask = prev[selectedTask] || {
+        collection: [],
+        storage: [],
+        usage: [],
+        provision: [],
+        disposal: [],
+      };
+      const currentStageData = currentTask[stage] || [];
+      
+      return {
+        ...prev,
+        [selectedTask]: {
+          ...currentTask,
+          [stage]: currentStageData.map((item: any) => 
+            item.id === id ? { ...item, [field]: value } : item
+          ),
+        },
+      };
+    });
   };
 
   const handleSave = () => {
