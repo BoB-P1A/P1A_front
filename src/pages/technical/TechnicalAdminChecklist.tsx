@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Upload, Download, RotateCcw, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
-import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface EvaluationItem {
   id: number;
@@ -55,81 +55,43 @@ export default function TechnicalAdminChecklist() {
   const [systemName, setSystemName] = useState('');
 
   useEffect(() => {
-    const loadSystems = () => {
-      const savedSystems = getCompanyData(user?.company, 'technicalSystems', []);
-      if (savedSystems.length > 0) {
-        setSystems(savedSystems);
-        if (!activeTab) {
-          setActiveTab(savedSystems[0].name);
+    const loadData = async () => {
+      if (!user?.company) return;
+      
+      try {
+        const systemsResponse = await api.technical.systems.getAll(user.company);
+        if (systemsResponse.length > 0) {
+          setSystems(systemsResponse);
+          if (!activeTab) {
+            setActiveTab(systemsResponse[0].name);
+          }
         }
-      }
-
-      const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
-      // 평가영역이 '2'로 시작하는 항목들을 필터링 (예: '2. 대상시스템의 기술적 보호조치')
-      const filtered = evaluationItems.filter((item: any) => item.area?.startsWith('2.'));
-      
-      const savedData = getCompanyData(user?.company, 'technicalData', []);
-      
-      const technicalItems: TechnicalItem[] = filtered.map((item: any) => {
-        const saved = savedData.find((s: TechnicalItem) => s.id === item.id);
-        return {
-          id: item.id,
-          systemName: saved?.systemName || (systems.length > 0 ? systems[0].name : ''),
-          field: item.field,
-          subField: item.subField,
-          no: item.no,
-          item: item.item,
-          status: saved?.status || null,
-          evidence: saved?.evidence || '',
-          files: saved?.files || [],
-        };
-      });
-      
-      setItems(technicalItems);
-    };
-
-    loadSystems();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const systemsKey = getCompanyStorageKey(user?.company, 'technicalSystems');
-      const evalKey = getCompanyStorageKey(user?.company, 'evaluationItems');
-      if (customEvent.detail?.key === systemsKey || customEvent.detail?.key === evalKey) {
-        loadSystems();
+      } catch (error) {
+        toast({ title: '오류', description: '시스템 목록 로딩 실패', variant: 'destructive' });
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, [user?.company, activeTab]);
+    loadData();
+  }, [user?.company]);
 
   useEffect(() => {
-    if (!activeTab) return;
+    const loadChecklist = async () => {
+      if (!activeTab || !user?.company) return;
+      
+      try {
+        const checklistResponse = await api.technical.checklists.getAll({
+          companyId: user.company,
+          status: []
+        });
+        
+        setItems(checklistResponse.filter((item: any) => item.systemName === activeTab));
+      } catch (error) {
+        toast({ title: '오류', description: '체크리스트 로딩 실패', variant: 'destructive' });
+      }
+    };
 
-    const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
-    // 평가영역이 '2'로 시작하는 항목들을 필터링 (예: '2. 대상시스템의 기술적 보호조치')
-    const filtered = evaluationItems.filter((item: any) => item.area?.startsWith('2.'));
-
-    const savedItems: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
-    const savedForSystem = savedItems.filter((s) => s.systemName === activeTab);
-
-    const merged: TechnicalItem[] = filtered.map((item: any) => {
-      const saved = savedForSystem.find((s: any) => s.id === item.id);
-      return {
-        id: item.id,
-        systemName: activeTab,
-        field: item.field,
-        subField: item.subField,
-        no: item.no,
-        item: item.item,
-        status: saved?.status ?? null,
-        evidence: saved?.evidence ?? '',
-        files: saved?.files ?? [],
-      };
-    });
-
-    setItems(merged);
-  }, [activeTab, systems.length, user?.company]);
+    loadChecklist();
+  }, [activeTab, user?.company]);
   const handleStatusChange = (id: number, status: '이행' | '부분이행' | '미이행' | '해당없음') => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
     setHasChanges(true);
@@ -175,20 +137,15 @@ export default function TechnicalAdminChecklist() {
     link.click();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user?.company) return;
+    
     try {
-      const savedAll: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
-      const others = savedAll.filter((s) => s.systemName !== activeTab);
-      const toSave = items.map((it) => ({ ...it, systemName: activeTab }));
-      setCompanyData(user?.company, 'technicalData', [...others, ...toSave]);
+      await api.technical.checklists.save(user.company, activeTab, items);
       setHasChanges(false);
-      toast.success('저장되었습니다');
+      toast({ title: '저장되었습니다' });
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        toast.error('저장 용량이 초과되었습니다. 파일 크기를 줄이거나 개수를 줄여주세요.');
-      } else {
-        toast.error('저장 중 오류가 발생했습니다.');
-      }
+      toast({ title: '오류', description: '저장 실패', variant: 'destructive' });
     }
   };
 
@@ -225,7 +182,6 @@ export default function TechnicalAdminChecklist() {
       }
     }
     setSystems(updatedSystems);
-    setCompanyData(user?.company, 'technicalSystems', updatedSystems);
     setIsDialogOpen(false);
     setEditingSystem(null);
     setSystemName('');
@@ -234,7 +190,6 @@ export default function TechnicalAdminChecklist() {
   const handleDeleteSystem = (id: number) => {
     const updatedSystems = systems.filter(s => s.id !== id);
     setSystems(updatedSystems);
-    setCompanyData(user?.company, 'technicalSystems', updatedSystems);
     if (updatedSystems.length > 0 && activeTab === systems.find(s => s.id === id)?.name) {
       setActiveTab(updatedSystems[0].name);
     }

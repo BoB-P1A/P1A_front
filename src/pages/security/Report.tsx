@@ -4,15 +4,41 @@ import { Download } from 'lucide-react';
 import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, WidthType, HeadingLevel, AlignmentType } from 'docx';
 import { Table, TableBody, TableCell as UITableCell, TableHead, TableHeader, TableRow as UITableRow } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { useState, useEffect } from 'react';
 
 export default function SecurityReport() {
   const { user } = useAuth();
+  const [securityData, setSecurityData] = useState<any[]>([]);
+  const [improvements, setImprovements] = useState<any>({});
+  const [actionPlans, setActionPlans] = useState<any>({});
+  const [targets, setTargets] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user?.company) return;
+      
+      try {
+        const [checklistData, improvementsData, actionsData, targetsData] = await Promise.all([
+          api.security.checklists.getAll({ companyId: user.company }),
+          api.security.improvements.getAll(user.company),
+          api.security.actionPlans.getAll(user.company),
+          api.security.targets.getAll(user.company),
+        ]);
+        
+        setSecurityData(checklistData);
+        setImprovements(improvementsData);
+        setActionPlans(actionsData);
+        setTargets(targetsData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    };
+
+    loadData();
+  }, [user?.company]);
 
   const handleDownload = async () => {
-    const securityData = getCompanyData(user?.company, 'securityData', []);
-    const improvements = getCompanyData(user?.company, 'securityImprovements', {});
-    const actionPlans = getCompanyData(user?.company, 'securityActionPlans', {});
 
     const sections = [];
     sections.push(new Paragraph({ text: '보안성 검토 결과보고서', heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, spacing: { after: 400 } }));
@@ -28,8 +54,6 @@ export default function SecurityReport() {
       }
     });
     
-    // Sort by targets order
-    const targets = getCompanyData(user?.company, 'securityTargets', []);
     const targetOrder = targets.map((t: any) => t.name);
     const sortedTargetNames = Object.keys(criteriaByTarget).sort((a, b) => {
       const indexA = targetOrder.indexOf(a);
@@ -162,9 +186,6 @@ export default function SecurityReport() {
     window.URL.revokeObjectURL(url);
   };
 
-  const securityData = getCompanyData(user?.company, 'securityData', []);
-  const improvements = getCompanyData(user?.company, 'securityImprovements', {});
-  const actionPlans = getCompanyData(user?.company, 'securityActionPlans', {});
 
   const criteriaByTarget: { [key: string]: { [subField: string]: string[] } } = {};
   securityData.forEach((item: any) => {
@@ -175,7 +196,6 @@ export default function SecurityReport() {
     }
   });
 
-  const targets = getCompanyData(user?.company, 'securityTargets', []);
   const targetOrder = targets.map((t: any) => t.name);
 
   const riskItems = securityData.filter((item: any) => item.status === '부분이행' || item.status === '미이행')

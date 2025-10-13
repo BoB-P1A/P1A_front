@@ -5,35 +5,38 @@ import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, T
 import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 export default function TechnicalReport() {
   const { user } = useAuth();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [technicalData, setTechnicalData] = useState<any[]>([]);
+  const [improvements, setImprovements] = useState<any>({});
+  const [systems, setSystems] = useState<any[]>([]);
 
   useEffect(() => {
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const dataKey = getCompanyStorageKey(user?.company, 'technicalData');
-      const improvementsKey = getCompanyStorageKey(user?.company, 'technicalImprovements');
-      const systemsKey = getCompanyStorageKey(user?.company, 'technicalSystems');
+    const loadData = async () => {
+      if (!user?.company) return;
       
-      if (customEvent.detail?.key === dataKey || 
-          customEvent.detail?.key === improvementsKey ||
-          customEvent.detail?.key === systemsKey) {
-        setRefreshKey(prev => prev + 1);
+      try {
+        const [checklistData, improvementsData, systemsData] = await Promise.all([
+          api.technical.checklists.getAll({ companyId: user.company }),
+          api.technical.improvements.getAll(user.company),
+          api.technical.systems.getAll(user.company),
+        ]);
+        
+        setTechnicalData(checklistData);
+        setImprovements(improvementsData);
+        setSystems(systemsData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
+    loadData();
   }, [user?.company]);
   
   const handleDownload = async () => {
     try {
-      // Load data from company storage
-      const technicalData = getCompanyData(user?.company, 'technicalData', []);
-      const improvements = getCompanyData(user?.company, 'technicalImprovements', {});
 
       const sections = [];
 
@@ -67,8 +70,6 @@ export default function TechnicalReport() {
         }
       });
 
-      // Sort by systems order
-      const systems = getCompanyData(user?.company, 'technicalSystems', []);
       const systemOrder = systems.map((s: any) => s.name);
       const sortedSystemNames = Object.keys(criteriaBySystem).sort((a, b) => {
         const indexA = systemOrder.indexOf(a);
@@ -141,11 +142,11 @@ export default function TechnicalReport() {
         })
       );
 
-      const actionPlans = getCompanyData(user?.company, 'technicalActionPlans', {});
+      const actionPlansData = await api.technical.actionPlans.getAll(user.company);
       const actionPlansBySystem: { [key: string]: any[] } = {};
       
-      Object.keys(actionPlans).forEach(id => {
-        const plan = actionPlans[id];
+      Object.keys(actionPlansData).forEach(id => {
+        const plan = actionPlansData[id];
         if (plan && plan.systemName) {
           if (!actionPlansBySystem[plan.systemName]) actionPlansBySystem[plan.systemName] = [];
           actionPlansBySystem[plan.systemName].push(plan);
@@ -262,8 +263,6 @@ export default function TechnicalReport() {
   };
 
 
-  const technicalData = getCompanyData(user?.company, 'technicalData', []);
-  const improvements = getCompanyData(user?.company, 'technicalImprovements', {});
 
   const criteriaBySystem: { [key: string]: { [subField: string]: string[] } } = {};
   technicalData.forEach((item: any) => {
@@ -335,7 +334,6 @@ export default function TechnicalReport() {
         </CardHeader>
         <CardContent className="space-y-2">
           {(() => {
-            const systems = getCompanyData(user?.company, 'technicalSystems', []);
             const systemOrder = systems.map((s: any) => s.name);
             const sortedSystemNames = Object.keys(criteriaBySystem).sort((a, b) => {
               const indexA = systemOrder.indexOf(a);
@@ -397,18 +395,30 @@ export default function TechnicalReport() {
         </CardHeader>
         <CardContent className="space-y-4">
           {(() => {
-            const actionPlans = getCompanyData(user?.company, 'technicalActionPlans', {});
+            const [actionPlansData, setActionPlansData] = useState<any>({});
+            
+            useEffect(() => {
+              const loadActionPlans = async () => {
+                if (!user?.company) return;
+                try {
+                  const data = await api.technical.actionPlans.getAll(user.company);
+                  setActionPlansData(data);
+                } catch (error) {
+                  console.error('Failed to load action plans:', error);
+                }
+              };
+              loadActionPlans();
+            }, [user?.company]);
             const actionPlansBySystem: { [key: string]: any[] } = {};
             
-            Object.keys(actionPlans).forEach(id => {
-              const plan = actionPlans[id];
+            Object.keys(actionPlansData).forEach(id => {
+              const plan = actionPlansData[id];
               if (plan && plan.systemName) {
                 if (!actionPlansBySystem[plan.systemName]) actionPlansBySystem[plan.systemName] = [];
                 actionPlansBySystem[plan.systemName].push(plan);
               }
             });
 
-            const systems = getCompanyData(user?.company, 'technicalSystems', []);
             const systemOrder = systems.map((s: any) => s.name);
             const sortedSystemNames = Object.keys(actionPlansBySystem).sort((a, b) => {
               const indexA = systemOrder.indexOf(a);

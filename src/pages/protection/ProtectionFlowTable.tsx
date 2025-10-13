@@ -8,7 +8,8 @@ import { Save, Plus, Trash2, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 // 수집 단계 데이터
 interface CollectionData {
@@ -99,89 +100,51 @@ interface TaskFlowData {
 
 export default function ProtectionFlowTable() {
   const { user } = useAuth();
-  const [taskNames, setTaskNames] = useState<string[]>(['회원가입', '고객상담']);
-  const [selectedTask, setSelectedTask] = useState('회원가입');
-  const [flowDataByTask, setFlowDataByTask] = useState<Record<string, TaskFlowData>>(() => {
-    const savedData = getCompanyData(user?.company, 'flowTableData', {});
-    
-    // Ensure all data has the correct structure with new 'usage' key
-    const migratedData: Record<string, TaskFlowData> = {};
-    Object.keys(savedData).forEach(taskName => {
-      migratedData[taskName] = {
-        collection: savedData[taskName]?.collection || [],
-        storage: savedData[taskName]?.storage || [],
-        usage: savedData[taskName]?.usage || [], // New key
-        provision: savedData[taskName]?.provision || [],
-        disposal: savedData[taskName]?.disposal || [],
-      };
-    });
-    
-    // Add default tasks if none exist
-    if (Object.keys(migratedData).length === 0) {
-      migratedData['회원가입'] = {
-        collection: [],
-        storage: [],
-        usage: [],
-        provision: [],
-        disposal: [],
-      };
-      migratedData['고객상담'] = {
-        collection: [],
-        storage: [],
-        usage: [],
-        provision: [],
-        disposal: [],
-      };
-    }
-    
-    return migratedData;
-  });
+  const [taskNames, setTaskNames] = useState<string[]>([]);
+  const [selectedTask, setSelectedTask] = useState('');
+  const [flowDataByTask, setFlowDataByTask] = useState<Record<string, TaskFlowData>>({});
+  const [loading, setLoading] = useState(false);
 
-  // 처리업무표에서 업무명 가져오기
   useEffect(() => {
-    const loadTaskNames = () => {
-      const savedTasks = getCompanyData(user?.company, 'processingTasks', []);
-      if (savedTasks.length > 0) {
-        const taskNamesList = savedTasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
+    const loadData = async () => {
+      if (!user?.company) return;
+      
+      try {
+        setLoading(true);
+        const tasksResponse = await api.protection.tasks.getAll(user.company);
+        const taskNamesList = tasksResponse.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
+        
         if (taskNamesList.length > 0) {
           setTaskNames(taskNamesList);
           
-          // 새로운 업무에 대한 빈 데이터 구조 생성
-          const newFlowData = { ...flowDataByTask };
+          const flowTableResponse = await api.protection.flowTables.getAll(user.company);
+          
+          const newFlowData: Record<string, TaskFlowData> = {};
           taskNamesList.forEach((name: string) => {
-            if (!newFlowData[name]) {
-              newFlowData[name] = {
-                collection: [],
-                storage: [],
-                usage: [],
-                provision: [],
-                disposal: [],
-              };
-            }
+            newFlowData[name] = flowTableResponse[name] || {
+              collection: [],
+              storage: [],
+              usage: [],
+              provision: [],
+              disposal: [],
+            };
           });
+          
           setFlowDataByTask(newFlowData);
           
-          // 선택된 태스크가 없으면 첫 번째로 설정
-          if (!taskNamesList.includes(selectedTask)) {
+          if (!selectedTask || !taskNamesList.includes(selectedTask)) {
             setSelectedTask(taskNamesList[0]);
           }
         }
+      } catch (error) {
+        toast({ title: '오류', description: '데이터 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadTaskNames();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const storageKey = getCompanyStorageKey(user?.company, 'processingTasks');
-      if (customEvent.detail?.key === storageKey) {
-        loadTaskNames();
-      }
-    };
-
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
+    loadData();
+  }, [user?.company]);
 
   const handleAddRow = (stage: 'collection' | 'storage' | 'usage' | 'provision' | 'disposal') => {
     const newId = Date.now().toString();
@@ -272,9 +235,18 @@ export default function ProtectionFlowTable() {
     });
   };
 
-  const handleSave = () => {
-    setCompanyData(user?.company, 'flowTableData', flowDataByTask);
-    alert('저장되었습니다.');
+  const handleSave = async () => {
+    if (!user?.company) return;
+    
+    try {
+      setLoading(true);
+      await api.protection.flowTables.save(user.company, flowDataByTask);
+      toast({ title: '저장되었습니다' });
+    } catch (error) {
+      toast({ title: '오류', description: '저장 실패', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExcelDownload = () => {

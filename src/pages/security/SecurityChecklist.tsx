@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Upload, Download, RotateCcw, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
-import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface EvaluationItem {
   id: number;
@@ -55,81 +55,43 @@ export default function SecurityChecklist() {
   const [targetName, setTargetName] = useState('');
 
   useEffect(() => {
-    const loadTargets = () => {
-      const savedTargets = getCompanyData(user?.company, 'securityTargets', []);
-      if (savedTargets.length > 0) {
-        setTargets(savedTargets);
-        if (!activeTab) {
-          setActiveTab(savedTargets[0].name);
+    const loadData = async () => {
+      if (!user?.company) return;
+      
+      try {
+        const targetsResponse = await api.security.targets.getAll(user.company);
+        if (targetsResponse.length > 0) {
+          setTargets(targetsResponse);
+          if (!activeTab) {
+            setActiveTab(targetsResponse[0].name);
+          }
         }
-      }
-
-      const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
-      // 평가영역이 '3'으로 시작하는 항목들을 필터링 (예: '3. 보안성 검토')
-      const filtered = evaluationItems.filter((item: any) => item.area?.startsWith('3.'));
-      
-      const savedData = getCompanyData(user?.company, 'securityData', []);
-      
-      const securityItems: SecurityItem[] = filtered.map((item: any) => {
-        const saved = savedData.find((s: SecurityItem) => s.id === item.id);
-        return {
-          id: item.id,
-          targetName: saved?.targetName || (targets.length > 0 ? targets[0].name : ''),
-          field: item.field,
-          subField: item.subField,
-          no: item.no,
-          item: item.item,
-          status: saved?.status || null,
-          evidence: saved?.evidence || '',
-          files: saved?.files || [],
-        };
-      });
-      
-      setItems(securityItems);
-    };
-
-    loadTargets();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const targetsKey = getCompanyStorageKey(user?.company, 'securityTargets');
-      const evalKey = getCompanyStorageKey(user?.company, 'evaluationItems');
-      if (customEvent.detail?.key === targetsKey || customEvent.detail?.key === evalKey) {
-        loadTargets();
+      } catch (error) {
+        toast({ title: '오류', description: '데이터 로딩 실패', variant: 'destructive' });
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, [user?.company, activeTab]);
+    loadData();
+  }, [user?.company]);
 
   useEffect(() => {
-    if (!activeTab) return;
+    const loadChecklist = async () => {
+      if (!activeTab || !user?.company) return;
+      
+      try {
+        const checklistResponse = await api.security.checklists.getAll({
+          companyId: user.company,
+          status: []
+        });
+        
+        setItems(checklistResponse.filter((item: any) => item.targetName === activeTab));
+      } catch (error) {
+        toast({ title: '오류', description: '체크리스트 로딩 실패', variant: 'destructive' });
+      }
+    };
 
-    const evaluationItems = getCompanyData(user?.company, 'evaluationItems', []);
-    // 평가영역이 '3'으로 시작하는 항목들을 필터링 (예: '3. 보안성 검토')
-    const filtered = evaluationItems.filter((item: any) => item.area?.startsWith('3.'));
-
-    const savedItems: SecurityItem[] = getCompanyData(user?.company, 'securityData', []);
-    const savedForTarget = savedItems.filter((s) => s.targetName === activeTab);
-
-    const merged: SecurityItem[] = filtered.map((item: any) => {
-      const saved = savedForTarget.find((s: any) => s.id === item.id);
-      return {
-        id: item.id,
-        targetName: activeTab,
-        field: item.field,
-        subField: item.subField,
-        no: item.no,
-        item: item.item,
-        status: saved?.status ?? null,
-        evidence: saved?.evidence ?? '',
-        files: saved?.files ?? [],
-      };
-    });
-
-    setItems(merged);
-  }, [activeTab, targets.length, user?.company]);
+    loadChecklist();
+  }, [activeTab, user?.company]);
 
   const handleStatusChange = (id: number, status: '이행' | '부분이행' | '미이행' | '해당없음') => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, status } : item));
@@ -176,20 +138,15 @@ export default function SecurityChecklist() {
     link.click();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user?.company) return;
+    
     try {
-      const savedAll: SecurityItem[] = getCompanyData(user?.company, 'securityData', []);
-      const others = savedAll.filter((s) => s.targetName !== activeTab);
-      const toSave = items.map((it) => ({ ...it, targetName: activeTab }));
-      setCompanyData(user?.company, 'securityData', [...others, ...toSave]);
+      await api.security.checklists.save(user.company, activeTab, items);
       setHasChanges(false);
-      toast.success('저장되었습니다');
+      toast({ title: '저장되었습니다' });
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        toast.error('저장 용량이 초과되었습니다. 파일 크기를 줄이거나 개수를 줄여주세요.');
-      } else {
-        toast.error('저장 중 오류가 발생했습니다.');
-      }
+      toast({ title: '오류', description: '저장 실패', variant: 'destructive' });
     }
   };
 
@@ -226,7 +183,6 @@ export default function SecurityChecklist() {
       }
     }
     setTargets(updatedTargets);
-    setCompanyData(user?.company, 'securityTargets', updatedTargets);
     setIsDialogOpen(false);
     setEditingTarget(null);
     setTargetName('');
@@ -235,7 +191,6 @@ export default function SecurityChecklist() {
   const handleDeleteTarget = (id: number) => {
     const updatedTargets = targets.filter(t => t.id !== id);
     setTargets(updatedTargets);
-    setCompanyData(user?.company, 'securityTargets', updatedTargets);
     if (updatedTargets.length > 0 && activeTab === targets.find(t => t.id === id)?.name) {
       setActiveTab(updatedTargets[0].name);
     }

@@ -5,40 +5,44 @@ import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, T
 import { Table as UITable, TableBody as UITableBody, TableCell as UITableCell, TableHead as UITableHead, TableHeader as UITableHeader, TableRow as UITableRow } from '@/components/ui/table';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 export default function ProtectionReport() {
   const { user } = useAuth();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [taskTableData, setTaskTableData] = useState<any[]>([]);
+  const [flowTableData, setFlowTableData] = useState<any>({});
+  const [lifecycleData, setLifecycleData] = useState<any[]>([]);
+  const [improvements, setImprovements] = useState<any>({});
+  const [flowChartImages, setFlowChartImages] = useState<any>({});
 
   useEffect(() => {
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
-      const flowKey = getCompanyStorageKey(user?.company, 'flowTableData');
-      const chartKey = getCompanyStorageKey(user?.company, 'flowChartData');
-      const lifecycleKey = getCompanyStorageKey(user?.company, 'lifecycleData');
-      const improvementsKey = getCompanyStorageKey(user?.company, 'protectionImprovements');
+    const loadData = async () => {
+      if (!user?.company) return;
       
-      if (customEvent.detail?.key === taskKey || 
-          customEvent.detail?.key === flowKey ||
-          customEvent.detail?.key === chartKey ||
-          customEvent.detail?.key === lifecycleKey ||
-          customEvent.detail?.key === improvementsKey) {
-        setRefreshKey(prev => prev + 1);
+      try {
+        const [tasks, flowTables, lifecycle, improvementsData, flowCharts] = await Promise.all([
+          api.protection.tasks.getAll(user.company),
+          api.protection.flowTables.getAll(user.company),
+          api.protection.lifecycle.getAll(user.company),
+          api.protection.improvements.getAll(user.company),
+          api.protection.flowCharts.getAll(user.company),
+        ]);
+        
+        setTaskTableData(tasks);
+        setFlowTableData(flowTables);
+        setLifecycleData(lifecycle);
+        setImprovements(improvementsData);
+        setFlowChartImages(flowCharts);
+      } catch (error) {
+        console.error('Failed to load data:', error);
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
+    loadData();
   }, [user?.company]);
+
   const handleDownload = async () => {
     try {
-      // Load data from company storage
-      const taskTableData = getCompanyData(user?.company, 'processingTasks', []);
-      const flowTableData = getCompanyData(user?.company, 'flowTableData', {});
-      const lifecycleData = getCompanyData(user?.company, 'lifecycleData', []);
-      const improvements = getCompanyData(user?.company, 'protectionImprovements', {});
 
       const sections = [];
 
@@ -226,8 +230,6 @@ export default function ProtectionReport() {
         })
       );
 
-      // Load flow chart images
-      const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
       const taskNames = Object.keys(flowChartImages);
       
       if (taskNames.length > 0) {
@@ -365,11 +367,11 @@ export default function ProtectionReport() {
         })
       );
 
-      const actionPlans = getCompanyData(user?.company, 'protectionActionPlans', {});
+      const actionPlansData = await api.protection.actionPlans.getAll(user.company);
       const actionPlansByTask: { [key: string]: any[] } = {};
       
-      Object.keys(actionPlans).forEach(id => {
-        const plan = actionPlans[id];
+      Object.keys(actionPlansData).forEach(id => {
+        const plan = actionPlansData[id];
         if (plan && plan.taskName) {
           if (!actionPlansByTask[plan.taskName]) actionPlansByTask[plan.taskName] = [];
           actionPlansByTask[plan.taskName].push(plan);
@@ -488,10 +490,7 @@ export default function ProtectionReport() {
   };
 
 
-  const processingTasks = getCompanyData(user?.company, 'processingTasks', []);
-  const flowTableData = getCompanyData(user?.company, 'flowTableData', {});
-  const lifecycleData = getCompanyData(user?.company, 'lifecycleData', []);
-  const improvements = getCompanyData(user?.company, 'protectionImprovements', {});
+  const processingTasks = taskTableData;
   const PHASES = ['수집','보유','이용','제공','파기'] as const;
 
   const criteriaByTask: { [key: string]: { [subField: string]: string[] } } = {};
@@ -767,7 +766,6 @@ export default function ProtectionReport() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">1.3 개인정보 흐름도</h3>
             {(() => {
-              const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
               const taskNames = processingTasks.map((t: any) => t.taskName).filter((name: string) => name.trim() !== '');
               
               if (Object.keys(flowChartImages).length === 0) {
@@ -866,11 +864,25 @@ export default function ProtectionReport() {
         </CardHeader>
         <CardContent className="space-y-4">
           {(() => {
-            const actionPlans = getCompanyData(user?.company, 'protectionActionPlans', {});
+            const [actionPlansData, setActionPlansData] = useState<any>({});
+            
+            useEffect(() => {
+              const loadActionPlans = async () => {
+                if (!user?.company) return;
+                try {
+                  const data = await api.protection.actionPlans.getAll(user.company);
+                  setActionPlansData(data);
+                } catch (error) {
+                  console.error('Failed to load action plans:', error);
+                }
+              };
+              loadActionPlans();
+            }, [user?.company]);
+            
             const actionPlansByTask: { [key: string]: any[] } = {};
             
-            Object.keys(actionPlans).forEach(id => {
-              const plan = actionPlans[id];
+            Object.keys(actionPlansData).forEach(id => {
+              const plan = actionPlansData[id];
               if (plan && plan.taskName) {
                 if (!actionPlansByTask[plan.taskName]) actionPlansByTask[plan.taskName] = [];
                 actionPlansByTask[plan.taskName].push(plan);
