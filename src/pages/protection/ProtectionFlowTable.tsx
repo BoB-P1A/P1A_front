@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Save, Plus, Trash2, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
@@ -321,8 +322,8 @@ export default function ProtectionFlowTable() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col h-[calc(100vh-8rem)] gap-6">
+      <div className="shrink-0 flex justify-between items-center">
         <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
         <div className="flex gap-2">
           <Button onClick={handleExcelDownload} variant="outline">
@@ -336,13 +337,15 @@ export default function ProtectionFlowTable() {
         </div>
       </div>
 
-      <Tabs value={selectedTask} onValueChange={setSelectedTask}>
-        <TabsList>
+      <Tabs value={selectedTask} onValueChange={setSelectedTask} className="flex flex-col flex-1 overflow-hidden">
+        <TabsList className="shrink-0">
           {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
         </TabsList>
 
         {taskNames.map(task => (
-          <TabsContent key={task} value={task} className="space-y-6">
+          <TabsContent key={task} value={task} className="flex-1 overflow-hidden mt-6">
+            <ScrollArea className="h-full">
+              <div className="space-y-6 pr-4">
             {/* 수집 단계 */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -737,6 +740,8 @@ export default function ProtectionFlowTable() {
                 </div>
               </CardContent>
             </Card>
+              </div>
+            </ScrollArea>
           </TabsContent>
         ))}
       </Tabs>
