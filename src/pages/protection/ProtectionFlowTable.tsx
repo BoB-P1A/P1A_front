@@ -348,79 +348,6 @@ export default function ProtectionFlowTable() {
         {/* Scrollable Content Section */}
         <ScrollArea className="flex-1">
           {taskNames.map(task => (
-            <TabsContent key={task} value={task} className="space-y-6 pr-4 mt-4">
-              {/* 수집 단계 */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>수집</CardTitle>
-                  <Button onClick={() => handleAddRow('collection')} size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    행 추가
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="min-w-[120px]">평가업무명</TableHead>
-                          <TableHead className="min-w-[120px]">세부업무명</TableHead>
-                          <TableHead className="min-w-[120px]">수집대상</TableHead>
-                          <TableHead className="min-w-[120px]">수집경로</TableHead>
-                          <TableHead className="min-w-[120px]">수집시스템</TableHead>
-                          <TableHead className="min-w-[200px]">수집항목</TableHead>
-                          <TableHead className="min-w-[120px]">수집주기</TableHead>
-                          <TableHead className="min-w-[120px]">수집담당자</TableHead>
-                          <TableHead className="min-w-[150px]">수집근거</TableHead>
-                          <TableHead className="min-w-[100px]">온라인여부</TableHead>
-                          <TableHead className="min-w-[100px]">암호화여부</TableHead>
-                          <TableHead className="w-[80px]">작업</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {flowDataByTask[task]?.collection.map((row) => (
-                          <TableRow key={row.id}>
-                            <TableCell className="font-medium">{task}</TableCell>
-                            <TableCell><Input value={row.detailTask} onChange={(e) => handleEdit('collection', row.id, 'detailTask', e.target.value)} /></TableCell>
-                            <TableCell><Input value={row.collectionTarget} onChange={(e) => handleEdit('collection', row.id, 'collectionTarget', e.target.value)} /></TableCell>
-                            <TableCell><Input value={row.collectionPath} onChange={(e) => handleEdit('collection', row.id, 'collectionPath', e.target.value)} /></TableCell>
-                            <TableCell><Input value={row.collectionSystem} onChange={(e) => handleEdit('collection', row.id, 'collectionSystem', e.target.value)} /></TableCell>
-                            <TableCell><Input value={row.collectionItem} onChange={(e) => handleEdit('collection', row.id, 'collectionItem', e.target.value)} /></TableCell>
-                            <TableCell><Input value={row.collectionPeriod} onChange={(e) => handleEdit('collection', row.id, 'collectionPeriod', e.target.value)} /></TableCell>
-                            <TableCell><Input value={row.collectionManager} onChange={(e) => handleEdit('collection', row.id, 'collectionManager', e.target.value)} /></TableCell>
-                            <TableCell><Input value={row.collectionBasis} onChange={(e) => handleEdit('collection', row.id, 'collectionBasis', e.target.value)} /></TableCell>
-                            <TableCell>
-                              <Select value={row.isOnline} onValueChange={(value) => handleEdit('collection', row.id, 'isOnline', value)}>
-                                <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="True">True</SelectItem>
-                                  <SelectItem value="False">False</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Select value={row.isEncrypted} onValueChange={(value) => handleEdit('collection', row.id, 'isEncrypted', value)}>
-                                <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="True">True</SelectItem>
-                                  <SelectItem value="False">False</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteRow('collection', row.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-
-        {taskNames.map(task => (
           <TabsContent key={task} value={task} className="space-y-6">
             {/* 수집 단계 */}
             <Card>
@@ -817,8 +744,8 @@ export default function ProtectionFlowTable() {
               </CardContent>
             </Card>
           </TabsContent>
-          ))}
-        </ScrollArea>
+        ))}
+      </ScrollArea>
       </Tabs>
     </div>
   );
