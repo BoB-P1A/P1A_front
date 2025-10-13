@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Save, Plus, Trash2, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
@@ -322,45 +321,40 @@ export default function ProtectionFlowTable() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] overflow-x-hidden">
-      <div className="sticky top-0 z-10 bg-background pb-4 space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
-          <div className="flex gap-2">
-            <Button onClick={handleExcelDownload} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              엑셀 다운로드
-            </Button>
-            <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              저장
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
+        <div className="flex gap-2">
+          <Button onClick={handleExcelDownload} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            엑셀 다운로드
+          </Button>
+          <Button onClick={handleSave}>
+            <Save className="mr-2 h-4 w-4" />
+            저장
+          </Button>
         </div>
-
-        <Tabs value={selectedTask} onValueChange={setSelectedTask}>
-          <TabsList>
-            {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
-          </TabsList>
-        </Tabs>
       </div>
 
       <Tabs value={selectedTask} onValueChange={setSelectedTask}>
+        <TabsList>
+          {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
+        </TabsList>
+
         {taskNames.map(task => (
-          <TabsContent key={task} value={task} className="flex-1">
-            <ScrollArea className="h-full">
-              <div className="space-y-6 pr-4">
-                {/* 수집 단계 */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>수집</CardTitle>
-                    <Button onClick={() => handleAddRow('collection')} size="sm">
-                      <Plus className="mr-2 h-4 w-4" />
-                      행 추가
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
+          <TabsContent key={task} value={task} className="space-y-6">
+            {/* 수집 단계 */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>수집</CardTitle>
+                <Button onClick={() => handleAddRow('collection')} size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  행 추가
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="min-w-[120px]">평가업무명</TableHead>
@@ -416,20 +410,22 @@ export default function ProtectionFlowTable() {
                       ))}
                     </TableBody>
                   </Table>
-                  </CardContent>
-                </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-                {/* 보유 단계 */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>보유</CardTitle>
-                    <Button onClick={() => handleAddRow('storage')} size="sm">
-                      <Plus className="mr-2 h-4 w-4" />
-                      행 추가
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
+            {/* 보유 단계 */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>보유</CardTitle>
+                <Button onClick={() => handleAddRow('storage')} size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  행 추가
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="min-w-[120px]">평가업무명</TableHead>
@@ -479,20 +475,22 @@ export default function ProtectionFlowTable() {
                       ))}
                     </TableBody>
                   </Table>
-                  </CardContent>
-                </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-                {/* 이용 단계 */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>이용</CardTitle>
-                    <Button onClick={() => handleAddRow('usage')} size="sm">
-                      <Plus className="mr-2 h-4 w-4" />
-                      행 추가
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
+            {/* 이용 단계 */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>이용</CardTitle>
+                <Button onClick={() => handleAddRow('usage')} size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  행 추가
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="min-w-[120px]">평가업무명</TableHead>
@@ -546,20 +544,22 @@ export default function ProtectionFlowTable() {
                       ))}
                     </TableBody>
                   </Table>
-                  </CardContent>
-                </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-                {/* 제공 단계 */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>제공</CardTitle>
-                    <Button onClick={() => handleAddRow('provision')} size="sm">
-                      <Plus className="mr-2 h-4 w-4" />
-                      행 추가
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
+            {/* 제공 단계 */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>제공</CardTitle>
+                <Button onClick={() => handleAddRow('provision')} size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  행 추가
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="min-w-[120px]">평가업무명</TableHead>
@@ -641,20 +641,22 @@ export default function ProtectionFlowTable() {
                       ))}
                     </TableBody>
                   </Table>
-                  </CardContent>
-                </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-                {/* 파기 단계 */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>파기</CardTitle>
-                    <Button onClick={() => handleAddRow('disposal')} size="sm">
-                      <Plus className="mr-2 h-4 w-4" />
-                      행 추가
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
+            {/* 파기 단계 */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>파기</CardTitle>
+                <Button onClick={() => handleAddRow('disposal')} size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  행 추가
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="min-w-[120px]">평가업무명</TableHead>
@@ -732,10 +734,9 @@ export default function ProtectionFlowTable() {
                       ))}
                     </TableBody>
                   </Table>
-                  </CardContent>
-                </Card>
-              </div>
-            </ScrollArea>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         ))}
       </Tabs>
