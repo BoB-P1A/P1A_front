@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Download, Trash2, RotateCcw, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface EvaluationItem {
   id: number;
@@ -50,59 +51,69 @@ export default function ProtectionLifecycle() {
   const [items, setItems] = useState<LifecycleItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadTasks = () => {
-      const processingTasks = getCompanyData(user?.company, 'processingTasks', []);
-      if (processingTasks.length > 0) {
-        setTasks(processingTasks);
-        if (!activeTab) {
-          setActiveTab(processingTasks[0].taskName);
+    if (!user?.company) return;
+
+    const loadTasks = async () => {
+      try {
+        setLoading(true);
+        const processingTasks = await api.protection.tasks.getAll(user.company);
+        if (processingTasks.length > 0) {
+          setTasks(processingTasks);
+          if (!activeTab) {
+            setActiveTab(processingTasks[0].taskName);
+          }
         }
+      } catch (error) {
+        toast({ title: '처리업무 목록 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
     loadTasks();
+  }, [user?.company]);
 
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
-      const evalKey = getCompanyStorageKey(user?.company, 'evaluationItems');
-      if (customEvent.detail?.key === taskKey || customEvent.detail?.key === evalKey) {
-        loadTasks();
+useEffect(() => {
+    if (!activeTab || !user?.company) return;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [evaluationItems, savedItems] = await Promise.all([
+          api.evaluations.getAll(),
+          api.protection.lifecycle.getAll(user.company),
+        ]);
+
+        const filtered = evaluationItems.filter((item: any) => item.area?.startsWith('1.'));
+        const savedForTask = savedItems.filter((s: any) => s.taskName === activeTab);
+
+        const merged: LifecycleItem[] = filtered.map((item: any) => {
+          const saved = savedForTask.find((s: any) => s.id === item.id);
+          return {
+            id: item.id,
+            taskName: activeTab,
+            field: item.field,
+            subField: item.subField,
+            no: item.no,
+            item: item.item,
+            status: saved?.status ?? null,
+            evidence: saved?.evidence ?? '',
+            files: saved?.files ?? [],
+          };
+        });
+
+        setItems(merged);
+      } catch (error) {
+        toast({ title: '데이터 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
-  }, []);
-
-  useEffect(() => {
-    if (!activeTab) return;
-
-    const evaluationItems: EvaluationItem[] = getCompanyData(user?.company, 'evaluationItems', []);
-    // 평가영역이 '1'로 시작하는 항목들을 필터링 (예: '1. 개인정보 처리단계별 보호조치')
-    const filtered = evaluationItems.filter(item => item.area?.startsWith('1.'));
-
-    const savedItems: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
-    const savedForTask = savedItems.filter((s) => s.taskName === activeTab);
-
-    const merged: LifecycleItem[] = filtered.map((item) => {
-      const saved = savedForTask.find((s) => s.id === item.id);
-      return {
-        id: item.id,
-        taskName: activeTab,
-        field: item.field,
-        subField: item.subField,
-        no: item.no,
-        item: item.item,
-        status: saved?.status ?? null,
-        evidence: saved?.evidence ?? '',
-        files: saved?.files ?? [],
-      };
-    });
-
-    setItems(merged);
+    loadData();
   }, [activeTab, tasks.length, user?.company]);
 
   const handleStatusChange = (id: number, status: '이행' | '부분이행' | '미이행' | '해당없음') => {
@@ -150,12 +161,18 @@ export default function ProtectionLifecycle() {
     link.click();
   };
 
-  const handleSave = () => {
-    const savedAll: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
-    const others = savedAll.filter((s) => s.taskName !== activeTab);
-    const toSave = items.map((it) => ({ ...it, taskName: activeTab }));
-    setCompanyData(user?.company, 'lifecycleData', [...others, ...toSave]);
-    setHasChanges(false);
+const handleSave = async () => {
+    try {
+      setLoading(true);
+      const toSave = items.map((it) => ({ ...it, taskName: activeTab }));
+      await api.protection.lifecycle.save(user?.company as string, activeTab, toSave);
+      setHasChanges(false);
+      toast({ title: '저장되었습니다' });
+    } catch (error) {
+      toast({ title: '저장 실패', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {

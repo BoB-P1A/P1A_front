@@ -5,19 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Download, AlertTriangle, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
-import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface TechnicalItem {
   id: number;
@@ -47,72 +39,62 @@ export default function TechnicalImprovementPlan() {
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
   const [systemNames, setSystemNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadData = () => {
-      const systems = getCompanyData(user?.company, 'technicalSystems', []);
-      if (systems.length > 0) {
+    if (!user?.company) return;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const systems = await api.technical.systems.getAll(user.company);
         const names = systems.map((s: any) => s.name);
         setSystemNames(names);
-        if (activeTab === '전체') {
-          setActiveTab('전체');
-        }
+      } catch (error) {
+        toast({ title: '시스템 목록 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
     loadData();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const systemsKey = getCompanyStorageKey(user?.company, 'technicalSystems');
-      if (customEvent.detail?.key === systemsKey) {
-        loadData();
-      }
-    };
-
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, [user?.company]);
 
   useEffect(() => {
-    const loadImprovements = () => {
-      const parsed: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
-      const filtered = parsed.filter(item => 
-        item.status === '부분이행' || item.status === '미이행'
-      );
+    if (!user?.company) return;
 
-      const saved = getCompanyData(user?.company, 'technicalImprovements', {});
+    const loadImprovements = async () => {
+      try {
+        setLoading(true);
+        const [checklists, saved] = await Promise.all([
+          api.technical.checklists.getAll({ companyId: user.company, status: ['부분이행', '미이행'] }),
+          api.technical.improvements.getAll(user.company),
+        ]);
 
-      const improvementItems: ImprovementItem[] = filtered.map(item => {
-        const itemId = `${item.systemName}-${item.no}`;
-        const savedItem = saved[itemId];
-        return {
-          id: itemId,
-          systemName: item.systemName,
-          code: item.no,
-          question: item.item,
-          evidence: item.evidence,
-          relatedLaw: savedItem?.relatedLaw || '',
-          riskFactor: savedItem?.riskFactor || '',
-          improvementPlan: savedItem?.improvementPlan || '',
-        };
-      });
+        const improvementItems: ImprovementItem[] = checklists.map((item: any) => {
+          const itemId = `${item.systemName}-${item.no}`;
+          const savedItem = saved[itemId];
+          return {
+            id: itemId,
+            systemName: item.systemName,
+            code: item.no,
+            question: item.item,
+            evidence: item.evidence,
+            relatedLaw: savedItem?.relatedLaw || '',
+            riskFactor: savedItem?.riskFactor || '',
+            improvementPlan: savedItem?.improvementPlan || '',
+          };
+        });
 
-      setItems(improvementItems);
-    };
-
-    loadImprovements();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const techDataKey = getCompanyStorageKey(user?.company, 'technicalData');
-      if (customEvent.detail?.key === techDataKey) {
-        loadImprovements();
+        setItems(improvementItems);
+      } catch (error) {
+        toast({ title: '개선 가이드 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
+    loadImprovements();
   }, [user?.company]);
 
   const handleRelatedLawChange = (id: string, value: string) => {
@@ -136,18 +118,25 @@ export default function TechnicalImprovementPlan() {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    const improvements: { [key: string]: { relatedLaw: string; riskFactor: string; improvementPlan: string } } = {};
-    items.forEach(item => {
-      improvements[item.id] = {
-        relatedLaw: item.relatedLaw,
-        riskFactor: item.riskFactor,
-        improvementPlan: item.improvementPlan,
-      };
-    });
-    setCompanyData(user?.company, 'technicalImprovements', improvements);
-    setHasChanges(false);
-    toast.success('저장되었습니다');
+const handleSave = async () => {
+    try {
+      setLoading(true);
+      const improvements: { [key: string]: { relatedLaw: string; riskFactor: string; improvementPlan: string } } = {};
+      items.forEach(item => {
+        improvements[item.id] = {
+          relatedLaw: item.relatedLaw,
+          riskFactor: item.riskFactor,
+          improvementPlan: item.improvementPlan,
+        };
+      });
+      await api.technical.improvements.save(user?.company as string, improvements);
+      setHasChanges(false);
+      toast({ title: '저장되었습니다' });
+    } catch (error) {
+      toast({ title: '저장 실패', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExportToExcel = () => {
@@ -167,9 +156,13 @@ export default function TechnicalImprovementPlan() {
     XLSX.writeFile(wb, '기술적_침해요인별_개선_가이드.xlsx');
   };
 
-  const filteredItems = activeTab === '전체' 
+const filteredItems = activeTab === '전체' 
     ? items 
     : items.filter(item => item.systemName === activeTab);
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div className="space-y-6">

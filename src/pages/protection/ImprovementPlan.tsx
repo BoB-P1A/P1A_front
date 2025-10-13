@@ -5,18 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Download, AlertTriangle, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface LifecycleItem {
   id: number;
@@ -46,68 +39,66 @@ export default function ImprovementPlan() {
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
   const [taskNames, setTaskNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const loadData = () => {
-      const tasks = getCompanyData(user?.company, 'processingTasks', []);
-      if (tasks.length > 0) {
+useEffect(() => {
+    if (!user?.company) return;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const tasks = await api.protection.tasks.getAll(user.company);
         const names = tasks.map((t: any) => t.taskName);
         setTaskNames(names);
+      } catch (error) {
+        toast({ title: '처리업무 목록 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
     loadData();
-
-    const onStorage = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
-      if (customEvent.detail?.key === taskKey) {
-        loadData();
-      }
-    };
-    window.addEventListener('storageUpdate', onStorage);
-    return () => window.removeEventListener('storageUpdate', onStorage);
   }, [user?.company]);
 
   useEffect(() => {
-    const loadImprovements = () => {
-      const parsed: LifecycleItem[] = getCompanyData(user?.company, 'lifecycleData', []);
-      const filtered = parsed.filter(item => 
-        item.status === '부분이행' || item.status === '미이행'
-      );
+    if (!user?.company) return;
 
-      const saved = getCompanyData(user?.company, 'protectionImprovements', {});
+    const loadImprovements = async () => {
+      try {
+        setLoading(true);
+        const [lifecycle, saved] = await Promise.all([
+          api.protection.lifecycle.getAll(user.company),
+          api.protection.improvements.getAll(user.company),
+        ]);
 
-      const improvementItems: ImprovementItem[] = filtered.map(item => {
-        const itemId = `${item.taskName}-${item.no}`;
-        const savedItem = saved[itemId];
-        return {
-          id: itemId,
-          taskName: item.taskName,
-          code: item.no,
-          question: item.item,
-          evidence: item.evidence,
-          relatedLaw: savedItem?.relatedLaw || '',
-          riskFactor: savedItem?.riskFactor || '',
-          improvementPlan: savedItem?.improvementPlan || '',
-        };
-      });
+        const filtered = lifecycle.filter((item: any) => 
+          item.status === '부분이행' || item.status === '미이행'
+        );
 
-      setItems(improvementItems);
-    };
+        const improvementItems: ImprovementItem[] = filtered.map((item: any) => {
+          const itemId = `${item.taskName}-${item.no}`;
+          const savedItem = saved[itemId];
+          return {
+            id: itemId,
+            taskName: item.taskName,
+            code: item.no,
+            question: item.item,
+            evidence: item.evidence,
+            relatedLaw: savedItem?.relatedLaw || '',
+            riskFactor: savedItem?.riskFactor || '',
+            improvementPlan: savedItem?.improvementPlan || '',
+          };
+        });
 
-    loadImprovements();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const lifecycleKey = getCompanyStorageKey(user?.company, 'lifecycleData');
-      if (customEvent.detail?.key === lifecycleKey) {
-        loadImprovements();
+        setItems(improvementItems);
+      } catch (error) {
+        toast({ title: '개선 가이드 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
+    loadImprovements();
   }, [user?.company]);
 
   const handleRelatedLawChange = (id: string, value: string) => {
@@ -131,17 +122,25 @@ export default function ImprovementPlan() {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    const improvements: { [key: string]: { relatedLaw: string; riskFactor: string; improvementPlan: string } } = {};
-    items.forEach(item => {
-      improvements[item.id] = {
-        relatedLaw: item.relatedLaw,
-        riskFactor: item.riskFactor,
-        improvementPlan: item.improvementPlan,
-      };
-    });
-    setCompanyData(user?.company, 'protectionImprovements', improvements);
-    setHasChanges(false);
+const handleSave = async () => {
+    try {
+      setLoading(true);
+      const improvements: { [key: string]: { relatedLaw: string; riskFactor: string; improvementPlan: string } } = {};
+      items.forEach(item => {
+        improvements[item.id] = {
+          relatedLaw: item.relatedLaw,
+          riskFactor: item.riskFactor,
+          improvementPlan: item.improvementPlan,
+        };
+      });
+      await api.protection.improvements.save(user?.company as string, improvements);
+      setHasChanges(false);
+      toast({ title: '저장되었습니다' });
+    } catch (error) {
+      toast({ title: '저장 실패', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExportToExcel = () => {
@@ -161,10 +160,13 @@ export default function ImprovementPlan() {
     XLSX.writeFile(wb, '개인정보_침해요인별_개선_가이드.xlsx');
   };
 
-  const filteredItems = activeTab === '전체' 
+const filteredItems = activeTab === '전체' 
     ? items 
     : items.filter(item => item.taskName === activeTab);
 
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div className="space-y-6">

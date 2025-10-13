@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, ClipboardList, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
-import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface SecurityItem {
   id: number | string;
@@ -42,75 +42,67 @@ export default function SecurityActionPlan() {
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
   const [targetNames, setTargetNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadData = () => {
-      const targets = getCompanyData(user?.company, 'securityTargets', []);
-      if (targets.length > 0) {
+    if (!user?.company) return;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const targets = await api.security.targets.getAll(user.company);
         const names = targets.map((t: any) => t.name);
         setTargetNames(names);
+      } catch (error) {
+        toast({ title: '검토대상 목록 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
     loadData();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const targetsKey = getCompanyStorageKey(user?.company, 'securityTargets');
-      if (customEvent.detail?.key === targetsKey) {
-        loadData();
-      }
-    };
-
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, [user?.company]);
 
-  useEffect(() => {
-    const loadActionPlans = () => {
-      const parsed: SecurityItem[] = getCompanyData(user?.company, 'securityData', []);
-      const filtered = parsed.filter(item => 
-        item.status === '부분이행' || item.status === '미이행'
-      );
+useEffect(() => {
+    if (!user?.company) return;
 
-      const savedImprovements = getCompanyData(user?.company, 'securityImprovements', {});
-      const savedActionPlans = getCompanyData(user?.company, 'securityActionPlans', {});
+    const loadActionPlans = async () => {
+      try {
+        setLoading(true);
+        const [checklists, improvements, existingPlans] = await Promise.all([
+          api.security.checklists.getAll({ companyId: user.company, status: ['부분이행', '미이행'] }),
+          api.security.improvements.getAll(user.company),
+          api.security.actionPlans.getAll(user.company),
+        ]);
 
-      const actionPlanItems: ActionPlanItem[] = filtered.map(item => {
-        const itemId = `${item.targetName}-${item.no}`;
-        const savedImprovement = savedImprovements[itemId];
-        const savedActionPlan = savedActionPlans[itemId];
-        return {
-          id: itemId,
-          targetName: item.targetName,
-          code: item.no,
-          question: item.item,
-          evidence: item.evidence,
-          improvementGuide: savedImprovement?.improvementPlan || '',
-          actionPlan: savedActionPlan?.actionPlan || '',
-          actionPeriod: savedActionPlan?.actionPeriod || '',
-          department: savedActionPlan?.department || '',
-          manager: savedActionPlan?.manager || '',
-          actionDate: savedActionPlan?.actionDate || '',
-        };
-      });
+        const actionPlanItems: ActionPlanItem[] = checklists.map((item: any) => {
+          const itemId = `${item.targetName}-${item.no}`;
+          const improvement = improvements[itemId];
+          const savedPlan = existingPlans[itemId];
+          return {
+            id: itemId,
+            targetName: item.targetName,
+            code: item.no,
+            question: item.item,
+            evidence: item.evidence,
+            improvementGuide: improvement?.improvementPlan || '',
+            actionPlan: savedPlan?.actionPlan || '',
+            actionPeriod: savedPlan?.actionPeriod || '',
+            department: savedPlan?.department || '',
+            manager: savedPlan?.manager || '',
+            actionDate: savedPlan?.actionDate || '',
+          };
+        });
 
-      setItems(actionPlanItems);
+        setItems(actionPlanItems);
+      } catch (error) {
+        toast({ title: '조치 계획 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadActionPlans();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const securityDataKey = getCompanyStorageKey(user?.company, 'securityData');
-      const improvementsKey = getCompanyStorageKey(user?.company, 'securityImprovements');
-      if (customEvent.detail?.key === securityDataKey || customEvent.detail?.key === improvementsKey) {
-        loadActionPlans();
-      }
-    };
-
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, [user?.company]);
 
   const handleFieldChange = (id: string, field: keyof ActionPlanItem, value: string) => {
@@ -120,25 +112,29 @@ export default function SecurityActionPlan() {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    const actionPlans: { [key: string]: any } = {};
-    items.forEach(item => {
-      actionPlans[item.id] = {
-        targetName: item.targetName,
-        code: item.code,
-        question: item.question,
-        evidence: item.evidence,
-        improvementGuide: item.improvementGuide,
-        actionPlan: item.actionPlan,
-        actionPeriod: item.actionPeriod,
-        department: item.department,
-        manager: item.manager,
-        actionDate: item.actionDate,
-      };
-    });
-    setCompanyData(user?.company, 'securityActionPlans', actionPlans);
-    setHasChanges(false);
-    toast.success('저장되었습니다');
+const handleSave = async () => {
+    try {
+      setLoading(true);
+      const actionPlans: { [key: string]: any } = {};
+      items.forEach(item => {
+        actionPlans[item.id] = {
+          targetName: item.targetName,
+          code: item.code,
+          actionPlan: item.actionPlan,
+          actionPeriod: item.actionPeriod,
+          department: item.department,
+          manager: item.manager,
+          actionDate: item.actionDate,
+        };
+      });
+      await api.security.actionPlans.save(user?.company as string, actionPlans);
+      setHasChanges(false);
+      toast({ title: '저장되었습니다' });
+    } catch (error) {
+      toast({ title: '저장 실패', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExportToExcel = () => {
@@ -161,9 +157,13 @@ export default function SecurityActionPlan() {
     XLSX.writeFile(wb, '보안성검토_조치_계획_수립.xlsx');
   };
 
-  const filteredItems = activeTab === '전체' 
+const filteredItems = activeTab === '전체' 
     ? items 
     : items.filter(item => item.targetName === activeTab);
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div className="space-y-6">

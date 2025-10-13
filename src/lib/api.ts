@@ -209,6 +209,155 @@ export const api = {
     },
   },
 
+  // 보호조치 관련 API
+  protection: {
+    tasks: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/protection/tasks', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+    },
+    lifecycle: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/protection/lifecycle', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, taskName: string, data: any[]) => {
+        const response = await apiClient.post('/protection/lifecycle', {
+          companyId,
+          taskName,
+          data,
+        });
+        return response.data;
+      },
+    },
+    flowCharts: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/protection/flowcharts', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, taskName: string, imageData: string, flowData?: any, personalInfoText?: string) => {
+        const response = await apiClient.post('/protection/flowcharts', {
+          companyId,
+          taskName,
+          imageData,
+          flowData,
+          personalInfoText,
+        });
+        return response.data;
+      },
+    },
+    flowTables: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/protection/flowtables', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, data: any) => {
+        const response = await apiClient.post('/protection/flowtables', {
+          companyId,
+          data,
+        });
+        return response.data;
+      },
+    },
+    improvements: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/protection/improvements', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, improvements: any) => {
+        const response = await apiClient.post('/protection/improvements', {
+          companyId,
+          improvements,
+        });
+        return response.data;
+      },
+    },
+    actionPlans: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/protection/action-plans', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, actionPlans: any) => {
+        const response = await apiClient.post('/protection/action-plans', {
+          companyId,
+          actionPlans,
+        });
+        return response.data;
+      },
+    },
+  },
+
+  // 보안 관련 API
+  security: {
+    targets: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/security/targets', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+    },
+    checklists: {
+      getAll: async (params: { companyId: string; status?: string[] }) => {
+        const response = await apiClient.get('/security/checklists', {
+          params,
+        });
+        return response.data;
+      },
+      save: async (companyId: string, targetName: string, data: any[]) => {
+        const response = await apiClient.post('/security/checklists', {
+          companyId,
+          targetName,
+          data,
+        });
+        return response.data;
+      },
+    },
+    improvements: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/security/improvements', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, improvements: any) => {
+        const response = await apiClient.post('/security/improvements', {
+          companyId,
+          improvements,
+        });
+        return response.data;
+      },
+    },
+    actionPlans: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/security/action-plans', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, actionPlans: any) => {
+        const response = await apiClient.post('/security/action-plans', {
+          companyId,
+          actionPlans,
+        });
+        return response.data;
+      },
+    },
+  },
+
   // 기술 관련 API
   technical: {
     systems: {
@@ -223,6 +372,29 @@ export const api = {
       getAll: async (params: { companyId: string; status?: string[] }) => {
         const response = await apiClient.get('/technical/checklists', {
           params,
+        });
+        return response.data;
+      },
+      save: async (companyId: string, systemName: string, data: any[]) => {
+        const response = await apiClient.post('/technical/checklists', {
+          companyId,
+          systemName,
+          data,
+        });
+        return response.data;
+      },
+    },
+    improvements: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/technical/improvements', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, improvements: any) => {
+        const response = await apiClient.post('/technical/improvements', {
+          companyId,
+          improvements,
         });
         return response.data;
       },
