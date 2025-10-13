@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Save, Plus, Trash2, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import * as XLSX from 'xlsx';
@@ -322,37 +321,28 @@ export default function ProtectionFlowTable() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] overflow-x-hidden">
-      {/* Fixed header */}
-      <div className="sticky top-0 z-20 bg-background pb-4 border-b">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
-          <div className="flex gap-2">
-            <Button onClick={handleExcelDownload} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              엑셀 다운로드
-            </Button>
-            <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              저장
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
+        <div className="flex gap-2">
+          <Button onClick={handleExcelDownload} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            엑셀 다운로드
+          </Button>
+          <Button onClick={handleSave}>
+            <Save className="mr-2 h-4 w-4" />
+            저장
+          </Button>
         </div>
-
-        {/* Fixed tabs list */}
-        <Tabs value={selectedTask} onValueChange={setSelectedTask}>
-          <TabsList>
-            {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
-          </TabsList>
-        </Tabs>
       </div>
 
-      {/* Scrollable content area */}
-      <Tabs value={selectedTask} onValueChange={setSelectedTask} className="flex-1 overflow-hidden">
+      <Tabs value={selectedTask} onValueChange={setSelectedTask}>
+        <TabsList>
+          {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
+        </TabsList>
+
         {taskNames.map(task => (
-          <TabsContent key={task} value={task} className="h-full m-0 p-0">
-            <ScrollArea className="h-full">
-              <div className="space-y-6 p-6">
+          <TabsContent key={task} value={task} className="space-y-6">
             {/* 수집 단계 */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -747,8 +737,6 @@ export default function ProtectionFlowTable() {
                 </div>
               </CardContent>
             </Card>
-              </div>
-            </ScrollArea>
           </TabsContent>
         ))}
       </Tabs>
