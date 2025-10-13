@@ -8,6 +8,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { PieChart, RefreshCw, Download, Save, Camera, Trash, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 interface DraggableIcon {
   id: string;
@@ -164,7 +165,7 @@ export default function ProtectionFlowChart() {
     alert('저장되었습니다.');
   };
 
-  const handleCaptureFlowChart = () => {
+  const handleCaptureFlowChart = async () => {
     const icons = flowDataByTask[selectedTask]?.icons || [];
     if (icons.length === 0) {
       alert('저장할 흐름도 아이콘이 없습니다.');
@@ -251,11 +252,13 @@ export default function ProtectionFlowChart() {
     
     const imageData = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     
-    const flowChartImages = JSON.parse(localStorage.getItem('flowChartImages') || '{}');
-    flowChartImages[selectedTask] = imageData;
-    localStorage.setItem('flowChartImages', JSON.stringify(flowChartImages));
-    
-    alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
+    try {
+      await api.flowCharts.save(selectedTask, imageData);
+      alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
+    } catch (error) {
+      console.error('Failed to save flowchart image:', error);
+      alert('흐름도 저장에 실패했습니다.');
+    }
   };
 
   const handleExport = () => {

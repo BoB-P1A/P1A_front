@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface UseApiOptions {
   onSuccess?: (data: any) => void;
@@ -27,7 +27,7 @@ export function useApi<T = any>(options: UseApiOptions = {}) {
         setData(result);
         
         if (options.successMessage) {
-          toast.success(options.successMessage);
+          toast({ title: options.successMessage });
         }
         
         options.onSuccess?.(result);
@@ -37,7 +37,7 @@ export function useApi<T = any>(options: UseApiOptions = {}) {
         setError(error);
         
         const errorMessage = options.errorMessage || error.message;
-        toast.error(errorMessage);
+        toast({ title: '오류', description: errorMessage, variant: 'destructive' });
         
         options.onError?.(error);
         throw error;

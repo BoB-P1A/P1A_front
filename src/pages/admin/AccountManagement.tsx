@@ -119,7 +119,7 @@ export default function AccountManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.username || !formData.password || !formData.role || !formData.company) {
       alert('모든 필드를 입력해주세요.');
       return;
@@ -136,38 +136,41 @@ export default function AccountManagement() {
       return;
     }
 
-    if (editingAccount) {
-      // 수정
-      setAccounts(accounts.map(a => 
-        a.id === editingAccount.id 
-          ? { ...a, ...formData, role: formData.role as UserRole }
-          : a
-      ));
-    } else {
-      // 추가
-      const newAccount: Account = {
-        id: Date.now().toString(),
-        ...formData,
-        role: formData.role as UserRole,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setAccounts([...accounts, newAccount]);
+    try {
+      if (editingAccount) {
+        await execute(() => api.accounts.update(editingAccount.id, formData));
+        setAccounts(accounts.map(a => 
+          a.id === editingAccount.id 
+            ? { ...a, ...formData, role: formData.role as UserRole }
+            : a
+        ));
+      } else {
+        const newAccount: Account = {
+          id: Date.now().toString(),
+          ...formData,
+          role: formData.role as UserRole,
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+        await execute(() => api.accounts.create(newAccount));
+        setAccounts([...accounts, newAccount]);
+      }
+      
+      setIsDialogOpen(false);
+      setEditingAccount(null);
+      setFormData({ name: '', username: '', password: '', role: '', company: '' });
+    } catch (error) {
+      console.error('Failed to save account:', error);
     }
-    
-    setIsDialogOpen(false);
-    setEditingAccount(null);
-    setFormData({
-      name: '',
-      username: '',
-      password: '',
-      role: '',
-      company: '',
-    });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('정말 삭제하시겠습니까?')) {
-      setAccounts(accounts.filter(account => account.id !== id));
+      try {
+        await execute(() => api.accounts.delete(id));
+        setAccounts(accounts.filter(account => account.id !== id));
+      } catch (error) {
+        console.error('Failed to delete account:', error);
+      }
     }
   };
 
