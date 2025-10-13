@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Save, Plus, Trash2, Download } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
@@ -321,25 +322,103 @@ export default function ProtectionFlowTable() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
-        <div className="flex gap-2">
-          <Button onClick={handleExcelDownload} variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            엑셀 다운로드
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="mr-2 h-4 w-4" />
-            저장
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <Tabs value={selectedTask} onValueChange={setSelectedTask} className="flex flex-col h-full">
+        {/* Fixed Header Section */}
+        <div className="flex-shrink-0 space-y-4 pb-4 border-b bg-background">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
+            <div className="flex gap-2">
+              <Button onClick={handleExcelDownload} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                엑셀 다운로드
+              </Button>
+              <Button onClick={handleSave}>
+                <Save className="mr-2 h-4 w-4" />
+                저장
+              </Button>
+            </div>
+          </div>
 
-      <Tabs value={selectedTask} onValueChange={setSelectedTask}>
-        <TabsList>
-          {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
-        </TabsList>
+          <TabsList>
+            {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
+          </TabsList>
+        </div>
+
+        {/* Scrollable Content Section */}
+        <ScrollArea className="flex-1">
+          {taskNames.map(task => (
+            <TabsContent key={task} value={task} className="space-y-6 pr-4 mt-4">
+              {/* 수집 단계 */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>수집</CardTitle>
+                  <Button onClick={() => handleAddRow('collection')} size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    행 추가
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[120px]">평가업무명</TableHead>
+                          <TableHead className="min-w-[120px]">세부업무명</TableHead>
+                          <TableHead className="min-w-[120px]">수집대상</TableHead>
+                          <TableHead className="min-w-[120px]">수집경로</TableHead>
+                          <TableHead className="min-w-[120px]">수집시스템</TableHead>
+                          <TableHead className="min-w-[200px]">수집항목</TableHead>
+                          <TableHead className="min-w-[120px]">수집주기</TableHead>
+                          <TableHead className="min-w-[120px]">수집담당자</TableHead>
+                          <TableHead className="min-w-[150px]">수집근거</TableHead>
+                          <TableHead className="min-w-[100px]">온라인여부</TableHead>
+                          <TableHead className="min-w-[100px]">암호화여부</TableHead>
+                          <TableHead className="w-[80px]">작업</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {flowDataByTask[task]?.collection.map((row) => (
+                          <TableRow key={row.id}>
+                            <TableCell className="font-medium">{task}</TableCell>
+                            <TableCell><Input value={row.detailTask} onChange={(e) => handleEdit('collection', row.id, 'detailTask', e.target.value)} /></TableCell>
+                            <TableCell><Input value={row.collectionTarget} onChange={(e) => handleEdit('collection', row.id, 'collectionTarget', e.target.value)} /></TableCell>
+                            <TableCell><Input value={row.collectionPath} onChange={(e) => handleEdit('collection', row.id, 'collectionPath', e.target.value)} /></TableCell>
+                            <TableCell><Input value={row.collectionSystem} onChange={(e) => handleEdit('collection', row.id, 'collectionSystem', e.target.value)} /></TableCell>
+                            <TableCell><Input value={row.collectionItem} onChange={(e) => handleEdit('collection', row.id, 'collectionItem', e.target.value)} /></TableCell>
+                            <TableCell><Input value={row.collectionPeriod} onChange={(e) => handleEdit('collection', row.id, 'collectionPeriod', e.target.value)} /></TableCell>
+                            <TableCell><Input value={row.collectionManager} onChange={(e) => handleEdit('collection', row.id, 'collectionManager', e.target.value)} /></TableCell>
+                            <TableCell><Input value={row.collectionBasis} onChange={(e) => handleEdit('collection', row.id, 'collectionBasis', e.target.value)} /></TableCell>
+                            <TableCell>
+                              <Select value={row.isOnline} onValueChange={(value) => handleEdit('collection', row.id, 'isOnline', value)}>
+                                <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="True">True</SelectItem>
+                                  <SelectItem value="False">False</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Select value={row.isEncrypted} onValueChange={(value) => handleEdit('collection', row.id, 'isEncrypted', value)}>
+                                <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="True">True</SelectItem>
+                                  <SelectItem value="False">False</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteRow('collection', row.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
 
         {taskNames.map(task => (
           <TabsContent key={task} value={task} className="space-y-6">
@@ -738,7 +817,8 @@ export default function ProtectionFlowTable() {
               </CardContent>
             </Card>
           </TabsContent>
-        ))}
+          ))}
+        </ScrollArea>
       </Tabs>
     </div>
   );
