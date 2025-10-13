@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2, Building2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 interface Company {
   id: number;
@@ -32,52 +34,24 @@ interface Company {
 }
 
 export default function CompanyManagement() {
-  const [companies, setCompanies] = useState<Company[]>(() => {
-    const saved = localStorage.getItem('companies');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return [];
-      }
-    }
-    return [
-      {
-        id: 1,
-        name: 'PIA Corp',
-        managerName: '홍길동',
-        managerPhone: '010-1234-5678',
-        status: 'active',
-        createdAt: '2024-01-01',
-      },
-      {
-        id: 2,
-        name: '테크기업',
-        managerName: '김철수',
-        managerPhone: '010-9876-5432',
-        status: 'active',
-        createdAt: '2024-01-15',
-      },
-    ];
-  });
-
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
+  const { loading, execute } = useApi();
 
   useEffect(() => {
-    // Save to localStorage whenever companies change
-    localStorage.setItem('companies', JSON.stringify(companies));
-  }, [companies]);
-
-  useEffect(() => {
-    // Load accounts from localStorage
-    const savedAccounts = localStorage.getItem('accounts');
-    if (savedAccounts) {
+    const loadData = async () => {
       try {
-        setAccounts(JSON.parse(savedAccounts));
-      } catch {
-        setAccounts([]);
+        const [companiesData, accountsData] = await Promise.all([
+          api.companies.getAll(),
+          api.accounts.getAll()
+        ]);
+        setCompanies(companiesData);
+        setAccounts(accountsData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
       }
-    }
+    };
+    loadData();
   }, []);
 
   const getAccountCount = (companyName: string) => {
@@ -115,42 +89,45 @@ export default function CompanyManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.managerName || !formData.managerPhone) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
 
-    if (editingCompany) {
-      // 수정
-      setCompanies(companies.map(c => 
-        c.id === editingCompany.id 
-          ? { ...c, ...formData }
-          : c
-      ));
-    } else {
-      // 추가
-      const newCompany: Company = {
-        id: Math.max(...companies.map(c => c.id), 0) + 1,
-        ...formData,
-        status: 'active',
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setCompanies([...companies, newCompany]);
+    try {
+      if (editingCompany) {
+        await execute(() => api.companies.update(String(editingCompany.id), formData));
+        setCompanies(companies.map(c => 
+          c.id === editingCompany.id ? { ...c, ...formData } : c
+        ));
+      } else {
+        const newCompany: Company = {
+          id: Math.max(...companies.map(c => c.id), 0) + 1,
+          ...formData,
+          status: 'active',
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+        await execute(() => api.companies.create(newCompany));
+        setCompanies([...companies, newCompany]);
+      }
+      
+      setIsDialogOpen(false);
+      setEditingCompany(null);
+      setFormData({ name: '', managerName: '', managerPhone: '' });
+    } catch (error) {
+      console.error('Failed to save company:', error);
     }
-    
-    setIsDialogOpen(false);
-    setEditingCompany(null);
-    setFormData({
-      name: '',
-      managerName: '',
-      managerPhone: '',
-    });
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm('정말 삭제하시겠습니까?')) {
-      setCompanies(companies.filter(company => company.id !== id));
+      try {
+        await execute(() => api.companies.delete(String(id)));
+        setCompanies(companies.filter(company => company.id !== id));
+      } catch (error) {
+        console.error('Failed to delete company:', error);
+      }
     }
   };
 

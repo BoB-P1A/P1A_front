@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export type UserRole = 'admin' | 'developer' | 'privacy-team' | 'planning-team';
 
@@ -83,67 +85,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for saved user session
-    const savedUser = localStorage.getItem('pia-user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Failed to parse saved user:', error);
-        localStorage.removeItem('pia-user');
+    // Check for saved auth token and fetch current user
+    const checkAuth = async () => {
+      const token = sessionStorage.getItem('auth-token');
+      if (token) {
+        try {
+          const userData = await api.auth.getCurrentUser();
+          setUser(userData);
+        } catch (error) {
+          console.error('Failed to fetch user:', error);
+          sessionStorage.removeItem('auth-token');
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+    
+    checkAuth();
   }, []);
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // First check mock users
-    let mockUser = mockUsers[credentials.id];
-    
-    // If not in mock users, check AccountManagement accounts
-    if (!mockUser) {
-      const accountsData = localStorage.getItem('accounts');
-      if (accountsData) {
-        try {
-          const accounts = JSON.parse(accountsData);
-          const account = accounts.find((acc: any) => acc.username === credentials.id);
-          if (account && account.password === credentials.password) {
-            mockUser = {
-              password: account.password,
-              user: {
-                id: account.id,
-                name: account.name,
-                email: account.username + '@company.com',
-                role: account.role,
-                company: account.company
-              }
-            };
-          }
-        } catch (error) {
-          console.error('Failed to parse accounts:', error);
-        }
-      }
-    }
-    
-    if (mockUser && mockUser.password === credentials.password) {
-      setUser(mockUser.user);
-      localStorage.setItem('pia-user', JSON.stringify(mockUser.user));
+    try {
+      // API 호출로 로그인
+      const response = await api.auth.login(credentials);
+      
+      // 토큰 저장
+      sessionStorage.setItem('auth-token', response.token);
+      
+      // 사용자 정보 설정
+      setUser(response.user);
+      
+      toast.success('로그인 성공');
       setIsLoading(false);
       return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      toast.error('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
+      setIsLoading(false);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('pia-user');
+  const logout = async () => {
+    try {
+      await api.auth.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      sessionStorage.removeItem('auth-token');
+      toast.success('로그아웃 되었습니다');
+    }
   };
 
   return (

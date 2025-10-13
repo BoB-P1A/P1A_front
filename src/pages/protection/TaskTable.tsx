@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,9 @@ import {
 import { Save, Plus, Trash2, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
+import { Task } from '@/types/api';
 
 interface TaskRow {
   id: number;
@@ -25,24 +27,39 @@ interface TaskRow {
 
 export default function TaskTable() {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<TaskRow[]>(() => {
-    return getCompanyData(user?.company, 'processingTasks', [
-      {
-        id: 1,
-        taskName: '회원가입',
-        purpose: '서비스 이용을 위한 회원 식별',
-        personalInfo: '이름, 이메일, 전화번호',
-        department: '개발팀',
-      },
-      {
-        id: 2,
-        taskName: '고객상담',
-        purpose: '고객 문의 응대 및 서비스 개선',
-        personalInfo: '이름, 연락처, 상담내용',
-        department: 'CS팀',
-      },
-    ]);
-  });
+  const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const { loading, execute } = useApi();
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const data = await api.tasks.getAll(user?.company);
+        setTasks(data);
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+        // 에러 시 기본 데이터
+        setTasks([
+          {
+            id: 1,
+            taskName: '회원가입',
+            purpose: '서비스 이용을 위한 회원 식별',
+            personalInfo: '이름, 이메일, 전화번호',
+            department: '개발팀',
+          },
+          {
+            id: 2,
+            taskName: '고객상담',
+            purpose: '고객 문의 응대 및 서비스 개선',
+            personalInfo: '이름, 연락처, 상담내용',
+            department: 'CS팀',
+          },
+        ]);
+      }
+    };
+    
+    loadTasks();
+  }, [user?.company]);
 
   const handleAddRow = () => {
     const newTask: TaskRow = {
@@ -55,13 +72,21 @@ export default function TaskTable() {
     setTasks([...tasks, newTask]);
   };
 
-  const handleDeleteRow = (id: number) => {
-    setTasks(tasks.filter(task => task.id !== id));
+  const handleDeleteRow = async (id: number) => {
+    try {
+      await execute(() => api.tasks.delete(id));
+      setTasks(tasks.filter(task => task.id !== id));
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
   };
 
-  const handleSave = () => {
-    setCompanyData(user?.company, 'processingTasks', tasks);
-    alert('저장되었습니다. 개인정보 흐름표 페이지에서 업무별 탭이 업데이트됩니다.');
+  const handleSave = async () => {
+    try {
+      await execute(() => api.tasks.bulkUpdate(tasks));
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+    }
   };
 
   const handleExcelDownload = () => {

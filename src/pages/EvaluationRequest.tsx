@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Eye, Edit } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { api } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 interface EvaluationRequestData {
   id: string;
@@ -70,13 +72,30 @@ const mockRequests: EvaluationRequestData[] = [
 
 export default function EvaluationRequest() {
   const { user } = useAuth();
-  const [requests, setRequests] = useState<EvaluationRequestData[]>(mockRequests);
+  const [requests, setRequests] = useState<EvaluationRequestData[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newRequest, setNewRequest] = useState({
     title: '',
     description: '',
     priority: 'medium' as const
   });
+  const { loading, execute } = useApi();
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    const loadRequests = async () => {
+      try {
+        const data = await api.evaluationRequests.getAll();
+        setRequests(data);
+      } catch (error) {
+        console.error('Failed to load evaluation requests:', error);
+        // 에러 시 mock 데이터 사용
+        setRequests(mockRequests);
+      }
+    };
+
+    loadRequests();
+  }, []);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -104,7 +123,7 @@ export default function EvaluationRequest() {
     }
   };
 
-  const handleCreateRequest = () => {
+  const handleCreateRequest = async () => {
     const newId = `REQ-${String(requests.length + 1).padStart(3, '0')}`;
     const createdRequest: EvaluationRequestData = {
       id: newId,
@@ -117,9 +136,14 @@ export default function EvaluationRequest() {
       description: newRequest.description
     };
 
-    setRequests([createdRequest, ...requests]);
-    setNewRequest({ title: '', description: '', priority: 'medium' });
-    setIsCreateDialogOpen(false);
+    try {
+      await execute(() => api.evaluationRequests.create(createdRequest));
+      setRequests([createdRequest, ...requests]);
+      setNewRequest({ title: '', description: '', priority: 'medium' });
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to create request:', error);
+    }
   };
 
   return (

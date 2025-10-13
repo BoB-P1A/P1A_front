@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { UserRole } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { api } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 interface Account {
   id: string;
@@ -47,61 +48,7 @@ interface Company {
 }
 
 export default function AccountManagement() {
-  const [accounts, setAccounts] = useState<Account[]>(() => {
-    // Load from localStorage
-    const saved = localStorage.getItem('accounts');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return [];
-      }
-    }
-    return [
-      {
-        id: 'admin',
-        name: '관리자',
-        username: 'admin',
-        password: 'admin1234',
-        role: 'admin',
-        company: 'PIA Corp',
-        createdAt: '2024-01-01',
-      },
-      {
-        id: 'developer',
-        name: '김개발',
-        username: 'developer',
-        password: 'dev1234',
-        role: 'developer',
-        company: 'PIA Corp',
-        createdAt: '2024-01-15',
-      },
-      {
-        id: 'privacy',
-        name: '박개인정보',
-        username: 'privacy',
-        password: 'privacy1234',
-        role: 'privacy-team',
-        company: 'PIA Corp',
-        createdAt: '2024-01-20',
-      },
-      {
-        id: 'plan',
-        name: '최기획',
-        username: 'planning',
-        password: 'plan1234',
-        role: 'planning-team',
-        company: 'PIA Corp',
-        createdAt: '2024-01-10',
-      },
-    ];
-  });
-
-  // Save to localStorage whenever accounts change
-  useEffect(() => {
-    localStorage.setItem('accounts', JSON.stringify(accounts));
-  }, [accounts]);
-
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -112,14 +59,22 @@ export default function AccountManagement() {
     role: '' as UserRole | '',
     company: '',
   });
+  const { loading, execute } = useApi();
 
   useEffect(() => {
-    // Load companies from localStorage
-    const companiesData = localStorage.getItem('companies');
-    if (companiesData) {
-      const parsedCompanies = JSON.parse(companiesData);
-      setCompanies(parsedCompanies.map((c: any) => ({ id: c.id, name: c.name })));
-    }
+    const loadData = async () => {
+      try {
+        const [accountsData, companiesData] = await Promise.all([
+          api.accounts.getAll(),
+          api.companies.getAll()
+        ]);
+        setAccounts(accountsData);
+        setCompanies(companiesData.map((c: any) => ({ id: c.id, name: c.name })));
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    };
+    loadData();
   }, []);
 
   const getRoleDisplayName = (role: UserRole) => {

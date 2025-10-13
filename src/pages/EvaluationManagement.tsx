@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2, Save } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 interface EvaluationItem {
   id: number;
@@ -35,108 +36,57 @@ interface EvaluationItem {
 
 export default function EvaluationManagement() {
   const { user } = useAuth();
-  const [items, setItems] = useState<EvaluationItem[]>(() => {
-    const DATA_VERSION = '1.2'; // 데이터 버전
-    const savedVersion = getCompanyData(user?.company, 'evaluationItemsVersion', null);
-    const saved = getCompanyData(user?.company, 'evaluationItems', null);
-    
-    // 버전이 다르면 새로운 defaultItems 로드
-    if (saved && savedVersion === DATA_VERSION) {
-      // No. 기준으로 정렬
-      return saved.sort((a: EvaluationItem, b: EvaluationItem) => {
-        return a.no.localeCompare(b.no, undefined, { numeric: true });
-      });
-    }
-    const defaultItems = [
-      {
-        id: 1,
-        area: '1. 개인정보 처리단계별 보호조치',
-        field: '1.1. 수집',
-        subField: '개인정보 수집의 적합성',
-        no: '1.1.1',
-        item: '개인정보를 수집하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 수집하도록 계획하고 있습니까?',
-      },
-      {
-        id: 2,
-        area: '1. 개인정보 처리단계별 보호조치',
-        field: '1.1. 수집',
-        subField: '개인정보 수집의 적합성',
-        no: '1.1.2',
-        item: '개인정보를 수집하는 경우 목적에 필요한 최소한의 범위에서만 수집하도록 계획하고 있습니까?',
-      },
-      {
-        id: 3,
-        area: '1. 개인정보 처리단계별 보호조치',
-        field: '1.1. 수집',
-        subField: '동의받는 방법의 적절성',
-        no: '1.1.6',
-        item: '개인정보를 수집하는 경우 필수항목과 선택항목을 분리하고 선택적으로 동의할 수 있는 사항에 동의하지 아니하여도 서비스 이용이 가능하도록 계획하고 있습니까?',
-      },
-      {
-        id: 4,
-        area: '1. 개인정보 처리단계별 보호조치',
-        field: '1.3. 이용·제공',
-        subField: '개인정보 제공의 적합성',
-        no: '1.3.1',
-        item: '개인정보를 제3자에게 제공하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 제공하도록 계획하고 있습니까?',
-      },
-      {
-        id: 5,
-        area: '2. 대상시스템의 기술적 보호조치',
-        field: '2.1. 접근권한 관리',
-        subField: '계정 관리',
-        no: '2.1.1',
-        item: '개인정보취급자별로 책임추적성이 확보될 수 있도록 개별 계정을 부여하도록 계획하고 있습니까?',
-      },
-      {
-        id: 6,
-        area: '2. 대상시스템의 기술적 보호조치',
-        field: '2.1. 접근권한 관리',
-        subField: '인증 관리',
-        no: '2.1.2',
-        item: '개인정보취급자 및 정보주체의 인증수단을 안전하게 적용하고 관리하도록 계획하고 있습니까?',
-      },
-      {
-        id: 7,
-        area: '2. 대상시스템의 기술적 보호조치',
-        field: '2.1. 접근권한 관리',
-        subField: '인증 관리',
-        no: '2.1.3',
-        item: '정보주체가 비밀번호 변경 등 중요 정보 접근 시 비밀번호 재확인 등 추가적인 인증이 적용되도록 계획하고 있습니까?',
-      },
-      {
-        id: 8,
-        area: '2. 대상시스템의 기술적 보호조치',
-        field: '2.2. 접근통제',
-        subField: '접근통제 조치',
-        no: '2.2.1',
-        item: '개인정보처리시스템에 대한 불법적인 접근 제한 및 개인정보 유출 시도 탐지·대응을 위한 안전조치를 하도록 계획하고 있습니까?',
-      },
-      {
-        id: 9,
-        area: '3. 보안성 검토',
-        field: '3.1. 사용자 인증',
-        subField: '로그인',
-        no: '3.1.1',
-        item: '로그인 화면에서 비밀번호는 입력 값이 마스킹 처리되어 화면에 표시되도록 계획하고 있습니까?',
-      },
-      {
-        id: 10,
-        area: '3. 보안성 검토',
-        field: '3.1. 사용자 인증',
-        subField: '로그인',
-        no: '3.1.2',
-        item: '사용자가 로그인을 일정 횟수 실패했을 경우 로그인 제한을 계획하고 있습니까?',
-      },
-    ];
-    // No. 기준으로 정렬
-    const sortedItems = defaultItems.sort((a, b) => {
-      return a.no.localeCompare(b.no, undefined, { numeric: true });
-    });
-    setCompanyData(user?.company, 'evaluationItems', sortedItems);
-    setCompanyData(user?.company, 'evaluationItemsVersion', DATA_VERSION);
-    return sortedItems;
-  });
+  const [items, setItems] = useState<EvaluationItem[]>([]);
+  const { loading, execute } = useApi();
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    const loadEvaluations = async () => {
+      try {
+        const data = await api.evaluations.getAll();
+        // No. 기준으로 정렬
+        const sorted = data.sort((a: EvaluationItem, b: EvaluationItem) => {
+          return a.no.localeCompare(b.no, undefined, { numeric: true });
+        });
+        setItems(sorted);
+      } catch (error) {
+        console.error('Failed to load evaluations:', error);
+        // 에러 시 기본 데이터 로드
+        const defaultItems = [
+          {
+            id: 1,
+            area: '1. 개인정보 처리단계별 보호조치',
+            field: '1.1. 수집',
+            subField: '개인정보 수집의 적합성',
+            no: '1.1.1',
+            item: '개인정보를 수집하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 수집하도록 계획하고 있습니까?',
+          },
+          {
+            id: 2,
+            area: '1. 개인정보 처리단계별 보호조치',
+            field: '1.1. 수집',
+            subField: '개인정보 수집의 적합성',
+            no: '1.1.2',
+            item: '개인정보를 수집하는 경우 목적에 필요한 최소한의 범위에서만 수집하도록 계획하고 있습니까?',
+          },
+          {
+            id: 3,
+            area: '1. 개인정보 처리단계별 보호조치',
+            field: '1.1. 수집',
+            subField: '동의받는 방법의 적절성',
+            no: '1.1.6',
+            item: '개인정보를 수집하는 경우 필수항목과 선택항목을 분리하고 선택적으로 동의할 수 있는 사항에 동의하지 아니하여도 서비스 이용이 가능하도록 계획하고 있습니까?',
+          },
+        ];
+        const sorted = defaultItems.sort((a, b) => {
+          return a.no.localeCompare(b.no, undefined, { numeric: true });
+        });
+        setItems(sorted);
+      }
+    };
+
+    loadEvaluations();
+  }, []);
 
   const [editingItem, setEditingItem] = useState<EvaluationItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -153,7 +103,7 @@ export default function EvaluationManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let updatedItems;
     if (editingItem) {
       updatedItems = items.map(item => 
@@ -176,19 +126,31 @@ export default function EvaluationManagement() {
     updatedItems.sort((a, b) => {
       return a.no.localeCompare(b.no, undefined, { numeric: true });
     });
-    setItems(updatedItems);
-    setCompanyData(user?.company, 'evaluationItems', updatedItems);
-    setCompanyData(user?.company, 'evaluationItemsVersion', '1.2');
+    
+    try {
+      if (editingItem) {
+        await execute(() => api.evaluations.update(editingItem.id, formData));
+      } else {
+        await execute(() => api.evaluations.create(formData));
+      }
+      setItems(updatedItems);
+    } catch (error) {
+      console.error('Failed to save evaluation:', error);
+    }
+    
     setIsDialogOpen(false);
     setEditingItem(null);
     setFormData({});
   };
 
-  const handleDelete = (id: number) => {
-    const updatedItems = items.filter(item => item.id !== id);
-    setItems(updatedItems);
-    localStorage.setItem('evaluationItems', JSON.stringify(updatedItems));
-    window.dispatchEvent(new CustomEvent('storageUpdate', { detail: { key: 'evaluationItems' } }));
+  const handleDelete = async (id: number) => {
+    try {
+      await execute(() => api.evaluations.delete(id));
+      const updatedItems = items.filter(item => item.id !== id);
+      setItems(updatedItems);
+    } catch (error) {
+      console.error('Failed to delete evaluation:', error);
+    }
   };
 
   return (
