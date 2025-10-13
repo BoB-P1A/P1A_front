@@ -324,30 +324,27 @@ export default function ProtectionFlowTable() {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] overflow-x-hidden">
       {/* Fixed Header */}
-      <div className="sticky top-0 z-10 bg-background pb-4 border-b">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
-          <div className="flex gap-2">
-            <Button onClick={handleExcelDownload} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              엑셀 다운로드
-            </Button>
-            <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              저장
-            </Button>
-          </div>
+      <div className="flex justify-between items-center sticky top-0 z-10 bg-background pb-4 border-b mb-4">
+        <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
+        <div className="flex gap-2">
+          <Button onClick={handleExcelDownload} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            엑셀 다운로드
+          </Button>
+          <Button onClick={handleSave}>
+            <Save className="mr-2 h-4 w-4" />
+            저장
+          </Button>
         </div>
-
-        <TabsList>
-          {taskNames.map(t => <TabsTrigger key={t} value={t} onClick={() => setSelectedTask(t)}>{t}</TabsTrigger>)}
-        </TabsList>
       </div>
 
-      {/* Scrollable Content */}
-      <Tabs value={selectedTask} onValueChange={setSelectedTask} className="flex-1 min-h-0">
+      {/* Scrollable Content with Tabs */}
+      <Tabs value={selectedTask} onValueChange={setSelectedTask} className="flex-1 min-h-0 flex flex-col">
+        <TabsList className="sticky top-[72px] z-10 bg-background mb-4">
+          {taskNames.map(t => <TabsTrigger key={t} value={t}>{t}</TabsTrigger>)}
+        </TabsList>
         {taskNames.map(task => (
-          <TabsContent key={task} value={task} className="h-full">
+          <TabsContent key={task} value={task} className="flex-1 min-h-0">
             <ScrollArea className="h-full">
               <div className="space-y-6 pr-4 pb-4">
                 {/* 수집 단계 */}
