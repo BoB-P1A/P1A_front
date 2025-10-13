@@ -208,4 +208,39 @@ export const api = {
       return response.data;
     },
   },
+
+  // 기술 관련 API
+  technical: {
+    systems: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/technical/systems', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+    },
+    checklists: {
+      getAll: async (params: { companyId: string; status?: string[] }) => {
+        const response = await apiClient.get('/technical/checklists', {
+          params,
+        });
+        return response.data;
+      },
+    },
+    actionPlans: {
+      getAll: async (companyId: string) => {
+        const response = await apiClient.get('/technical/action-plans', {
+          params: { companyId },
+        });
+        return response.data;
+      },
+      save: async (companyId: string, actionPlans: any[]) => {
+        const response = await apiClient.post('/technical/action-plans', {
+          companyId,
+          actionPlans,
+        });
+        return response.data;
+      },
+    },
+  },
 };

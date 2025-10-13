@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, ClipboardList, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
-import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface TechnicalItem {
   id: number;
@@ -42,75 +42,57 @@ export default function TechnicalActionPlan() {
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
   const [systemNames, setSystemNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const loadData = () => {
-      const systems = getCompanyData(user?.company, 'technicalSystems', []);
-      if (systems.length > 0) {
+useEffect(() => {
+    if (!user?.company) return;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const systems = await api.technical.systems.getAll(user.company);
         const names = systems.map((s: any) => s.name);
         setSystemNames(names);
+      } catch (error) {
+        toast({ title: '시스템 목록 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
     loadData();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const systemsKey = getCompanyStorageKey(user?.company, 'technicalSystems');
-      if (customEvent.detail?.key === systemsKey) {
-        loadData();
-      }
-    };
-
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, [user?.company]);
 
-  useEffect(() => {
-    const loadActionPlans = () => {
-      const parsed: TechnicalItem[] = getCompanyData(user?.company, 'technicalData', []);
-      const filtered = parsed.filter(item => 
-        item.status === '부분이행' || item.status === '미이행'
-      );
+useEffect(() => {
+    if (!user?.company) return;
 
-      const savedImprovements = getCompanyData(user?.company, 'technicalImprovements', {});
-      const savedActionPlans = getCompanyData(user?.company, 'technicalActionPlans', {});
+    const loadActionPlans = async () => {
+      try {
+        setLoading(true);
+        const [checklist, existingPlans] = await Promise.all([
+          api.technical.checklists.getAll({ companyId: user.company, status: ['부분이행', '미이행'] }),
+          api.technical.actionPlans.getAll(user.company),
+        ]);
 
-      const actionPlanItems: ActionPlanItem[] = filtered.map(item => {
-        const itemId = `${item.systemName}-${item.no}`;
-        const savedImprovement = savedImprovements[itemId];
-        const savedActionPlan = savedActionPlans[itemId];
-        return {
-          id: itemId,
+        const merged: ActionPlanItem[] = checklist.map((item: any) => ({
+          id: `${item.systemName}-${item.no}`,
           systemName: item.systemName,
           code: item.no,
           question: item.item,
           evidence: item.evidence,
-          improvementGuide: savedImprovement?.improvementPlan || '',
-          actionPlan: savedActionPlan?.actionPlan || '',
-          actionPeriod: savedActionPlan?.actionPeriod || '',
-          department: savedActionPlan?.department || '',
-          manager: savedActionPlan?.manager || '',
-          actionDate: savedActionPlan?.actionDate || '',
-        };
-      });
+          improvementGuide: item.improvementGuide || '',
+          ...existingPlans.find((ap: any) => ap.systemName === item.systemName && ap.code === item.no),
+        }));
 
-      setItems(actionPlanItems);
-    };
-
-    loadActionPlans();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const techDataKey = getCompanyStorageKey(user?.company, 'technicalData');
-      const improvementsKey = getCompanyStorageKey(user?.company, 'technicalImprovements');
-      if (customEvent.detail?.key === techDataKey || customEvent.detail?.key === improvementsKey) {
-        loadActionPlans();
+        setItems(merged);
+      } catch (error) {
+        toast({ title: '조치 계획 로딩 실패', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
     };
 
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
+    loadActionPlans();
   }, [user?.company]);
 
   const handleFieldChange = (id: string, field: keyof ActionPlanItem, value: string) => {
@@ -120,25 +102,28 @@ export default function TechnicalActionPlan() {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    const actionPlans: { [key: string]: any } = {};
-    items.forEach(item => {
-      actionPlans[item.id] = {
-        systemName: item.systemName,
-        code: item.code,
-        question: item.question,
-        evidence: item.evidence,
-        improvementGuide: item.improvementGuide,
-        actionPlan: item.actionPlan,
-        actionPeriod: item.actionPeriod,
-        department: item.department,
-        manager: item.manager,
-        actionDate: item.actionDate,
-      };
-    });
-    setCompanyData(user?.company, 'technicalActionPlans', actionPlans);
-    setHasChanges(false);
-    toast.success('저장되었습니다');
+const handleSave = async () => {
+    try {
+      setLoading(true);
+      await api.technical.actionPlans.save(
+        user?.company as string,
+        items.map(item => ({
+          systemName: item.systemName,
+          code: item.code,
+          actionPlan: item.actionPlan,
+          actionPeriod: item.actionPeriod,
+          department: item.department,
+          manager: item.manager,
+          actionDate: item.actionDate,
+        }))
+      );
+      setHasChanges(false);
+      toast({ title: '저장되었습니다' });
+    } catch (error) {
+      toast({ title: '저장 실패', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExportToExcel = () => {
@@ -161,9 +146,13 @@ export default function TechnicalActionPlan() {
     XLSX.writeFile(wb, '기술적_조치_계획_수립.xlsx');
   };
 
-  const filteredItems = activeTab === '전체' 
+const filteredItems = activeTab === '전체' 
     ? items 
     : items.filter(item => item.systemName === activeTab);
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div className="space-y-6">
