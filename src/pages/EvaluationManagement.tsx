@@ -157,7 +157,7 @@ export default function EvaluationManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">영향평가 관리 페이지</h1>
+          <h1 className="text-3xl font-bold text-primary">평가항목 관리</h1>
           <p className="text-muted-foreground mt-2">
             평가항목을 구성하고 관리합니다
           </p>

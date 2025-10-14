@@ -45,7 +45,7 @@ const getMenuItems = (userRole?: string) => {
   // 영향평가 관리 페이지는 관리자와 개인정보팀만 접근 가능
   if (userRole === 'admin' || userRole === 'privacy-team') {
     items.push({
-      title: '영향평가 관리 페이지',
+      title: '평가항목 관리',
       url: '/evaluation-management',
       icon: ListChecks,
     });
