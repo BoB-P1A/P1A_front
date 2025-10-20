@@ -91,7 +91,7 @@ export default function ProtectionFlowChart() {
 
   const addIcon = (type: DraggableIcon['type']) => {
     const newIcon: DraggableIcon = {
-      id: Date.now().toString(),
+      id: `temp_${Date.now()}`,
       type,
       x: 100,
       y: 100,
@@ -165,13 +165,21 @@ export default function ProtectionFlowChart() {
 
   const handleSave = async () => {
     try {
-      await api.protection.flowCharts.save(
+      const savedData = await api.protection.flowCharts.save(
         user?.company as string,
         selectedTask,
         '',  // imageData는 캡처 시에만 저장
         flowDataByTask[selectedTask],
         JSON.stringify(personalInfoTexts[selectedTask] || {})
       );
+      
+      // 백엔드 응답으로 state 업데이트
+      if (savedData?.flowData) {
+        setFlowDataByTask(prev => ({
+          ...prev,
+          [selectedTask]: savedData.flowData,
+        }));
+      }
       alert('저장되었습니다.');
     } catch (error) {
       console.error('Failed to save flowchart:', error);
@@ -267,13 +275,21 @@ export default function ProtectionFlowChart() {
     const imageData = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     
     try {
-      await api.protection.flowCharts.save(
+      const savedData = await api.protection.flowCharts.save(
         user?.company as string,
         selectedTask,
         imageData,
         flowDataByTask[selectedTask],
         JSON.stringify(personalInfoTexts[selectedTask] || {})
       );
+      
+      // 백엔드 응답으로 state 업데이트
+      if (savedData?.flowData) {
+        setFlowDataByTask(prev => ({
+          ...prev,
+          [selectedTask]: savedData.flowData,
+        }));
+      }
       alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
     } catch (error) {
       console.error('Failed to save flowchart image:', error);

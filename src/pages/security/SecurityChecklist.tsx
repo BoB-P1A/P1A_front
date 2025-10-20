@@ -400,7 +400,7 @@ export default function SecurityChecklist() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => handleFileDelete(item.id, file.name)}
+                                  onClick={() => handleFileDelete(item.id, file.url)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>

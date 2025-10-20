@@ -147,24 +147,23 @@ export default function ProtectionFlowTable() {
   }, [user?.company]);
 
   const handleAddRow = (stage: 'collection' | 'storage' | 'usage' | 'provision' | 'disposal') => {
-    const newId = Date.now().toString();
     let newRow: any;
 
     switch (stage) {
       case 'collection':
-        newRow = { id: newId, detailTask: '', collectionTarget: '', collectionPath: '', collectionSystem: '', collectionItem: '', collectionPeriod: '', collectionManager: '', collectionBasis: '', isOnline: '', isEncrypted: '' };
+        newRow = { detailTask: '', collectionTarget: '', collectionPath: '', collectionSystem: '', collectionItem: '', collectionPeriod: '', collectionManager: '', collectionBasis: '', isOnline: '', isEncrypted: '' };
         break;
       case 'storage':
-        newRow = { id: newId, detailTask: '', inputSystem: '', storageSpace: '', storageItem: '', encryptionItem: '', isOnline: '', isEncrypted: '' };
+        newRow = { detailTask: '', inputSystem: '', storageSpace: '', storageItem: '', encryptionItem: '', isOnline: '', isEncrypted: '' };
         break;
       case 'usage':
-        newRow = { id: newId, detailTask: '', storageSpace: '', usageSystem: '', usageItem: '', usagePurpose: '', usageMethod: '', personalInfoHandler: '', isOnline: '', isEncrypted: '' };
+        newRow = { detailTask: '', storageSpace: '', usageSystem: '', usageItem: '', usagePurpose: '', usageMethod: '', personalInfoHandler: '', isOnline: '', isEncrypted: '' };
         break;
       case 'provision':
-        newRow = { id: newId, detailTask: '', storageSpace: '', provisionSystem: '', provider: '', recipient: '', provisionItem: '', provisionPurpose: '', provisionMethod: '', provisionPeriod: '', encryptionMethod: '', provisionBasis: '', provisionSystemOnline: '', provisionSystemEncrypted: '', recipientOnline: '', recipientEncrypted: '' };
+        newRow = { detailTask: '', storageSpace: '', provisionSystem: '', provider: '', recipient: '', provisionItem: '', provisionPurpose: '', provisionMethod: '', provisionPeriod: '', encryptionMethod: '', provisionBasis: '', provisionSystemOnline: '', provisionSystemEncrypted: '', recipientOnline: '', recipientEncrypted: '' };
         break;
       case 'disposal':
-        newRow = { id: newId, detailTask: '', storageSpace: '', disposalSystem: '', disposalPeriod: '', disposalItem: '', retentionPeriod: '', disposalManager: '', disposalProcedure: '', separateStorageSpace: '', disposalOnline: '', hasSeparateStorage: '', separateStorageOnline: '', separateStorageEncrypted: '' };
+        newRow = { detailTask: '', storageSpace: '', disposalSystem: '', disposalPeriod: '', disposalItem: '', retentionPeriod: '', disposalManager: '', disposalProcedure: '', separateStorageSpace: '', disposalOnline: '', hasSeparateStorage: '', separateStorageOnline: '', separateStorageEncrypted: '' };
         break;
     }
 
@@ -240,7 +239,8 @@ export default function ProtectionFlowTable() {
     
     try {
       setLoading(true);
-      await api.protection.flowTables.save(user.company, flowDataByTask);
+      const savedData = await api.protection.flowTables.save(user.company, flowDataByTask);
+      setFlowDataByTask(savedData);
       toast({ title: '저장되었습니다' });
     } catch (error) {
       toast({ title: '오류', description: '저장 실패', variant: 'destructive' });
