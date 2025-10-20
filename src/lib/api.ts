@@ -309,6 +309,23 @@ export const api = {
         });
         return response.data;
       },
+      create: async (companyId: string, targetName: string) => {
+        const response = await apiClient.post('/security/targets', {
+          companyId,
+          targetName,
+        });
+        return response.data;
+      },
+      update: async (id: number, targetName: string) => {
+        const response = await apiClient.put(`/security/targets/${id}`, {
+          targetName,
+        });
+        return response.data;
+      },
+      delete: async (id: number) => {
+        const response = await apiClient.delete(`/security/targets/${id}`);
+        return response.data;
+      },
     },
     checklists: {
       getAll: async (params: { companyId: string; status?: string[] }) => {
@@ -365,6 +382,23 @@ export const api = {
         const response = await apiClient.get('/technical/systems', {
           params: { companyId },
         });
+        return response.data;
+      },
+      create: async (companyId: string, systemName: string) => {
+        const response = await apiClient.post('/technical/systems', {
+          companyId,
+          systemName,
+        });
+        return response.data;
+      },
+      update: async (id: number, systemName: string) => {
+        const response = await apiClient.put(`/technical/systems/${id}`, {
+          systemName,
+        });
+        return response.data;
+      },
+      delete: async (id: number) => {
+        const response = await apiClient.delete(`/technical/systems/${id}`);
         return response.data;
       },
     },

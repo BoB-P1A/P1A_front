@@ -120,41 +120,37 @@ export default function AccountManagement() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.username || !formData.password || !formData.role || !formData.company) {
-      alert('모든 필드를 입력해주세요.');
+    if (!formData.name || !formData.username) {
+      alert('이름과 아이디는 필수 입력 항목입니다.');
       return;
     }
 
-    // 아이디 중복 체크
-    const isDuplicate = accounts.some(account => 
-      account.username === formData.username && 
-      (!editingAccount || account.id !== editingAccount.id)
+    // 아이디 중복 체크 (수정 시 자기 자신 제외)
+    const isDuplicate = accounts.some(
+      (acc) => acc.username === formData.username && acc.id !== editingAccount?.id
     );
-
+    
     if (isDuplicate) {
-      alert('이미 존재하는 아이디입니다. 다른 아이디를 입력해주세요.');
+      alert('이미 사용 중인 아이디입니다.');
       return;
     }
 
     try {
       if (editingAccount) {
-        await execute(() => api.accounts.update(editingAccount.id, formData));
-        setAccounts(accounts.map(a => 
-          a.id === editingAccount.id 
-            ? { ...a, ...formData, role: formData.role as UserRole }
-            : a
+        const updated = await execute(() => api.accounts.update(editingAccount.id.toString(), formData));
+        setAccounts(prev => prev.map(acc => 
+          acc.id === editingAccount.id ? updated : acc
         ));
       } else {
-        const newAccount: Account = {
-          id: Date.now().toString(),
-          ...formData,
-          role: formData.role as UserRole,
-          createdAt: new Date().toISOString().split('T')[0],
-        };
-        await execute(() => api.accounts.create(newAccount));
-        setAccounts([...accounts, newAccount]);
+        if (!formData.password) {
+          alert('비밀번호는 필수 입력 항목입니다.');
+          return;
+        }
+        
+        const created = await execute(() => api.accounts.create(formData));
+        setAccounts(prev => [...prev, created]);
       }
-      
+
       setIsDialogOpen(false);
       setEditingAccount(null);
       setFormData({ name: '', username: '', password: '', role: '', company: '' });

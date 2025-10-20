@@ -61,15 +61,20 @@ export default function TaskTable() {
     loadTasks();
   }, [user?.company]);
 
-  const handleAddRow = () => {
-    const newTask: TaskRow = {
-      id: Date.now(),
-      taskName: '',
-      purpose: '',
-      personalInfo: '',
-      department: '',
-    };
-    setTasks([...tasks, newTask]);
+  const handleAddRow = async () => {
+    try {
+      const newTask = await api.tasks.create({
+        taskName: '',
+        purpose: '',
+        personalInfo: '',
+        department: '',
+        companyId: user?.company,
+      });
+      setTasks([...tasks, newTask]);
+    } catch (error) {
+      console.error('Failed to add task:', error);
+      alert('업무 추가에 실패했습니다.');
+    }
   };
 
   const handleDeleteRow = async (id: number) => {

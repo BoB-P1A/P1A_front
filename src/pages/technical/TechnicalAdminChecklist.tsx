@@ -35,7 +35,7 @@ interface TechnicalItem {
 
 interface FileAttachment {
   name: string;
-  data: string;
+  url: string;
   type: string;
 }
 
@@ -102,39 +102,47 @@ export default function TechnicalAdminChecklist() {
     setHasChanges(true);
   };
 
-  const handleFileUpload = (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      try {
+        // FormData로 AWS S3에 직접 업로드
+        const uploadResult = await api.files.upload(file, 'technical-checklist');
+        
         const fileData: FileAttachment = {
           name: file.name,
-          data: e.target?.result as string,
+          url: uploadResult.fileUrl,
           type: file.type,
         };
+        
         setItems(prev => prev.map(item => 
           item.id === id ? { ...item, files: [...item.files, fileData] } : item
         ));
         setHasChanges(true);
-      };
-      reader.readAsDataURL(file);
+        toast({ title: '파일이 업로드되었습니다' });
+      } catch (error) {
+        toast({ title: '파일 업로드 실패', variant: 'destructive' });
+      }
     }
   };
 
-  const handleFileDelete = (itemId: number, fileName: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === itemId 
-        ? { ...item, files: item.files.filter(f => f.name !== fileName) } 
-        : item
-    ));
-    setHasChanges(true);
+  const handleFileDelete = async (itemId: number, fileUrl: string) => {
+    try {
+      await api.files.delete(fileUrl);
+      setItems(prev => prev.map(item => 
+        item.id === itemId 
+          ? { ...item, files: item.files.filter(f => f.url !== fileUrl) } 
+          : item
+      ));
+      setHasChanges(true);
+      toast({ title: '파일이 삭제되었습니다' });
+    } catch (error) {
+      toast({ title: '파일 삭제 실패', variant: 'destructive' });
+    }
   };
 
   const handleFileDownload = (file: FileAttachment) => {
-    const link = document.createElement('a');
-    link.href = file.data;
-    link.download = file.name;
-    link.click();
+    window.open(file.url, '_blank');
   };
 
   const handleSave = async () => {
@@ -165,33 +173,53 @@ export default function TechnicalAdminChecklist() {
     setIsDialogOpen(true);
   };
 
-  const handleSaveSystem = () => {
-    let updatedSystems;
-    if (editingSystem) {
-      updatedSystems = systems.map(s => 
-        s.id === editingSystem.id ? { ...s, name: systemName } : s
-      );
-    } else {
-      const newSystem: SystemInfo = {
-        id: Date.now(),
-        name: systemName,
-      };
-      updatedSystems = [...systems, newSystem];
-      if (systems.length === 0) {
-        setActiveTab(systemName);
-      }
+  const handleSaveSystem = async () => {
+    if (!systemName.trim()) {
+      alert('시스템 이름을 입력해주세요.');
+      return;
     }
-    setSystems(updatedSystems);
-    setIsDialogOpen(false);
-    setEditingSystem(null);
-    setSystemName('');
+
+    try {
+      if (editingSystem) {
+        await api.technical.systems.update(editingSystem.id, systemName);
+        setSystems(prev => prev.map(s => 
+          s.id === editingSystem.id ? { ...s, name: systemName } : s
+        ));
+        toast({ title: '시스템이 수정되었습니다' });
+      } else {
+        const newSystem = await api.technical.systems.create(user?.company as string, systemName);
+        setSystems(prev => [...prev, newSystem]);
+        if (systems.length === 0) {
+          setActiveTab(newSystem.name);
+        }
+        toast({ title: '시스템이 추가되었습니다' });
+      }
+
+      setIsDialogOpen(false);
+      setEditingSystem(null);
+      setSystemName('');
+    } catch (error) {
+      toast({ title: '저장 실패', variant: 'destructive' });
+    }
   };
 
-  const handleDeleteSystem = (id: number) => {
-    const updatedSystems = systems.filter(s => s.id !== id);
-    setSystems(updatedSystems);
-    if (updatedSystems.length > 0 && activeTab === systems.find(s => s.id === id)?.name) {
-      setActiveTab(updatedSystems[0].name);
+  const handleDeleteSystem = async (id: number) => {
+    const system = systems.find(s => s.id === id);
+    if (!system || !confirm(`${system.name} 시스템을 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      await api.technical.systems.delete(id);
+      const updatedSystems = systems.filter(s => s.id !== id);
+      setSystems(updatedSystems);
+      toast({ title: '시스템이 삭제되었습니다' });
+
+      if (activeTab === system.name && updatedSystems.length > 0) {
+        setActiveTab(updatedSystems[0].name);
+      }
+    } catch (error) {
+      toast({ title: '삭제 실패', variant: 'destructive' });
     }
   };
 

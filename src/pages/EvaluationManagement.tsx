@@ -104,36 +104,26 @@ export default function EvaluationManagement() {
   };
 
   const handleSave = async () => {
-    let updatedItems;
-    if (editingItem) {
-      updatedItems = items.map(item => 
-        item.id === editingItem.id 
-          ? { ...item, ...formData } as EvaluationItem
-          : item
-      );
-    } else {
-      const newItem: EvaluationItem = {
-        id: Date.now(),
-        area: formData.area || '',
-        field: formData.field || '',
-        subField: formData.subField || '',
-        no: formData.no || '',
-        item: formData.item || '',
-      };
-      updatedItems = [...items, newItem];
-    }
-    // No. 기준으로 정렬
-    updatedItems.sort((a, b) => {
-      return a.no.localeCompare(b.no, undefined, { numeric: true });
-    });
-    
     try {
       if (editingItem) {
-        await execute(() => api.evaluations.update(editingItem.id, formData));
+        const updated = await execute(() => api.evaluations.update(editingItem.id, formData));
+        setItems(prev => {
+          const updatedItems = prev.map(item => 
+            item.id === editingItem.id ? { ...item, ...updated } : item
+          );
+          return updatedItems.sort((a, b) => 
+            a.no.localeCompare(b.no, undefined, { numeric: true })
+          );
+        });
       } else {
-        await execute(() => api.evaluations.create(formData));
+        const created = await execute(() => api.evaluations.create(formData));
+        setItems(prev => {
+          const updatedItems = [...prev, created];
+          return updatedItems.sort((a, b) => 
+            a.no.localeCompare(b.no, undefined, { numeric: true })
+          );
+        });
       }
-      setItems(updatedItems);
     } catch (error) {
       console.error('Failed to save evaluation:', error);
     }

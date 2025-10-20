@@ -33,7 +33,7 @@ interface LifecycleItem {
 
 interface FileAttachment {
   name: string;
-  data: string;
+  url: string;
   type: string;
 }
 
@@ -126,39 +126,47 @@ useEffect(() => {
     setHasChanges(true);
   };
 
-  const handleFileUpload = (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      try {
+        // FormData로 AWS S3에 직접 업로드
+        const uploadResult = await api.files.upload(file, 'protection-lifecycle');
+        
         const fileData: FileAttachment = {
           name: file.name,
-          data: e.target?.result as string,
+          url: uploadResult.fileUrl,
           type: file.type,
         };
+        
         setItems(prev => prev.map(item => 
           item.id === id ? { ...item, files: [...item.files, fileData] } : item
         ));
         setHasChanges(true);
-      };
-      reader.readAsDataURL(file);
+        toast({ title: '파일이 업로드되었습니다' });
+      } catch (error) {
+        toast({ title: '파일 업로드 실패', variant: 'destructive' });
+      }
     }
   };
 
-  const handleFileDelete = (itemId: number, fileName: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === itemId 
-        ? { ...item, files: item.files.filter(f => f.name !== fileName) } 
-        : item
-    ));
-    setHasChanges(true);
+  const handleFileDelete = async (itemId: number, fileUrl: string) => {
+    try {
+      await api.files.delete(fileUrl);
+      setItems(prev => prev.map(item => 
+        item.id === itemId 
+          ? { ...item, files: item.files.filter(f => f.url !== fileUrl) } 
+          : item
+      ));
+      setHasChanges(true);
+      toast({ title: '파일이 삭제되었습니다' });
+    } catch (error) {
+      toast({ title: '파일 삭제 실패', variant: 'destructive' });
+    }
   };
 
   const handleFileDownload = (file: FileAttachment) => {
-    const link = document.createElement('a');
-    link.href = file.data;
-    link.download = file.name;
-    link.click();
+    window.open(file.url, '_blank');
   };
 
 const handleSave = async () => {

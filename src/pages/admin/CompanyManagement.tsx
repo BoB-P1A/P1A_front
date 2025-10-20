@@ -90,28 +90,22 @@ export default function CompanyManagement() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.managerName || !formData.managerPhone) {
-      alert('모든 필드를 입력해주세요.');
+    if (!formData.name) {
+      alert('회사명은 필수 입력 항목입니다.');
       return;
     }
 
     try {
       if (editingCompany) {
-        await execute(() => api.companies.update(String(editingCompany.id), formData));
-        setCompanies(companies.map(c => 
-          c.id === editingCompany.id ? { ...c, ...formData } : c
+        const updated = await execute(() => api.companies.update(editingCompany.id.toString(), formData));
+        setCompanies(prev => prev.map(company => 
+          company.id === editingCompany.id ? updated : company
         ));
       } else {
-        const newCompany: Company = {
-          id: Math.max(...companies.map(c => c.id), 0) + 1,
-          ...formData,
-          status: 'active',
-          createdAt: new Date().toISOString().split('T')[0],
-        };
-        await execute(() => api.companies.create(newCompany));
-        setCompanies([...companies, newCompany]);
+        const created = await execute(() => api.companies.create(formData));
+        setCompanies(prev => [...prev, created]);
       }
-      
+
       setIsDialogOpen(false);
       setEditingCompany(null);
       setFormData({ name: '', managerName: '', managerPhone: '' });

@@ -35,7 +35,7 @@ interface SecurityItem {
 
 interface FileAttachment {
   name: string;
-  data: string;
+  url: string;
   type: string;
 }
 
@@ -103,39 +103,47 @@ export default function SecurityChecklist() {
     setHasChanges(true);
   };
 
-  const handleFileUpload = (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      try {
+        // FormData로 AWS S3에 직접 업로드
+        const uploadResult = await api.files.upload(file, 'security-checklist');
+        
         const fileData: FileAttachment = {
           name: file.name,
-          data: e.target?.result as string,
+          url: uploadResult.fileUrl,
           type: file.type,
         };
+        
         setItems(prev => prev.map(item => 
           item.id === id ? { ...item, files: [...item.files, fileData] } : item
         ));
         setHasChanges(true);
-      };
-      reader.readAsDataURL(file);
+        toast({ title: '파일이 업로드되었습니다' });
+      } catch (error) {
+        toast({ title: '파일 업로드 실패', variant: 'destructive' });
+      }
     }
   };
 
-  const handleFileDelete = (itemId: number, fileName: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === itemId 
-        ? { ...item, files: item.files.filter(f => f.name !== fileName) } 
-        : item
-    ));
-    setHasChanges(true);
+  const handleFileDelete = async (itemId: number, fileUrl: string) => {
+    try {
+      await api.files.delete(fileUrl);
+      setItems(prev => prev.map(item => 
+        item.id === itemId 
+          ? { ...item, files: item.files.filter(f => f.url !== fileUrl) } 
+          : item
+      ));
+      setHasChanges(true);
+      toast({ title: '파일이 삭제되었습니다' });
+    } catch (error) {
+      toast({ title: '파일 삭제 실패', variant: 'destructive' });
+    }
   };
 
   const handleFileDownload = (file: FileAttachment) => {
-    const link = document.createElement('a');
-    link.href = file.data;
-    link.download = file.name;
-    link.click();
+    window.open(file.url, '_blank');
   };
 
   const handleSave = async () => {
@@ -166,33 +174,53 @@ export default function SecurityChecklist() {
     setIsDialogOpen(true);
   };
 
-  const handleSaveTarget = () => {
-    let updatedTargets;
-    if (editingTarget) {
-      updatedTargets = targets.map(t => 
-        t.id === editingTarget.id ? { ...t, name: targetName } : t
-      );
-    } else {
-      const newTarget: TargetInfo = {
-        id: Date.now(),
-        name: targetName,
-      };
-      updatedTargets = [...targets, newTarget];
-      if (targets.length === 0) {
-        setActiveTab(targetName);
-      }
+  const handleSaveTarget = async () => {
+    if (!targetName.trim()) {
+      alert('대상 이름을 입력해주세요.');
+      return;
     }
-    setTargets(updatedTargets);
-    setIsDialogOpen(false);
-    setEditingTarget(null);
-    setTargetName('');
+
+    try {
+      if (editingTarget) {
+        await api.security.targets.update(editingTarget.id, targetName);
+        setTargets(prev => prev.map(t => 
+          t.id === editingTarget.id ? { ...t, name: targetName } : t
+        ));
+        toast({ title: '대상이 수정되었습니다' });
+      } else {
+        const newTarget = await api.security.targets.create(user?.company as string, targetName);
+        setTargets(prev => [...prev, newTarget]);
+        if (targets.length === 0) {
+          setActiveTab(newTarget.name);
+        }
+        toast({ title: '대상이 추가되었습니다' });
+      }
+
+      setIsDialogOpen(false);
+      setEditingTarget(null);
+      setTargetName('');
+    } catch (error) {
+      toast({ title: '저장 실패', variant: 'destructive' });
+    }
   };
 
-  const handleDeleteTarget = (id: number) => {
-    const updatedTargets = targets.filter(t => t.id !== id);
-    setTargets(updatedTargets);
-    if (updatedTargets.length > 0 && activeTab === targets.find(t => t.id === id)?.name) {
-      setActiveTab(updatedTargets[0].name);
+  const handleDeleteTarget = async (id: number) => {
+    const target = targets.find(t => t.id === id);
+    if (!target || !confirm(`${target.name} 대상을 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      await api.security.targets.delete(id);
+      const updatedTargets = targets.filter(t => t.id !== id);
+      setTargets(updatedTargets);
+      toast({ title: '대상이 삭제되었습니다' });
+
+      if (activeTab === target.name && updatedTargets.length > 0) {
+        setActiveTab(updatedTargets[0].name);
+      }
+    } catch (error) {
+      toast({ title: '삭제 실패', variant: 'destructive' });
     }
   };
 

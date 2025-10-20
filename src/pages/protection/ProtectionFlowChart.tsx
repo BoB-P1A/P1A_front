@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { PieChart, RefreshCw, Download, Save, Camera, Trash, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCompanyData, setCompanyData, getCompanyStorageKey } from '@/lib/utils';
 import { api } from '@/lib/api';
 
 interface DraggableIcon {
@@ -39,50 +38,55 @@ export default function ProtectionFlowChart() {
   const [personalInfoTexts, setPersonalInfoTexts] = useState<Record<string, { row1: string; row2: string; row3: string }>>({});
 
   useEffect(() => {
-    const loadData = () => {
-      const tasks = getCompanyData(user?.company, 'processingTasks', []);
-      if (tasks.length > 0) {
-        const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
-        if (taskNamesList.length > 0) {
-          setTaskNames(taskNamesList);
-          
-          const newFlowData = { ...flowDataByTask };
-          taskNamesList.forEach((name: string) => {
-            if (!newFlowData[name]) {
-              newFlowData[name] = { icons: [] };
+    const loadData = async () => {
+      if (!user?.company) return;
+
+      try {
+        // API에서 처리업무 목록 가져오기
+        const tasks = await api.protection.tasks.getAll(user.company);
+        if (tasks.length > 0) {
+          const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
+          if (taskNamesList.length > 0) {
+            setTaskNames(taskNamesList);
+            
+            const newFlowData = { ...flowDataByTask };
+            taskNamesList.forEach((name: string) => {
+              if (!newFlowData[name]) {
+                newFlowData[name] = { icons: [] };
+              }
+            });
+            setFlowDataByTask(newFlowData);
+            
+            if (!taskNamesList.includes(selectedTask)) {
+              setSelectedTask(taskNamesList[0]);
             }
-          });
-          setFlowDataByTask(newFlowData);
-          
-          if (!taskNamesList.includes(selectedTask)) {
-            setSelectedTask(taskNamesList[0]);
           }
         }
-      }
 
-      const savedFlowData = getCompanyData(user?.company, 'flowChartData', null);
-      if (savedFlowData) {
-        setFlowDataByTask(savedFlowData);
-      }
-
-      const savedPersonalInfoTexts = getCompanyData(user?.company, 'personalInfoTexts', {});
-      if (savedPersonalInfoTexts) {
-        setPersonalInfoTexts(savedPersonalInfoTexts);
+        // API에서 저장된 흐름도 데이터 가져오기
+        const savedFlowCharts = await api.protection.flowCharts.getAll(user.company);
+        if (savedFlowCharts && savedFlowCharts.length > 0) {
+          const flowDataMap: Record<string, FlowChartData> = {};
+          const personalInfoMap: Record<string, { row1: string; row2: string; row3: string }> = {};
+          
+          savedFlowCharts.forEach((chart: any) => {
+            if (chart.flowData) {
+              flowDataMap[chart.taskName] = chart.flowData;
+            }
+            if (chart.personalInfoText) {
+              personalInfoMap[chart.taskName] = chart.personalInfoText;
+            }
+          });
+          
+          setFlowDataByTask(prev => ({ ...prev, ...flowDataMap }));
+          setPersonalInfoTexts(prev => ({ ...prev, ...personalInfoMap }));
+        }
+      } catch (error) {
+        console.error('Failed to load flowchart data:', error);
       }
     };
 
     loadData();
-
-    const handleStorageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const taskKey = getCompanyStorageKey(user?.company, 'processingTasks');
-      if (customEvent.detail?.key === taskKey) {
-        loadData();
-      }
-    };
-
-    window.addEventListener('storageUpdate', handleStorageUpdate);
-    return () => window.removeEventListener('storageUpdate', handleStorageUpdate);
   }, [user?.company]);
 
   const addIcon = (type: DraggableIcon['type']) => {
@@ -159,10 +163,20 @@ export default function ProtectionFlowChart() {
     setEditingText(null);
   };
 
-  const handleSave = () => {
-    setCompanyData(user?.company, 'flowChartData', flowDataByTask);
-    setCompanyData(user?.company, 'personalInfoTexts', personalInfoTexts);
-    alert('저장되었습니다.');
+  const handleSave = async () => {
+    try {
+      await api.protection.flowCharts.save(
+        user?.company as string,
+        selectedTask,
+        '',  // imageData는 캡처 시에만 저장
+        flowDataByTask[selectedTask],
+        JSON.stringify(personalInfoTexts[selectedTask] || {})
+      );
+      alert('저장되었습니다.');
+    } catch (error) {
+      console.error('Failed to save flowchart:', error);
+      alert('저장에 실패했습니다.');
+    }
   };
 
   const handleCaptureFlowChart = async () => {
@@ -253,7 +267,13 @@ export default function ProtectionFlowChart() {
     const imageData = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     
     try {
-      await api.flowCharts.save(selectedTask, imageData);
+      await api.protection.flowCharts.save(
+        user?.company as string,
+        selectedTask,
+        imageData,
+        flowDataByTask[selectedTask],
+        JSON.stringify(personalInfoTexts[selectedTask] || {})
+      );
       alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
     } catch (error) {
       console.error('Failed to save flowchart image:', error);
@@ -294,14 +314,7 @@ export default function ProtectionFlowChart() {
             
             // Also save to localStorage for report
             const reader = new FileReader();
-            reader.onload = (e) => {
-              const base64 = e.target?.result as string;
-              const flowChartImages = getCompanyData(user?.company, 'flowChartImages', {});
-              flowChartImages[selectedTask] = base64;
-              setCompanyData(user?.company, 'flowChartImages', flowChartImages);
-              alert(`${selectedTask} 흐름도가 이미지로 저장되었습니다.`);
-            };
-            reader.readAsDataURL(blob);
+            // 이미지 다운로드 완료
           }
         }, 'image/png');
       }).catch((error: Error) => {
