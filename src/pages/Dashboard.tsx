@@ -62,31 +62,31 @@ export default function Dashboard() {
           <div className="space-y-3">
             <h3 className="font-semibold text-lg text-primary">개인정보 처리단계별 보호조치</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/protection/task-table')}>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/task-table')}>
                 <FileText className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">개인정보 처리 업무표</span>
               </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/protection/flow-table')}>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/flow-table')}>
                 <Table className="h-5 w-5 mb-2 text-accent" />
                 <span className="text-sm">개인정보 흐름표</span>
               </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/protection/flowchart')}>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/flowchart')}>
                 <PieChart className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">개인정보 흐름도</span>
               </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/protection/lifecycle')}>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/lifecycle')}>
                 <CheckSquare className="h-5 w-5 mb-2 text-pia-secondary" />
                 <span className="text-sm">Lifecycle Checklist</span>
               </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/protection/improvement-plan')}>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/improvement-plan')}>
                 <AlertCircle className="h-5 w-5 mb-2 text-destructive" />
                 <span className="text-sm">침해요인별 개선 가이드</span>
               </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/protection/action-plan')}>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/action-plan')}>
                 <ClipboardList className="h-5 w-5 mb-2 text-pia-secondary" />
                 <span className="text-sm">조치 계획 수립</span>
               </Button>
-              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/protection/report')}>
+              <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/report')}>
                 <FileText className="h-5 w-5 mb-2 text-pia-primary" />
                 <span className="text-sm">결과보고서</span>
               </Button>

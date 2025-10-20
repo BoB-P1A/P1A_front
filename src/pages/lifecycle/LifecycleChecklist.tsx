@@ -59,7 +59,7 @@ export default function ProtectionLifecycle() {
     const loadTasks = async () => {
       try {
         setLoading(true);
-        const processingTasks = await api.protection.tasks.getAll(user.company);
+        const processingTasks = await api.lifecycle.tasks.getAll(user.company);
         if (processingTasks.length > 0) {
           setTasks(processingTasks);
           if (!activeTab) {
@@ -84,7 +84,7 @@ useEffect(() => {
         setLoading(true);
         const [evaluationItems, savedItems] = await Promise.all([
           api.evaluations.getAll(),
-          api.protection.lifecycle.getAll(user.company),
+          api.lifecycle.lifecycle.getAll(user.company),
         ]);
 
         const filtered = evaluationItems.filter((item: any) => item.area?.startsWith('1.'));
@@ -173,7 +173,7 @@ const handleSave = async () => {
     try {
       setLoading(true);
       const toSave = items.map((it) => ({ ...it, taskName: activeTab }));
-      await api.protection.lifecycle.save(user?.company as string, activeTab, toSave);
+      await api.lifecycle.lifecycle.save(user?.company as string, activeTab, toSave);
       setHasChanges(false);
       toast({ title: '저장되었습니다' });
     } catch (error) {

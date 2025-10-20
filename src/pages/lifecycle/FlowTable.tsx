@@ -111,13 +111,13 @@ export default function ProtectionFlowTable() {
       
       try {
         setLoading(true);
-        const tasksResponse = await api.protection.tasks.getAll(user.company);
+        const tasksResponse = await api.lifecycle.tasks.getAll(user.company);
         const taskNamesList = tasksResponse.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
         
         if (taskNamesList.length > 0) {
           setTaskNames(taskNamesList);
           
-          const flowTableResponse = await api.protection.flowTables.getAll(user.company);
+          const flowTableResponse = await api.lifecycle.flowTables.getAll(user.company);
           
           const newFlowData: Record<string, TaskFlowData> = {};
           taskNamesList.forEach((name: string) => {
@@ -239,7 +239,7 @@ export default function ProtectionFlowTable() {
     
     try {
       setLoading(true);
-      const savedData = await api.protection.flowTables.save(user.company, flowDataByTask);
+      const savedData = await api.lifecycle.flowTables.save(user.company, flowDataByTask);
       setFlowDataByTask(savedData);
       toast({ title: '저장되었습니다' });
     } catch (error) {

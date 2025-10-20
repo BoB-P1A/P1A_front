@@ -209,11 +209,11 @@ export const api = {
     },
   },
 
-  // 보호조치 관련 API
-  protection: {
+  // 생애주기 관련 API
+  lifecycle: {
     tasks: {
       getAll: async (companyId: string) => {
-        const response = await apiClient.get('/protection/tasks', {
+        const response = await apiClient.get('/lifecycle/tasks', {
           params: { companyId },
         });
         return response.data;
@@ -221,13 +221,13 @@ export const api = {
     },
     lifecycle: {
       getAll: async (companyId: string) => {
-        const response = await apiClient.get('/protection/lifecycle', {
+        const response = await apiClient.get('/lifecycle/lifecycle', {
           params: { companyId },
         });
         return response.data;
       },
       save: async (companyId: string, taskName: string, data: any[]) => {
-        const response = await apiClient.post('/protection/lifecycle', {
+        const response = await apiClient.post('/lifecycle/lifecycle', {
           companyId,
           taskName,
           data,
@@ -237,13 +237,13 @@ export const api = {
     },
     flowCharts: {
       getAll: async (companyId: string) => {
-        const response = await apiClient.get('/protection/flowcharts', {
+        const response = await apiClient.get('/lifecycle/flowcharts', {
           params: { companyId },
         });
         return response.data;
       },
       save: async (companyId: string, taskName: string, imageData: string, flowData?: any, personalInfoText?: string) => {
-        const response = await apiClient.post('/protection/flowcharts', {
+        const response = await apiClient.post('/lifecycle/flowcharts', {
           companyId,
           taskName,
           imageData,
@@ -255,13 +255,13 @@ export const api = {
     },
     flowTables: {
       getAll: async (companyId: string) => {
-        const response = await apiClient.get('/protection/flowtables', {
+        const response = await apiClient.get('/lifecycle/flowtables', {
           params: { companyId },
         });
         return response.data;
       },
       save: async (companyId: string, data: any) => {
-        const response = await apiClient.post('/protection/flowtables', {
+        const response = await apiClient.post('/lifecycle/flowtables', {
           companyId,
           data,
         });
@@ -270,13 +270,13 @@ export const api = {
     },
     improvements: {
       getAll: async (companyId: string) => {
-        const response = await apiClient.get('/protection/improvements', {
+        const response = await apiClient.get('/lifecycle/improvements', {
           params: { companyId },
         });
         return response.data;
       },
       save: async (companyId: string, improvements: any) => {
-        const response = await apiClient.post('/protection/improvements', {
+        const response = await apiClient.post('/lifecycle/improvements', {
           companyId,
           improvements,
         });
@@ -285,13 +285,13 @@ export const api = {
     },
     actionPlans: {
       getAll: async (companyId: string) => {
-        const response = await apiClient.get('/protection/action-plans', {
+        const response = await apiClient.get('/lifecycle/action-plans', {
           params: { companyId },
         });
         return response.data;
       },
       save: async (companyId: string, actionPlans: any) => {
-        const response = await apiClient.post('/protection/action-plans', {
+        const response = await apiClient.post('/lifecycle/action-plans', {
           companyId,
           actionPlans,
         });

@@ -21,11 +21,11 @@ export default function ProtectionReport() {
       
       try {
         const [tasks, flowTables, lifecycle, improvementsData, flowCharts] = await Promise.all([
-          api.protection.tasks.getAll(user.company),
-          api.protection.flowTables.getAll(user.company),
-          api.protection.lifecycle.getAll(user.company),
-          api.protection.improvements.getAll(user.company),
-          api.protection.flowCharts.getAll(user.company),
+          api.lifecycle.tasks.getAll(user.company),
+          api.lifecycle.flowTables.getAll(user.company),
+          api.lifecycle.lifecycle.getAll(user.company),
+          api.lifecycle.improvements.getAll(user.company),
+          api.lifecycle.flowCharts.getAll(user.company),
         ]);
         
         setTaskTableData(tasks);
@@ -367,7 +367,7 @@ export default function ProtectionReport() {
         })
       );
 
-      const actionPlansData = await api.protection.actionPlans.getAll(user.company);
+      const actionPlansData = await api.lifecycle.actionPlans.getAll(user.company);
       const actionPlansByTask: { [key: string]: any[] } = {};
       
       Object.keys(actionPlansData).forEach(id => {
@@ -870,7 +870,7 @@ export default function ProtectionReport() {
               const loadActionPlans = async () => {
                 if (!user?.company) return;
                 try {
-                  const data = await api.protection.actionPlans.getAll(user.company);
+                  const data = await api.lifecycle.actionPlans.getAll(user.company);
                   setActionPlansData(data);
                 } catch (error) {
                   console.error('Failed to load action plans:', error);

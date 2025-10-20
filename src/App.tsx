@@ -16,17 +16,17 @@ import { DashboardLayout } from "./layouts/DashboardLayout";
 
 // Main Pages
 import EvaluationManagement from "./pages/EvaluationManagement";
-import TaskTable from "./pages/protection/TaskTable";
-import ProtectionLifecycle from "./pages/protection/ProtectionLifecycle";
-import ProtectionFlowTable from "./pages/protection/ProtectionFlowTable";
-import ProtectionFlowChart from "./pages/protection/ProtectionFlowChart";
-import ProtectionImprovementPlan from "./pages/protection/ImprovementPlan";
-import ProtectionActionPlan from "./pages/protection/ActionPlan";
-import ProtectionReport from "./pages/protection/ProtectionReport";
-import TechnicalAdminChecklist from "./pages/technical/TechnicalAdminChecklist";
+import TaskTable from "./pages/lifecycle/TaskTable";
+import LifecycleChecklist from "./pages/lifecycle/LifecycleChecklist";
+import FlowTable from "./pages/lifecycle/FlowTable";
+import FlowChart from "./pages/lifecycle/FlowChart";
+import LifecycleImprovementPlan from "./pages/lifecycle/ImprovementPlan";
+import LifecycleActionPlan from "./pages/lifecycle/ActionPlan";
+import LifecycleReport from "./pages/lifecycle/Report";
+import AdminChecklist from "./pages/technical/AdminChecklist";
 import TechnicalImprovementPlan from "./pages/technical/ImprovementPlan";
 import TechnicalActionPlan from "./pages/technical/ActionPlan";
-import TechnicalReport from "./pages/technical/TechnicalReport";
+import TechnicalReport from "./pages/technical/Report";
 import SecurityChecklist from "./pages/security/SecurityChecklist";
 import SecurityImprovementPlan from "./pages/security/ImprovementPlan";
 import SecurityActionPlan from "./pages/security/ActionPlan";
@@ -66,16 +66,16 @@ const App = () => (
               } />
               
               {/* 개인정보 처리단계별 보호조치 */}
-              <Route path="protection/task-table" element={<TaskTable />} />
-              <Route path="protection/lifecycle" element={<ProtectionLifecycle />} />
-              <Route path="protection/flow-table" element={<ProtectionFlowTable />} />
-              <Route path="protection/flowchart" element={<ProtectionFlowChart />} />
-              <Route path="protection/improvement-plan" element={<ProtectionImprovementPlan />} />
-              <Route path="protection/action-plan" element={<ProtectionActionPlan />} />
-              <Route path="protection/report" element={<ProtectionReport />} />
+              <Route path="lifecycle/task-table" element={<TaskTable />} />
+              <Route path="lifecycle/lifecycle" element={<LifecycleChecklist />} />
+              <Route path="lifecycle/flow-table" element={<FlowTable />} />
+              <Route path="lifecycle/flowchart" element={<FlowChart />} />
+              <Route path="lifecycle/improvement-plan" element={<LifecycleImprovementPlan />} />
+              <Route path="lifecycle/action-plan" element={<LifecycleActionPlan />} />
+              <Route path="lifecycle/report" element={<LifecycleReport />} />
               
               {/* 기술적 보호조치 */}
-              <Route path="technical/checklist" element={<TechnicalAdminChecklist />} />
+              <Route path="technical/checklist" element={<AdminChecklist />} />
               <Route path="technical/improvement-plan" element={<TechnicalImprovementPlan />} />
               <Route path="technical/action-plan" element={<TechnicalActionPlan />} />
               <Route path="technical/report" element={<TechnicalReport />} />

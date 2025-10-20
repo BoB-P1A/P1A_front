@@ -43,7 +43,7 @@ export default function ProtectionFlowChart() {
 
       try {
         // API에서 처리업무 목록 가져오기
-        const tasks = await api.protection.tasks.getAll(user.company);
+        const tasks = await api.lifecycle.tasks.getAll(user.company);
         if (tasks.length > 0) {
           const taskNamesList = tasks.map((task: any) => task.taskName).filter((name: string) => name.trim() !== '');
           if (taskNamesList.length > 0) {
@@ -64,7 +64,7 @@ export default function ProtectionFlowChart() {
         }
 
         // API에서 저장된 흐름도 데이터 가져오기
-        const savedFlowCharts = await api.protection.flowCharts.getAll(user.company);
+        const savedFlowCharts = await api.lifecycle.flowCharts.getAll(user.company);
         if (savedFlowCharts && savedFlowCharts.length > 0) {
           const flowDataMap: Record<string, FlowChartData> = {};
           const personalInfoMap: Record<string, { row1: string; row2: string; row3: string }> = {};
@@ -165,7 +165,7 @@ export default function ProtectionFlowChart() {
 
   const handleSave = async () => {
     try {
-      const savedData = await api.protection.flowCharts.save(
+      const savedData = await api.lifecycle.flowCharts.save(
         user?.company as string,
         selectedTask,
         '',  // imageData는 캡처 시에만 저장
@@ -275,7 +275,7 @@ export default function ProtectionFlowChart() {
     const imageData = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     
     try {
-      const savedData = await api.protection.flowCharts.save(
+      const savedData = await api.lifecycle.flowCharts.save(
         user?.company as string,
         selectedTask,
         imageData,
