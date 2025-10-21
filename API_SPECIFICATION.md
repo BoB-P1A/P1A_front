@@ -1,10 +1,12 @@
-# EPIA 백엔드 API 명세서
+# EPIA 백엔드 API 명세서 v2.1
 
 ## 기본 정보
 
 - **Base URL**: `http://localhost:8080/api`
 - **인증 방식**: JWT Bearer Token
 - **Content-Type**: `application/json`
+- **Database**: MongoDB
+- **File Storage**: AWS S3
 - **Timeout**: 10000ms
 
 ---
@@ -12,24 +14,27 @@
 ## 공통 응답 형식
 
 ### 성공 응답
+
 ```json
 {
-  "success": true,
-  "data": { ... },
-  "message": "String"
+  "success": boolean,
+  "data": object,
+  "message": string
 }
 ```
 
 ### 에러 응답
+
 ```json
 {
-  "success": false,
-  "error": "String",
-  "code": "String"
+  "success": boolean,
+  "error": string,
+  "code": string
 }
 ```
 
 ### HTTP 상태 코드
+
 - `200 OK`: 요청 성공
 - `201 Created`: 리소스 생성 성공
 - `400 Bad Request`: 잘못된 요청
@@ -43,72 +48,75 @@
 ## 1. 인증 API
 
 ### 1.1 로그인
+
 ```
 POST /auth/login
 ```
 
 **Request Body:**
+
 ```json
 {
-  "id": "String",
-  "password": "String"
+  "id": string,
+  "password": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "token": "String (JWT)",
+  "token": string,
   "user": {
-    "id": "String",
-    "username": "String",
-    "email": "String (email format)",
-    "name": "String",
-    "role": "String (UserRole enum)",
-    "company": "String",
-    "department": "String"
+    "id": string,
+    "name": string,
+    "role": string,
+    "company": string
   }
 }
 ```
 
 ### 1.2 로그아웃
+
 ```
 POST /auth/logout
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ### 1.3 현재 사용자 정보 조회
+
 ```
 GET /auth/me
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "String",
-  "username": "String",
-  "email": "String (email format)",
-  "name": "String",
-  "role": "String (UserRole enum)",
-  "company": "String",
-  "department": "String"
+  "id": string,
+  "name": string,
+  "role": string,
+  "company": string
 }
 ```
 
@@ -117,122 +125,149 @@ Authorization: Bearer {token}
 ## 2. 계정 관리 API
 
 ### 2.1 계정 목록 조회
+
 ```
 GET /accounts
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 [
   {
-    "id": "String",
-    "username": "String",
-    "email": "String (email format)",
-    "name": "String",
-    "role": "String (UserRole enum)",
-    "company": "String",
-    "department": "String",
-    "status": "String (active|inactive)",
-    "createdAt": "String (ISO 8601 format)",
-    "updatedAt": "String (ISO 8601 format)"
+    "id": string,
+    "name": string,
+    "username": string,
+    "role": string,
+    "company": string,
+    "createdAt": string
   }
 ]
 ```
 
 ### 2.2 계정 조회
+
 ```
 GET /accounts/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "id": "String",
-  "username": "String",
-  "email": "String (email format)",
-  "name": "String",
-  "role": "String (UserRole enum)",
-  "company": "String",
-  "department": "String",
-  "status": "String (active|inactive)",
-  "createdAt": "String (ISO 8601 format)",
-  "updatedAt": "String (ISO 8601 format)"
+  "id": string,
+  "name": string,
+  "username": string,
+  "role": string,
+  "company": string,
+  "createdAt": string
 }
 ```
 
 ### 2.3 계정 생성
+
 ```
 POST /accounts
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "username": "String",
-  "password": "String",
-  "email": "String (email format)",
-  "name": "String",
-  "role": "String (UserRole enum)",
-  "company": "String",
-  "department": "String"
+  "name": string,
+  "username": string,
+  "password": string,
+  "role": string,
+  "company": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "String",
-  "username": "String",
-  "email": "String (email format)",
-  "name": "String",
-  "role": "String (UserRole enum)",
-  "company": "String",
-  "department": "String",
-  "status": "String (active|inactive)",
-  "createdAt": "String (ISO 8601 format)"
+  "id": string,
+  "name": string,
+  "username": string,
+  "role": string,
+  "company": string,
+  "createdAt": string
 }
 ```
 
 ### 2.4 계정 수정
+
 ```
 PUT /accounts/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "email": "String (email format)",
-  "name": "String",
-  "department": "String",
-  "status": "String (active|inactive)"
+  "name": string,
+  "username": string,
+  "password": string,
+  "role": string,
+  "company": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "String",
-  "username": "String",
-  "email": "String (email format)",
-  "name": "String",
-  "role": "String (UserRole enum)",
-  "company": "String",
-  "department": "String",
-  "status": "String (active|inactive)",
-  "updatedAt": "String (ISO 8601 format)"
+  "id": string,
+  "name": string,
+  "username": string,
+  "role": string,
+  "company": string,
+  "createdAt": string
 }
 ```
 
 ### 2.5 계정 삭제
+
 ```
 DELETE /accounts/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
@@ -241,114 +276,145 @@ DELETE /accounts/{id}
 ## 3. 회사 관리 API
 
 ### 3.1 회사 목록 조회
+
 ```
 GET /companies
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 [
   {
-    "id": "String",
-    "name": "String",
-    "registrationNumber": "String",
-    "address": "String",
-    "ceoName": "String",
-    "accountCount": "Number",
-    "status": "String (active|inactive)",
-    "createdAt": "String (ISO 8601 format)",
-    "updatedAt": "String (ISO 8601 format)"
+    "id": string,
+    "name": string,
+    "managerName": string,
+    "managerPhone": string,
+    "status": string,
+    "createdAt": string
   }
 ]
 ```
 
 ### 3.2 회사 조회
+
 ```
 GET /companies/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "id": "String",
-  "name": "String",
-  "registrationNumber": "String",
-  "address": "String",
-  "ceoName": "String",
-  "accountCount": "Number",
-  "status": "String (active|inactive)",
-  "createdAt": "String (ISO 8601 format)",
-  "updatedAt": "String (ISO 8601 format)"
+  "id": string,
+  "name": string,
+  "managerName": string,
+  "managerPhone": string,
+  "status": string,
+  "createdAt": string
 }
 ```
 
 ### 3.3 회사 생성
+
 ```
 POST /companies
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "name": "String",
-  "registrationNumber": "String",
-  "address": "String",
-  "ceoName": "String"
+  "name": string,
+  "managerName": string,
+  "managerPhone": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "String",
-  "name": "String",
-  "registrationNumber": "String",
-  "address": "String",
-  "ceoName": "String",
-  "accountCount": "Number",
-  "status": "String (active|inactive)",
-  "createdAt": "String (ISO 8601 format)"
+  "id": string,
+  "name": string,
+  "managerName": string,
+  "managerPhone": string,
+  "status": string,
+  "createdAt": string
 }
 ```
 
 ### 3.4 회사 수정
+
 ```
 PUT /companies/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "name": "String",
-  "address": "String",
-  "ceoName": "String"
+  "name": string,
+  "managerName": string,
+  "managerPhone": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "String",
-  "name": "String",
-  "registrationNumber": "String",
-  "address": "String",
-  "ceoName": "String",
-  "accountCount": "Number",
-  "status": "String (active|inactive)",
-  "updatedAt": "String (ISO 8601 format)"
+  "id": string,
+  "name": string,
+  "managerName": string,
+  "managerPhone": string,
+  "status": string,
+  "createdAt": string
 }
 ```
 
 ### 3.5 회사 삭제
+
 ```
 DELETE /companies/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
@@ -357,1233 +423,1866 @@ DELETE /companies/{id}
 ## 4. 처리업무 관리 API
 
 ### 4.1 처리업무 목록 조회
+
 ```
 GET /tasks?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (선택)
+
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "taskName": "String",
-    "purpose": "String",
-    "personalInfo": "String",
-    "department": "String",
-    "companyId": "String",
-    "createdAt": "String (ISO 8601 format)",
-    "updatedAt": "String (ISO 8601 format)"
+    "id": number,
+    "taskName": string,
+    "purpose": string,
+    "personalInfo": string,
+    "department": string,
+    "companyId": string
   }
 ]
 ```
 
 ### 4.2 처리업무 생성
+
 ```
 POST /tasks
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "taskName": "String",
-  "purpose": "String",
-  "personalInfo": "String",
-  "department": "String",
-  "companyId": "String"
+  "taskName": string,
+  "purpose": string,
+  "personalInfo": string,
+  "department": string,
+  "companyId": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "taskName": "String",
-  "purpose": "String",
-  "personalInfo": "String",
-  "department": "String",
-  "companyId": "String",
-  "createdAt": "String (ISO 8601 format)"
+  "id": number,
+  "taskName": string,
+  "purpose": string,
+  "personalInfo": string,
+  "department": string,
+  "companyId": string
 }
 ```
 
 ### 4.3 처리업무 수정
+
 ```
 PUT /tasks/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "taskName": "String",
-  "purpose": "String",
-  "personalInfo": "String",
-  "department": "String"
+  "taskName": string,
+  "purpose": string,
+  "personalInfo": string,
+  "department": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "taskName": "String",
-  "purpose": "String",
-  "personalInfo": "String",
-  "department": "String",
-  "companyId": "String",
-  "updatedAt": "String (ISO 8601 format)"
+  "id": number,
+  "taskName": string,
+  "purpose": string,
+  "personalInfo": string,
+  "department": string,
+  "companyId": string
 }
 ```
 
 ### 4.4 처리업무 삭제
+
 ```
 DELETE /tasks/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ### 4.5 처리업무 일괄 수정
+
 ```
 PUT /tasks/bulk
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 [
   {
-    "id": "Number",
-    "taskName": "String",
-    "purpose": "String",
-    "personalInfo": "String",
-    "department": "String"
-  },
-  {
-    "id": "Number",
-    "taskName": "String",
-    "purpose": "String",
-    "personalInfo": "String",
-    "department": "String"
+    "id": number,
+    "taskName": string,
+    "purpose": string,
+    "personalInfo": string,
+    "department": string
   }
 ]
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ---
 
-## 5. 평가 관리 API
+## 5. 평가항목 관리 API
 
 ### 5.1 평가항목 목록 조회
+
 ```
 GET /evaluations
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "area": "String",
-    "field": "String",
-    "subField": "String",
-    "no": "String",
-    "item": "String"
+    "id": number,
+    "area": string,
+    "field": string,
+    "subField": string,
+    "no": string,
+    "item": string
   }
 ]
 ```
 
 ### 5.2 평가항목 조회
+
 ```
 GET /evaluations/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "area": "String",
-  "field": "String",
-  "subField": "String",
-  "no": "String",
-  "item": "String"
+  "id": number,
+  "area": string,
+  "field": string,
+  "subField": string,
+  "no": string,
+  "item": string
 }
 ```
 
 ### 5.3 평가항목 생성
+
 ```
 POST /evaluations
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "area": "String",
-  "field": "String",
-  "subField": "String",
-  "no": "String",
-  "item": "String"
+  "area": string,
+  "field": string,
+  "subField": string,
+  "no": string,
+  "item": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "area": "String",
-  "field": "String",
-  "subField": "String",
-  "no": "String",
-  "item": "String"
+  "id": number,
+  "area": string,
+  "field": string,
+  "subField": string,
+  "no": string,
+  "item": string
 }
 ```
 
 ### 5.4 평가항목 수정
+
 ```
 PUT /evaluations/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "area": "String",
-  "field": "String",
-  "subField": "String",
-  "no": "String",
-  "item": "String"
+  "area": string,
+  "field": string,
+  "subField": string,
+  "no": string,
+  "item": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "area": "String",
-  "field": "String",
-  "subField": "String",
-  "no": "String",
-  "item": "String"
+  "id": number,
+  "area": string,
+  "field": string,
+  "subField": string,
+  "no": string,
+  "item": string
 }
 ```
 
 ### 5.5 평가항목 삭제
+
 ```
 DELETE /evaluations/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ---
 
-## 6. 평가 요청 관리 API
+## 6. 생애주기 관리 API
 
-### 6.1 평가 요청 목록 조회
+### 6.1 처리업무 목록 조회 (생애주기용)
+
 ```
-GET /evaluation-requests
+GET /lifecycle/tasks?companyId={companyId}
 ```
+
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
 
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "title": "String",
-    "requestor": "String",
-    "department": "String",
-    "status": "String (pending|in_progress|completed)",
-    "priority": "String (high|medium|low)",
-    "description": "String",
-    "createdAt": "String (ISO 8601 format)",
-    "updatedAt": "String (ISO 8601 format)"
+    "id": number,
+    "taskName": string,
+    "purpose": string,
+    "personalInfo": string,
+    "department": string
   }
 ]
 ```
 
-### 6.2 평가 요청 생성
-```
-POST /evaluation-requests
-```
+### 6.2 생애주기 체크리스트 조회
 
-**Request Body:**
-```json
-{
-  "title": "String",
-  "description": "String",
-  "priority": "String (high|medium|low)"
-}
-```
-
-**Response:**
-```json
-{
-  "id": "Number",
-  "title": "String",
-  "requestor": "String (current user)",
-  "department": "String (current user's department)",
-  "status": "String (pending|in_progress|completed)",
-  "priority": "String (high|medium|low)",
-  "description": "String",
-  "createdAt": "String (ISO 8601 format)"
-}
-```
-
----
-
-## 7. 생애주기 관리 API
-
-### 7.1 생애주기 체크리스트
-
-#### 7.1.1 체크리스트 조회
 ```
 GET /lifecycle/lifecycle?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "taskName": "String",
-    "field": "String",
-    "subField": "String",
-    "no": "String",
-    "item": "String",
-    "status": "String (이행|부분이행|미이행|해당없음)",
-    "evidence": "String",
+    "id": number,
+    "taskName": string,
+    "field": string,
+    "subField": string,
+    "no": string,
+    "item": string,
+    "status": string | null,
+    "evidence": string,
     "files": [
       {
-        "name": "String",
-        "url": "String (URL format)",
-        "type": "String (MIME type)"
+        "name": string,
+        "url": string,
+        "type": string
       }
     ]
   }
 ]
 ```
 
-#### 7.1.2 체크리스트 저장
+### 6.3 생애주기 체크리스트 저장
+
 ```
 POST /lifecycle/lifecycle
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
-  "taskName": "String",
+  "companyId": string,
+  "taskName": string,
   "data": [
     {
-      "id": "Number",
-      "taskName": "String",
-      "field": "String",
-      "subField": "String",
-      "no": "String",
-      "item": "String",
-      "status": "String (이행|부분이행|미이행|해당없음)",
-      "evidence": "String",
-      "files": []
+      "id": number,
+      "taskName": string,
+      "field": string,
+      "subField": string,
+      "no": string,
+      "item": string,
+      "status": string | null,
+      "evidence": string,
+      "files": [
+        {
+          "name": string,
+          "url": string,
+          "type": string
+        }
+      ]
     }
   ]
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 7.2 흐름도 관리
+### 6.4 흐름도 목록 조회
 
-#### 7.2.1 흐름도 목록 조회
 ```
 GET /lifecycle/flowcharts?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
-{
-  "String (taskName)": {
-    "taskName": "String",
-    "imageData": "String (base64 encoded image)",
+[
+  {
+    "taskName": string,
+    "imageData": string,
     "flowData": {
       "icons": [
         {
-          "id": "String",
-          "type": "String",
-          "x": "Number",
-          "y": "Number",
-          "text": "String"
+          "id": string,
+          "type": string,
+          "x": number,
+          "y": number,
+          "text": string
         }
       ]
     },
-    "personalInfoText": "String (JSON stringified)"
+    "personalInfoText": string
   }
-}
+]
 ```
 
-#### 7.2.2 흐름도 저장
+### 6.5 흐름도 저장
+
 ```
 POST /lifecycle/flowcharts
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
-  "taskName": "String",
-  "imageData": "String (base64 encoded image)",
+  "companyId": string,
+  "taskName": string,
+  "imageData": string,
   "flowData": {
     "icons": [
       {
-        "id": "String",
-        "type": "String",
-        "x": "Number",
-        "y": "Number",
-        "text": "String"
+        "id": string,
+        "type": string,
+        "x": number,
+        "y": number,
+        "text": string
       }
     ]
   },
-  "personalInfoText": "String (JSON stringified)"
+  "personalInfoText": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "taskName": "String",
-  "imageData": "String (base64 encoded image)",
+  "taskName": string,
+  "imageData": string,
   "flowData": {
     "icons": [
       {
-        "id": "String",
-        "type": "String",
-        "x": "Number",
-        "y": "Number",
-        "text": "String"
+        "id": string,
+        "type": string,
+        "x": number,
+        "y": number,
+        "text": string
       }
     ]
   }
 }
 ```
 
-### 7.3 흐름표 관리
+### 6.6 흐름표 조회
 
-#### 7.3.1 흐름표 조회
 ```
 GET /lifecycle/flowtables?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 {
-  "String (taskName)": {
+  "{taskName}": {
     "collection": [
       {
-        "id": "String",
-        "detailTask": "String",
-        "collectionTarget": "String",
-        "collectionPath": "String",
-        "collectionSystem": "String",
-        "collectionItem": "String",
-        "collectionPeriod": "String",
-        "collectionManager": "String",
-        "collectionBasis": "String",
-        "isOnline": "Boolean",
-        "isEncrypted": "Boolean"
+        "id": string,
+        "detailTask": string,
+        "collectionTarget": string,
+        "collectionPath": string,
+        "collectionSystem": string,
+        "collectionItem": string,
+        "collectionItemName": string,
+        "collectionPeriod": string,
+        "collectionManager": string,
+        "collectionBasis": string,
+        "isOnline": string,
+        "isEncrypted": string
       }
     ],
-    "storage": [],
-    "usage": [],
-    "provision": [],
-    "disposal": []
+    "storage": [
+      {
+        "id": string,
+        "detailTask": string,
+        "inputSystem": string,
+        "storageSpace": string,
+        "storageItem": string,
+        "storageItemName": string,
+        "encryptionItem": string,
+        "isOnline": string,
+        "isEncrypted": string
+      }
+    ],
+    "usage": [
+      {
+        "id": string,
+        "detailTask": string,
+        "storageSpace": string,
+        "usageSystem": string,
+        "usageItem": string,
+        "usageItemName": string,
+        "usagePurpose": string,
+        "usageMethod": string,
+        "personalInfoHandler": string,
+        "isOnline": string,
+        "isEncrypted": string
+      }
+    ],
+    "provision": [
+      {
+        "id": string,
+        "detailTask": string,
+        "storageSpace": string,
+        "provisionSystem": string,
+        "provider": string,
+        "recipient": string,
+        "provisionItem": string,
+        "provisionItemName": string,
+        "provisionPurpose": string,
+        "provisionMethod": string,
+        "provisionPeriod": string,
+        "encryptionMethod": string,
+        "provisionBasis": string,
+        "provisionSystemOnline": string,
+        "provisionSystemEncrypted": string,
+        "recipientOnline": string,
+        "recipientEncrypted": string
+      }
+    ],
+    "disposal": [
+      {
+        "id": string,
+        "detailTask": string,
+        "storageSpace": string,
+        "disposalSystem": string,
+        "disposalItem": string,
+        "disposalItemName": string,
+        "retentionPeriod": string,
+        "disposalManager": string,
+        "disposalProcedure": string,
+        "separateStorageSpace": string,
+        "separateStorageEncryptionItem": string,
+        "disposalOnline": string,
+        "hasSeparateStorage": string,
+        "separateStorageOnline": string,
+        "separateStorageEncrypted": string
+      }
+    ]
   }
 }
 ```
 
-#### 7.3.2 흐름표 저장
+### 6.7 흐름표 저장
+
 ```
 POST /lifecycle/flowtables
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
+  "companyId": string,
   "data": {
-    "String (taskName)": {
+    "{taskName}": {
       "collection": [
         {
-          "id": "String",
-          "detailTask": "String",
-          "collectionTarget": "String",
-          "collectionPath": "String",
-          "collectionSystem": "String",
-          "collectionItem": "String",
-          "collectionPeriod": "String",
-          "collectionManager": "String",
-          "collectionBasis": "String",
-          "isOnline": "Boolean",
-          "isEncrypted": "Boolean"
+          "id": string,
+          "detailTask": string,
+          "collectionTarget": string,
+          "collectionPath": string,
+          "collectionSystem": string,
+          "collectionItem": string,
+          "collectionItemName": string,
+          "collectionPeriod": string,
+          "collectionManager": string,
+          "collectionBasis": string,
+          "isOnline": string,
+          "isEncrypted": string
         }
       ],
-      "storage": [],
-      "usage": [],
-      "provision": [],
-      "disposal": []
+      "storage": [
+        {
+          "id": string,
+          "detailTask": string,
+          "inputSystem": string,
+          "storageSpace": string,
+          "storageItem": string,
+          "storageItemName": string,
+          "encryptionItem": string,
+          "isOnline": string,
+          "isEncrypted": string
+        }
+      ],
+      "usage": [
+        {
+          "id": string,
+          "detailTask": string,
+          "storageSpace": string,
+          "usageSystem": string,
+          "usageItem": string,
+          "usageItemName": string,
+          "usagePurpose": string,
+          "usageMethod": string,
+          "personalInfoHandler": string,
+          "isOnline": string,
+          "isEncrypted": string
+        }
+      ],
+      "provision": [
+        {
+          "id": string,
+          "detailTask": string,
+          "storageSpace": string,
+          "provisionSystem": string,
+          "provider": string,
+          "recipient": string,
+          "provisionItem": string,
+          "provisionItemName": string,
+          "provisionPurpose": string,
+          "provisionMethod": string,
+          "provisionPeriod": string,
+          "encryptionMethod": string,
+          "provisionBasis": string,
+          "provisionSystemOnline": string,
+          "provisionSystemEncrypted": string,
+          "recipientOnline": string,
+          "recipientEncrypted": string
+        }
+      ],
+      "disposal": [
+        {
+          "id": string,
+          "detailTask": string,
+          "storageSpace": string,
+          "disposalSystem": string,
+          "disposalItem": string,
+          "disposalItemName": string,
+          "retentionPeriod": string,
+          "disposalManager": string,
+          "disposalProcedure": string,
+          "separateStorageSpace": string,
+          "separateStorageEncryptionItem": string,
+          "disposalOnline": string,
+          "hasSeparateStorage": string,
+          "separateStorageOnline": string,
+          "separateStorageEncrypted": string
+        }
+      ]
     }
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "String (taskName)": {
-    "collection": [
-      {
-        "id": "String",
-        "detailTask": "String",
-        "collectionTarget": "String",
-        "collectionPath": "String",
-        "collectionSystem": "String",
-        "collectionItem": "String",
-        "collectionPeriod": "String",
-        "collectionManager": "String",
-        "collectionBasis": "String",
-        "isOnline": "Boolean",
-        "isEncrypted": "Boolean"
-      }
-    ],
-    "storage": [],
-    "usage": [],
-    "provision": [],
-    "disposal": []
+  "{taskName}": {
+    "collection": array,
+    "storage": array,
+    "usage": array,
+    "provision": array,
+    "disposal": array
   }
 }
 ```
 
-### 7.4 개선 가이드 관리
+### 6.8 개선가이드 조회
 
-#### 7.4.1 개선 가이드 조회
 ```
 GET /lifecycle/improvements?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 {
-  "String (key: taskName-no)": {
-    "relatedLaw": "String",
-    "riskFactor": "String",
-    "improvementPlan": "String"
+  "{taskName}-{no}": {
+    "relatedLaw": string,
+    "riskFactor": string,
+    "improvementPlan": string
   }
 }
 ```
 
-#### 7.4.2 개선 가이드 저장
+### 6.9 개선가이드 저장
+
 ```
 POST /lifecycle/improvements
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
+  "companyId": string,
   "improvements": {
-    "String (key: taskName-no)": {
-      "relatedLaw": "String",
-      "riskFactor": "String",
-      "improvementPlan": "String"
+    "{taskName}-{no}": {
+      "relatedLaw": string,
+      "riskFactor": string,
+      "improvementPlan": string
     }
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 7.5 조치 계획 관리
+### 6.10 조치계획 조회
 
-#### 7.5.1 조치 계획 조회
 ```
 GET /lifecycle/action-plans?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 {
-  "String (key: taskName-no)": {
-    "taskName": "String",
-    "code": "String",
-    "actionPlan": "String",
-    "actionPeriod": "String",
-    "department": "String",
-    "manager": "String",
-    "actionDate": "String (date format)"
+  "{taskName}-{no}": {
+    "taskName": string,
+    "code": string,
+    "question": string,
+    "evidence": string,
+    "improvementGuide": string,
+    "actionPlan": string,
+    "actionPeriod": string,
+    "department": string,
+    "manager": string,
+    "actionDate": string
   }
 }
 ```
 
-#### 7.5.2 조치 계획 저장
+### 6.11 조치계획 저장
+
 ```
 POST /lifecycle/action-plans
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
+  "companyId": string,
   "actionPlans": {
-    "String (key: taskName-no)": {
-      "taskName": "String",
-      "code": "String",
-      "actionPlan": "String",
-      "actionPeriod": "String",
-      "department": "String",
-      "manager": "String",
-      "actionDate": "String (date format)"
+    "{taskName}-{no}": {
+      "taskName": string,
+      "code": string,
+      "actionPlan": string,
+      "actionPeriod": string,
+      "department": string,
+      "manager": string,
+      "actionDate": string
     }
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ---
 
-## 8. 보안성 검토 API
+## 7. 보안성 검토 API
 
-### 8.1 검토 대상 관리
+### 7.1 검토대상 목록 조회
 
-#### 8.1.1 검토 대상 목록 조회
 ```
 GET /security/targets?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "name": "String",
-    "companyId": "String",
-    "createdAt": "String (ISO 8601 format)"
+    "id": number,
+    "name": string,
+    "companyId": string
   }
 ]
 ```
 
-#### 8.1.2 검토 대상 생성
+### 7.2 검토대상 생성
+
 ```
 POST /security/targets
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
-  "targetName": "String"
+  "companyId": string,
+  "targetName": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "name": "String",
-  "companyId": "String",
-  "createdAt": "String (ISO 8601 format)"
+  "id": number,
+  "name": string,
+  "companyId": string
 }
 ```
 
-#### 8.1.3 검토 대상 수정
+### 7.3 검토대상 수정
+
 ```
 PUT /security/targets/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "targetName": "String"
+  "targetName": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "name": "String",
-  "companyId": "String",
-  "updatedAt": "String (ISO 8601 format)"
+  "id": number,
+  "name": string,
+  "companyId": string
 }
 ```
 
-#### 8.1.4 검토 대상 삭제
+### 7.4 검토대상 삭제
+
 ```
 DELETE /security/targets/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 8.2 보안 체크리스트
+### 7.5 보안성 체크리스트 조회
 
-#### 8.2.1 체크리스트 조회
 ```
-GET /security/checklists?companyId={companyId}&status[]=부분이행&status[]=미이행
+GET /security/checklists?companyId={companyId}&status[]={status}
+```
+
+**Headers:**
+
+```
+Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
-- `companyId`: 회사 ID (필수)
-- `status[]`: 필터링할 상태 (선택, 다중 선택 가능)
-  - 이행
-  - 부분이행
-  - 미이행
-  - 해당없음
+
+- `companyId`: string (필수)
+- `status[]`: string (선택)
 
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "targetName": "String",
-    "field": "String",
-    "subField": "String",
-    "no": "String",
-    "item": "String",
-    "status": "String (이행|부분이행|미이행|해당없음)",
-    "evidence": "String",
-    "files": []
+    "id": number,
+    "targetName": string,
+    "field": string,
+    "subField": string,
+    "no": string,
+    "item": string,
+    "status": string | null,
+    "evidence": string,
+    "files": [
+      {
+        "name": string,
+        "url": string,
+        "type": string
+      }
+    ]
   }
 ]
 ```
 
-#### 8.2.2 체크리스트 저장
+### 7.6 보안성 체크리스트 저장
+
 ```
 POST /security/checklists
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
-  "targetName": "String",
+  "companyId": string,
+  "targetName": string,
   "data": [
     {
-      "id": "Number",
-      "targetName": "String",
-      "field": "String",
-      "subField": "String",
-      "no": "String",
-      "item": "String",
-      "status": "String (이행|부분이행|미이행|해당없음)",
-      "evidence": "String",
-      "files": []
+      "id": number,
+      "targetName": string,
+      "field": string,
+      "subField": string,
+      "no": string,
+      "item": string,
+      "status": string | null,
+      "evidence": string,
+      "files": array
     }
   ]
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 8.3 보안 개선 가이드
+### 7.7 보안성 개선가이드 조회
 
-#### 8.3.1 개선 가이드 조회
 ```
 GET /security/improvements?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 {
-  "String (key: targetName-no)": {
-    "relatedLaw": "String",
-    "riskFactor": "String",
-    "improvementPlan": "String"
+  "{targetName}-{no}": {
+    "relatedLaw": string,
+    "riskFactor": string,
+    "improvementPlan": string
   }
 }
 ```
 
-#### 8.3.2 개선 가이드 저장
+### 7.8 보안성 개선가이드 저장
+
 ```
 POST /security/improvements
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
+  "companyId": string,
   "improvements": {
-    "String (key: targetName-no)": {
-      "relatedLaw": "String",
-      "riskFactor": "String",
-      "improvementPlan": "String"
+    "{targetName}-{no}": {
+      "relatedLaw": string,
+      "riskFactor": string,
+      "improvementPlan": string
     }
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 8.4 보안 조치 계획
+### 7.9 보안성 조치계획 조회
 
-#### 8.4.1 조치 계획 조회
 ```
 GET /security/action-plans?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 {
-  "String (key: targetName-no)": {
-    "targetName": "String",
-    "code": "String",
-    "actionPlan": "String",
-    "actionPeriod": "String",
-    "department": "String",
-    "manager": "String",
-    "actionDate": "String (date format)"
+  "{targetName}-{no}": {
+    "targetName": string,
+    "code": string,
+    "question": string,
+    "evidence": string,
+    "improvementGuide": string,
+    "actionPlan": string,
+    "actionPeriod": string,
+    "department": string,
+    "manager": string,
+    "actionDate": string
   }
 }
 ```
 
-#### 8.4.2 조치 계획 저장
+### 7.10 보안성 조치계획 저장
+
 ```
 POST /security/action-plans
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
+  "companyId": string,
   "actionPlans": {
-    "String (key: targetName-no)": {
-      "targetName": "String",
-      "code": "String",
-      "actionPlan": "String",
-      "actionPeriod": "String",
-      "department": "String",
-      "manager": "String",
-      "actionDate": "String (date format)"
+    "{targetName}-{no}": {
+      "targetName": string,
+      "code": string,
+      "actionPlan": string,
+      "actionPeriod": string,
+      "department": string,
+      "manager": string,
+      "actionDate": string
     }
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ---
 
-## 9. 기술적 보호조치 API
+## 8. 기술적 보호조치 API
 
-### 9.1 시스템 관리
+### 8.1 시스템 목록 조회
 
-#### 9.1.1 시스템 목록 조회
 ```
 GET /technical/systems?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "name": "String",
-    "companyId": "String",
-    "createdAt": "String (ISO 8601 format)"
+    "id": number,
+    "name": string,
+    "companyId": string
   }
 ]
 ```
 
-#### 9.1.2 시스템 생성
+### 8.2 시스템 생성
+
 ```
 POST /technical/systems
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
-  "systemName": "String"
+  "companyId": string,
+  "systemName": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "name": "String",
-  "companyId": "String",
-  "createdAt": "String (ISO 8601 format)"
+  "id": number,
+  "name": string,
+  "companyId": string
 }
 ```
 
-#### 9.1.3 시스템 수정
+### 8.3 시스템 수정
+
 ```
 PUT /technical/systems/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "systemName": "String"
+  "systemName": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "id": "Number",
-  "name": "String",
-  "companyId": "String",
-  "updatedAt": "String (ISO 8601 format)"
+  "id": number,
+  "name": string,
+  "companyId": string
 }
 ```
 
-#### 9.1.4 시스템 삭제
+### 8.4 시스템 삭제
+
 ```
 DELETE /technical/systems/{id}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 9.2 기술 체크리스트
+### 8.5 기술적 체크리스트 조회
 
-#### 9.2.1 체크리스트 조회
 ```
-GET /technical/checklists?companyId={companyId}&status[]=부분이행&status[]=미이행
+GET /technical/checklists?companyId={companyId}&status[]={status}
+```
+
+**Headers:**
+
+```
+Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
-- `companyId`: 회사 ID (필수)
-- `status[]`: 필터링할 상태 (선택, 다중 선택 가능)
+
+- `companyId`: string (필수)
+- `status[]`: string (선택)
 
 **Response:**
+
 ```json
 [
   {
-    "id": "Number",
-    "systemName": "String",
-    "field": "String",
-    "subField": "String",
-    "no": "String",
-    "item": "String",
-    "status": "String (이행|부분이행|미이행|해당없음)",
-    "evidence": "String",
-    "files": []
+    "id": number,
+    "systemName": string,
+    "field": string,
+    "subField": string,
+    "no": string,
+    "item": string,
+    "status": string | null,
+    "evidence": string,
+    "files": [
+      {
+        "name": string,
+        "url": string,
+        "type": string
+      }
+    ],
+    "improvementGuide": string
   }
 ]
 ```
 
-#### 9.2.2 체크리스트 저장
+### 8.6 기술적 체크리스트 저장
+
 ```
 POST /technical/checklists
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
-  "systemName": "String",
+  "companyId": string,
+  "systemName": string,
   "data": [
     {
-      "id": "Number",
-      "systemName": "String",
-      "field": "String",
-      "subField": "String",
-      "no": "String",
-      "item": "String",
-      "status": "String (이행|부분이행|미이행|해당없음)",
-      "evidence": "String",
-      "files": []
+      "id": number,
+      "systemName": string,
+      "field": string,
+      "subField": string,
+      "no": string,
+      "item": string,
+      "status": string | null,
+      "evidence": string,
+      "files": array
     }
   ]
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 9.3 기술 개선 가이드
+### 8.7 기술적 개선가이드 조회
 
-#### 9.3.1 개선 가이드 조회
 ```
 GET /technical/improvements?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 {
-  "String (key: systemName-no)": {
-    "relatedLaw": "String",
-    "riskFactor": "String",
-    "improvementPlan": "String"
+  "{systemName}-{no}": {
+    "relatedLaw": string,
+    "riskFactor": string,
+    "improvementPlan": string
   }
 }
 ```
 
-#### 9.3.2 개선 가이드 저장
+### 8.8 기술적 개선가이드 저장
+
 ```
 POST /technical/improvements
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
+  "companyId": string,
   "improvements": {
-    "String (key: systemName-no)": {
-      "relatedLaw": "String",
-      "riskFactor": "String",
-      "improvementPlan": "String"
+    "{systemName}-{no}": {
+      "relatedLaw": string,
+      "riskFactor": string,
+      "improvementPlan": string
     }
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
-### 9.4 기술 조치 계획
+### 8.9 기술적 조치계획 조회
 
-#### 9.4.1 조치 계획 조회
 ```
 GET /technical/action-plans?companyId={companyId}
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+
+- `companyId`: string (필수)
+
 **Response:**
+
 ```json
 {
-  "String (key: systemName-no)": {
-    "systemName": "String",
-    "code": "String",
-    "question": "String",
-    "evidence": "String",
-    "improvementGuide": "String",
-    "actionPlan": "String",
-    "actionPeriod": "String",
-    "department": "String",
-    "manager": "String",
-    "actionDate": "String (date format)"
+  "{systemName}-{no}": {
+    "systemName": string,
+    "code": string,
+    "question": string,
+    "evidence": string,
+    "improvementGuide": string,
+    "actionPlan": string,
+    "actionPeriod": string,
+    "department": string,
+    "manager": string,
+    "actionDate": string
   }
 }
 ```
 
-#### 9.4.2 조치 계획 저장
+### 8.10 기술적 조치계획 저장
+
 ```
 POST /technical/action-plans
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "companyId": "String",
+  "companyId": string,
   "actionPlans": [
     {
-      "systemName": "String",
-      "code": "String",
-      "actionPlan": "String",
-      "actionPeriod": "String",
-      "department": "String",
-      "manager": "String",
-      "actionDate": "String (date format)"
+      "systemName": string,
+      "code": string,
+      "question": string,
+      "evidence": string,
+      "improvementGuide": string,
+      "actionPlan": string,
+      "actionPeriod": string,
+      "department": string,
+      "manager": string,
+      "actionDate": string
     }
   ]
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ---
 
-## 10. 파일 관리 API
+## 9. 파일 관리 API
 
-### 10.1 파일 업로드 (AWS S3)
+### 9.1 파일 업로드
+
 ```
 POST /files/upload
 ```
 
-**Request:**
-- Content-Type: `multipart/form-data`
+**Headers:**
 
-**Form Data:**
-- `file`: 업로드할 파일 (필수)
-- `folder`: 저장할 폴더명 (선택)
-  - `protection-lifecycle`: 생애주기 관련 파일
-  - `security-checklist`: 보안성 검토 관련 파일
-  - `technical-checklist`: 기술적 보호조치 관련 파일
+```
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+```
+
+**Request Body (Form Data):**
+
+- `file`: File (필수)
+- `folder`: string (선택)
 
 **Response:**
+
 ```json
 {
-  "fileUrl": "String (URL format)",
-  "fileName": "String",
-  "fileSize": "Number",
-  "uploadedAt": "String (ISO 8601 format)"
+  "fileUrl": string,
+  "fileName": string,
+  "fileSize": number,
+  "uploadedAt": string
 }
 ```
 
-### 10.2 파일 삭제
+### 9.2 파일 삭제
+
 ```
 DELETE /files
 ```
 
+**Headers:**
+
+```
+Authorization: Bearer {token}
+```
+
 **Request Body:**
+
 ```json
 {
-  "fileUrl": "String (URL format)"
+  "fileUrl": string
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "success": true,
-  "message": "String"
+  "success": boolean,
+  "message": string
 }
 ```
 
 ---
 
-## 11. 에러 코드
+## 10. 에러 코드
 
-| 코드 | 설명 |
-|------|------|
-| `INVALID_CREDENTIALS` | 잘못된 인증 정보 |
-| `TOKEN_EXPIRED` | 토큰 만료 |
-| `UNAUTHORIZED` | 인증되지 않은 사용자 |
-| `FORBIDDEN` | 권한 없음 |
-| `NOT_FOUND` | 리소스를 찾을 수 없음 |
-| `DUPLICATE_ENTRY` | 중복된 데이터 |
-| `VALIDATION_ERROR` | 데이터 유효성 검증 실패 |
-| `FILE_TOO_LARGE` | 파일 크기 초과 |
+| 코드                    | 설명                    |
+| ----------------------- | ----------------------- |
+| `INVALID_CREDENTIALS`   | 잘못된 인증 정보        |
+| `TOKEN_EXPIRED`         | 토큰 만료               |
+| `UNAUTHORIZED`          | 인증되지 않은 사용자    |
+| `FORBIDDEN`             | 권한 없음               |
+| `NOT_FOUND`             | 리소스를 찾을 수 없음   |
+| `DUPLICATE_ENTRY`       | 중복된 데이터           |
+| `VALIDATION_ERROR`      | 데이터 유효성 검증 실패 |
+| `FILE_TOO_LARGE`        | 파일 크기 초과 (10MB)   |
 | `UNSUPPORTED_FILE_TYPE` | 지원하지 않는 파일 형식 |
-| `SERVER_ERROR` | 서버 오류 |
+| `SERVER_ERROR`          | 서버 오류               |
 
 ---
 
-## 12. 데이터 타입 정의
+## 11. 데이터 타입 정의
 
 ### UserRole
-- `super_admin`: 슈퍼 관리자
-- `company_admin`: 회사 관리자
-- `user`: 일반 사용자
+
+```typescript
+type UserRole = "admin" | "developer" | "privacy-team" | "planning-team"
+```
 
 ### Status (평가 상태)
-- `이행`: 완전히 이행됨
-- `부분이행`: 부분적으로 이행됨
-- `미이행`: 이행되지 않음
-- `해당없음`: 해당 사항 없음
 
-### Priority (우선순위)
-- `high`: 높음
-- `medium`: 중간
-- `low`: 낮음
+```typescript
+type Status = "이행" | "부분이행" | "미이행" | "해당없음" | null
+```
 
-### RequestStatus (요청 상태)
-- `pending`: 대기 중
-- `in_progress`: 진행 중
-- `completed`: 완료됨
+### CompanyStatus
+
+```typescript
+type CompanyStatus = "active" | "inactive"
+```
 
 ---
 
-## 13. 보안 요구사항
+## 12. 보안 요구사항
 
-### 인증
-- JWT Bearer Token 방식 사용
-- 토큰은 `Authorization` 헤더에 `Bearer {token}` 형식으로 전송
-- 토큰은 `sessionStorage`에 저장
-- 401 Unauthorized 응답 시 자동 로그아웃 및 로그인 페이지 리다이렉트
+### JWT 토큰
 
-### CORS
-- 프론트엔드 도메인만 허용
-- 개발 환경: `http://localhost:5173`
-- 프로덕션 환경: 실제 도메인 설정 필요
+- 모든 API 요청에 Bearer Token 필요 (로그인 제외)
+- 토큰 만료 시간: 24시간
+- 토큰 저장: sessionStorage
 
-### 파일 업로드
+### CORS 설정
+
+```
+Access-Control-Allow-Origin: http://localhost:5173
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+```
+
+### 파일 업로드 제한
+
 - 최대 파일 크기: 10MB
 - 허용 파일 형식: PDF, JPG, PNG, DOCX, XLSX
-- 바이러스 검사 필수
+- S3 버킷 정책: 비공개, 사전 서명 URL 사용
+
+---
+
+## 13. MongoDB 스키마 예시
+
+### User Collection
+
+```javascript
+{
+  "_id": ObjectId,
+  "name": String,
+  "username": String,
+  "password": String (hashed),
+  "role": String,
+  "company": String,
+  "createdAt": Date,
+  "updatedAt": Date
+}
+```
+
+### Task Collection
+
+```javascript
+{
+  "_id": ObjectId,
+  "taskId": Number (auto-increment),
+  "taskName": String,
+  "purpose": String,
+  "personalInfo": String,
+  "department": String,
+  "companyId": String,
+  "createdAt": Date,
+  "updatedAt": Date
+}
+```
+
+### LifecycleChecklist Collection
+
+```javascript
+{
+  "_id": ObjectId,
+  "companyId": String,
+  "taskName": String,
+  "items": [
+    {
+      "id": Number,
+      "field": String,
+      "subField": String,
+      "no": String,
+      "item": String,
+      "status": String,
+      "evidence": String,
+      "files": Array
+    }
+  ],
+  "createdAt": Date,
+  "updatedAt": Date
+}
+```
+
+### FlowTables Collection
+
+```javascript
+{
+  "_id": ObjectId,
+  "companyId": String,
+  "taskName": String,
+  "collection": [
+    {
+      "id": String,
+      "detailTask": String,
+      "collectionTarget": String,
+      "collectionPath": String,
+      "collectionSystem": String,
+      "collectionItem": String,
+      "collectionItemName": String,
+      "collectionPeriod": String,
+      "collectionManager": String,
+      "collectionBasis": String,
+      "isOnline": String,
+      "isEncrypted": String
+    }
+  ],
+  "storage": [
+    {
+      "id": String,
+      "detailTask": String,
+      "inputSystem": String,
+      "storageSpace": String,
+      "storageItem": String,
+      "storageItemName": String,
+      "encryptionItem": String,
+      "isOnline": String,
+      "isEncrypted": String
+    }
+  ],
+  "usage": [
+    {
+      "id": String,
+      "detailTask": String,
+      "storageSpace": String,
+      "usageSystem": String,
+      "usageItem": String,
+      "usageItemName": String,
+      "usagePurpose": String,
+      "usageMethod": String,
+      "personalInfoHandler": String,
+      "isOnline": String,
+      "isEncrypted": String
+    }
+  ],
+  "provision": [
+    {
+      "id": String,
+      "detailTask": String,
+      "storageSpace": String,
+      "provisionSystem": String,
+      "provider": String,
+      "recipient": String,
+      "provisionItem": String,
+      "provisionItemName": String,
+      "provisionPurpose": String,
+      "provisionMethod": String,
+      "provisionPeriod": String,
+      "encryptionMethod": String,
+      "provisionBasis": String,
+      "provisionSystemOnline": String,
+      "provisionSystemEncrypted": String,
+      "recipientOnline": String,
+      "recipientEncrypted": String
+    }
+  ],
+  "disposal": [
+    {
+      "id": String,
+      "detailTask": String,
+      "storageSpace": String,
+      "disposalSystem": String,
+      "disposalItem": String,
+      "disposalItemName": String,
+      "retentionPeriod": String,
+      "disposalManager": String,
+      "disposalProcedure": String,
+      "separateStorageSpace": String,
+      "separateStorageEncryptionItem": String,
+      "disposalOnline": String,
+      "hasSeparateStorage": String,
+      "separateStorageOnline": String,
+      "separateStorageEncrypted": String
+    }
+  ],
+  "createdAt": Date,
+  "updatedAt": Date
+}
+```
 
 ---
 
 ## 14. 개발 가이드
 
 ### API 호출 예시 (JavaScript)
+
 ```javascript
 import { apiClient } from '@/lib/api';
 
@@ -1621,6 +2320,7 @@ const response = await apiClient.post('/files/upload', formData, {
 ```
 
 ### 에러 처리
+
 ```javascript
 try {
   const response = await apiClient.get('/tasks');
@@ -1639,118 +2339,3 @@ try {
 ```
 
 ---
-
-## 15. 테스트 데이터
-
-### 테스트 계정
-```json
-{
-  "admin": {
-    "id": "String",
-    "password": "String",
-    "role": "super_admin"
-  },
-  "developer": {
-    "id": "String",
-    "password": "String",
-    "role": "user"
-  },
-  "privacy": {
-    "id": "String",
-    "password": "String",
-    "role": "user"
-  }
-}
-```
-
----
-
-## 16. 버전 히스토리
-
-### v1.0.0 (2024-01-01)
-- 초기 API 명세서 작성
-- 인증, 계정, 회사, 처리업무, 평가 관리 API
-- 생애주기, 보안성 검토, 기술적 보호조치 API
-- 파일 관리 API
-
----
-
-## 부록: API 엔드포인트 목록
-
-### 인증
-- `POST /auth/login` - 로그인
-- `POST /auth/logout` - 로그아웃
-- `GET /auth/me` - 현재 사용자 정보
-
-### 계정
-- `GET /accounts` - 계정 목록
-- `GET /accounts/{id}` - 계정 조회
-- `POST /accounts` - 계정 생성
-- `PUT /accounts/{id}` - 계정 수정
-- `DELETE /accounts/{id}` - 계정 삭제
-
-### 회사
-- `GET /companies` - 회사 목록
-- `GET /companies/{id}` - 회사 조회
-- `POST /companies` - 회사 생성
-- `PUT /companies/{id}` - 회사 수정
-- `DELETE /companies/{id}` - 회사 삭제
-
-### 처리업무
-- `GET /tasks` - 처리업무 목록
-- `POST /tasks` - 처리업무 생성
-- `PUT /tasks/{id}` - 처리업무 수정
-- `DELETE /tasks/{id}` - 처리업무 삭제
-- `PUT /tasks/bulk` - 처리업무 일괄 수정
-
-### 평가
-- `GET /evaluations` - 평가항목 목록
-- `GET /evaluations/{id}` - 평가항목 조회
-- `POST /evaluations` - 평가항목 생성
-- `PUT /evaluations/{id}` - 평가항목 수정
-- `DELETE /evaluations/{id}` - 평가항목 삭제
-
-### 평가 요청
-- `GET /evaluation-requests` - 평가 요청 목록
-- `POST /evaluation-requests` - 평가 요청 생성
-
-### 생애주기
-- `GET /lifecycle/tasks` - 처리업무 목록
-- `GET /lifecycle/lifecycle` - 체크리스트 조회
-- `POST /lifecycle/lifecycle` - 체크리스트 저장
-- `GET /lifecycle/flowcharts` - 흐름도 목록
-- `POST /lifecycle/flowcharts` - 흐름도 저장
-- `GET /lifecycle/flowtables` - 흐름표 조회
-- `POST /lifecycle/flowtables` - 흐름표 저장
-- `GET /lifecycle/improvements` - 개선 가이드 조회
-- `POST /lifecycle/improvements` - 개선 가이드 저장
-- `GET /lifecycle/action-plans` - 조치 계획 조회
-- `POST /lifecycle/action-plans` - 조치 계획 저장
-
-### 보안성 검토
-- `GET /security/targets` - 검토 대상 목록
-- `POST /security/targets` - 검토 대상 생성
-- `PUT /security/targets/{id}` - 검토 대상 수정
-- `DELETE /security/targets/{id}` - 검토 대상 삭제
-- `GET /security/checklists` - 체크리스트 조회
-- `POST /security/checklists` - 체크리스트 저장
-- `GET /security/improvements` - 개선 가이드 조회
-- `POST /security/improvements` - 개선 가이드 저장
-- `GET /security/action-plans` - 조치 계획 조회
-- `POST /security/action-plans` - 조치 계획 저장
-
-### 기술적 보호조치
-- `GET /technical/systems` - 시스템 목록
-- `POST /technical/systems` - 시스템 생성
-- `PUT /technical/systems/{id}` - 시스템 수정
-- `DELETE /technical/systems/{id}` - 시스템 삭제
-- `GET /technical/checklists` - 체크리스트 조회
-- `POST /technical/checklists` - 체크리스트 저장
-- `GET /technical/improvements` - 개선 가이드 조회
-- `POST /technical/improvements` - 개선 가이드 저장
-- `GET /technical/action-plans` - 조치 계획 조회
-- `POST /technical/action-plans` - 조치 계획 저장
-
-### 파일
-- `POST /files/upload` - 파일 업로드
-- `DELETE /files` - 파일 삭제
