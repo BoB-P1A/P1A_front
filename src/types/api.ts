@@ -28,12 +28,9 @@ export interface LoginResponse {
 
 export interface User {
   id: string;
-  username: string;
-  email: string;
   name: string;
   role: UserRole;
   company?: string;
-  department?: string;
 }
 
 export type UserRole = 'super_admin' | 'company_admin' | 'user';
@@ -42,11 +39,9 @@ export type UserRole = 'super_admin' | 'company_admin' | 'user';
 export interface Account {
   id: string;
   username: string;
-  email: string;
   name: string;
   role: UserRole;
   company: string;
-  department: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -54,25 +49,27 @@ export interface Account {
 export interface CreateAccountRequest {
   username: string;
   password: string;
-  email: string;
   name: string;
   role: UserRole;
   company: string;
-  department: string;
 }
 
 export interface UpdateAccountRequest extends Partial<CreateAccountRequest> {}
 
 // 회사 관련 타입
 export interface Company {
-  id: string;
+  id: number;
   name: string;
+  managerName: string;
+  managerPhone: string;
   createdAt: string;
   updatedAt?: string;
 }
 
 export interface CreateCompanyRequest {
   name: string;
+  managerName: string;
+  managerPhone: string;
 }
 
 // 처리업무 관련 타입
