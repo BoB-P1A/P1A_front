@@ -79,7 +79,7 @@ export default function EvaluationManagement() {
     };
 
     loadEvaluations();
-  }, []);
+  }, [user?.company]);
 
   const [editingItem, setEditingItem] = useState<EvaluationItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -105,7 +105,12 @@ export default function EvaluationManagement() {
           return updatedItems.sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true }));
         });
       } else {
-        const created = await execute(() => api.evaluations.create(formData));
+        const created = await execute(() =>
+          api.evaluations.create({
+            ...formData,
+            companyId: user?.company,
+          }),
+        );
         setItems((prev) => {
           const updatedItems = [...prev, created];
           return updatedItems.sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true }));
