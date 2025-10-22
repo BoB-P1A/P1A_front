@@ -218,7 +218,21 @@ export default function ProtectionLifecycle() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(newTab) => {
+          if (hasChanges && newTab !== activeTab) {
+            if (
+              confirm("저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?\n(저장하지 않은 내용은 사라집니다)")
+            ) {
+              setActiveTab(newTab);
+              setHasChanges(false);
+            }
+          } else {
+            setActiveTab(newTab);
+          }
+        }}
+      >
         <TabsList>
           {tasks.map((task) => (
             <TabsTrigger key={task.id} value={task.taskName}>
