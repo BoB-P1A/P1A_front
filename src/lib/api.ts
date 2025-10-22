@@ -436,7 +436,7 @@ export const api = {
         });
         return response.data;
       },
-      save: async (companyId: string, actionPlans: any[]) => {
+      save: async (companyId: string, actionPlans: any) => {
         const response = await apiClient.post("/technical/action-plans", {
           companyId,
           actionPlans,
