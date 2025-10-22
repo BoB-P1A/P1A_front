@@ -155,18 +155,6 @@ export const api = {
     },
   },
 
-  // 평가 요청 관리
-  evaluationRequests: {
-    getAll: async () => {
-      const response = await apiClient.get('/evaluation-requests');
-      return response.data;
-    },
-    create: async (request: any) => {
-      const response = await apiClient.post('/evaluation-requests', request);
-      return response.data;
-    },
-  },
-
   // 흐름도 이미지 관리
   flowCharts: {
     get: async (taskName: string) => {

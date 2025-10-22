@@ -29,7 +29,6 @@ interface Company {
   name: string;
   managerName: string;
   managerPhone: string;
-  status: 'active' | 'inactive';
   createdAt: string;
 }
 

@@ -47,7 +47,6 @@ export interface Account {
   role: UserRole;
   company: string;
   department: string;
-  status: 'active' | 'inactive';
   createdAt: string;
   updatedAt?: string;
 }
@@ -62,28 +61,18 @@ export interface CreateAccountRequest {
   department: string;
 }
 
-export interface UpdateAccountRequest extends Partial<CreateAccountRequest> {
-  status?: 'active' | 'inactive';
-}
+export interface UpdateAccountRequest extends Partial<CreateAccountRequest> {}
 
 // 회사 관련 타입
 export interface Company {
   id: string;
   name: string;
-  registrationNumber?: string;
-  address?: string;
-  ceoName?: string;
-  accountCount?: number;
-  status: 'active' | 'inactive';
   createdAt: string;
   updatedAt?: string;
 }
 
 export interface CreateCompanyRequest {
   name: string;
-  registrationNumber?: string;
-  address?: string;
-  ceoName?: string;
 }
 
 // 처리업무 관련 타입
@@ -115,24 +104,6 @@ export interface Evaluation {
   progress: number;
   createdAt: string;
   updatedAt?: string;
-}
-
-export interface EvaluationRequest {
-  id: number;
-  title: string;
-  requestor: string;
-  department: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  priority: 'high' | 'medium' | 'low';
-  description?: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface CreateEvaluationRequestRequest {
-  title: string;
-  description?: string;
-  priority: 'high' | 'medium' | 'low';
 }
 
 // 흐름도 관련 타입
