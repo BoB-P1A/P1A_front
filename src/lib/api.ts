@@ -133,8 +133,10 @@ export const api = {
 
   // 평가 관리
   evaluations: {
-    getAll: async () => {
-      const response = await apiClient.get("/evaluations");
+    getAll: async (companyId?: string) => {
+      const response = await apiClient.get("/evaluations", {
+        params: { companyId },
+      });
       return response.data;
     },
     getById: async (id: number) => {
