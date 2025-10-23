@@ -58,7 +58,7 @@ export interface UpdateAccountRequest extends Partial<CreateAccountRequest> {}
 
 // 회사 관련 타입
 export interface Company {
-  id: number;
+  id: string;
   name: string;
   managerName: string;
   managerPhone: string;

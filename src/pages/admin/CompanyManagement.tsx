@@ -18,7 +18,7 @@ import { api } from "@/lib/api";
 import { useApi } from "@/hooks/useApi";
 
 interface Company {
-  id: number;
+  id: string;
   name: string;
   managerName: string;
   managerPhone: string;
@@ -86,7 +86,7 @@ export default function CompanyManagement() {
 
     try {
       if (editingCompany) {
-        const updated = await execute(() => api.companies.update(editingCompany.id.toString(), formData));
+        const updated = await execute(() => api.companies.update(editingCompany.id, formData));
         setCompanies((prev) => prev.map((company) => (company.id === editingCompany.id ? updated : company)));
       } else {
         const created = await execute(() => api.companies.create(formData));
@@ -101,10 +101,10 @@ export default function CompanyManagement() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("정말 삭제하시겠습니까?")) {
       try {
-        await execute(() => api.companies.delete(String(id)));
+        await execute(() => api.companies.delete(id));
         setCompanies(companies.filter((company) => company.id !== id));
       } catch (error) {
         console.error("Failed to delete company:", error);
