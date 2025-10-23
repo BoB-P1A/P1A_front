@@ -14,7 +14,6 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'admin',
       name: '관리자',
-      email: 'admin@pia.com',
       role: 'admin',
       company: 'PIA Corp',
     }
@@ -24,7 +23,6 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'developer',
       name: '김개발',
-      email: 'dev@pia.com',
       role: 'developer',
       company: 'PIA Corp',
     }
@@ -34,7 +32,6 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'privacy',
       name: '박개인정보',
-      email: 'privacy@pia.com',
       role: 'privacy-team',
       company: 'PIA Corp',
     }
@@ -44,7 +41,6 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'plan',
       name: '김기획',
-      email: 'plan@pia.com',
       role: 'planning-team',
       company: 'PIA Corp',
     }

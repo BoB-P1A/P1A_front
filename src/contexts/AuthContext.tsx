@@ -9,7 +9,6 @@ export type UserRole = 'admin' | 'developer' | 'privacy-team' | 'planning-team';
 export interface User {
   id: string;
   name: string;
-  email: string;
   role: UserRole;
   company?: string;
 }
@@ -35,7 +34,6 @@ const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'admin',
       name: '관리자',
-      email: 'admin@pia.com',
       role: 'admin',
       company: 'PIA Corp'
     }
@@ -45,7 +43,6 @@ const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'developer',
       name: '김개발',
-      email: 'dev@pia.com',
       role: 'developer',
       company: 'PIA Corp'
     }
@@ -55,7 +52,6 @@ const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'privacy',
       name: '박개인정보',
-      email: 'privacy@pia.com',
       role: 'privacy-team',
       company: 'PIA Corp'
     }
@@ -65,7 +61,6 @@ const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'planning',
       name: '김기획',
-      email: 'planning@pia.com',
       role: 'planning-team',
       company: 'PIA Corp'
     }
@@ -75,7 +70,6 @@ const mockUsers: Record<string, { password: string; user: User }> = {
     user: {
       id: 'plan',
       name: '최기획',
-      email: 'plan@pia.com',
       role: 'planning-team',
       company: 'PIA Corp'
     }
@@ -97,7 +91,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const contextUser: User = {
             id: userData.id,
             name: userData.name,
-            email: userData.email,
             role: userData.role as UserRole,
             company: userData.company,
           };
@@ -134,7 +127,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const contextUser: User = {
         id: response.user.id,
         name: response.user.name,
-        email: response.user.email,
         role: response.user.role as UserRole,
         company: response.user.company,
       };
