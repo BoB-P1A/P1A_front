@@ -12,7 +12,8 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
   'admin': {
     password: 'admin123',
     user: {
-      id: 'admin',
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      username: 'admin',
       name: '관리자',
       role: 'admin',
       company: 'PIA Corp',
@@ -21,7 +22,8 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
   'developer': {
     password: 'dev123',
     user: {
-      id: 'developer',
+      id: '550e8400-e29b-41d4-a716-446655440002',
+      username: 'developer',
       name: '김개발',
       role: 'developer',
       company: 'PIA Corp',
@@ -30,7 +32,8 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
   'privacy': {
     password: 'privacy123',
     user: {
-      id: 'privacy',
+      id: '550e8400-e29b-41d4-a716-446655440003',
+      username: 'privacy',
       name: '박개인정보',
       role: 'privacy-team',
       company: 'PIA Corp',
@@ -39,7 +42,8 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
   'plan': {
     password: 'plan123',
     user: {
-      id: 'plan',
+      id: '550e8400-e29b-41d4-a716-446655440005',
+      username: 'plan',
       name: '김기획',
       role: 'planning-team',
       company: 'PIA Corp',
@@ -53,13 +57,13 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
  */
 export const mockBackend = {
   // 로그인
-  login: async (credentials: { id: string; password: string }) => {
+  login: async (credentials: { username: string; password: string }) => {
     await new Promise(resolve => setTimeout(resolve, 500)); // API 지연 시뮬레이션
     
-    const mockUser = mockUsers[credentials.id];
+    const mockUser = mockUsers[credentials.username];
     if (mockUser && mockUser.password === credentials.password) {
       return {
-        token: 'mock-jwt-token-' + credentials.id,
+        token: 'mock-jwt-token-' + credentials.username,
         user: mockUser.user,
       };
     }
@@ -72,8 +76,8 @@ export const mockBackend = {
     // sessionStorage에서 토큰 확인
     const token = sessionStorage.getItem('auth-token');
     if (token) {
-      const userId = token.replace('mock-jwt-token-', '');
-      const mockUser = mockUsers[userId];
+      const username = token.replace('mock-jwt-token-', '');
+      const mockUser = mockUsers[username];
       if (mockUser) {
         return mockUser.user;
       }

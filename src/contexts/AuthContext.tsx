@@ -8,6 +8,7 @@ export type UserRole = 'admin' | 'developer' | 'privacy-team' | 'planning-team';
 
 export interface User {
   id: string;
+  username: string;
   name: string;
   role: UserRole;
   company?: string;
@@ -21,7 +22,7 @@ interface AuthContextType {
 }
 
 interface LoginCredentials {
-  id: string;
+  username: string;
   password: string;
 }
 
@@ -32,7 +33,8 @@ const mockUsers: Record<string, { password: string; user: User }> = {
   'admin': {
     password: 'admin123',
     user: {
-      id: 'admin',
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      username: 'admin',
       name: '관리자',
       role: 'admin',
       company: 'PIA Corp'
@@ -41,7 +43,8 @@ const mockUsers: Record<string, { password: string; user: User }> = {
   'developer': {
     password: 'dev123',
     user: {
-      id: 'developer',
+      id: '550e8400-e29b-41d4-a716-446655440002',
+      username: 'developer',
       name: '김개발',
       role: 'developer',
       company: 'PIA Corp'
@@ -50,7 +53,8 @@ const mockUsers: Record<string, { password: string; user: User }> = {
   'privacy': {
     password: 'privacy123',
     user: {
-      id: 'privacy',
+      id: '550e8400-e29b-41d4-a716-446655440003',
+      username: 'privacy',
       name: '박개인정보',
       role: 'privacy-team',
       company: 'PIA Corp'
@@ -59,7 +63,8 @@ const mockUsers: Record<string, { password: string; user: User }> = {
   'planning': {
     password: 'plan123',
     user: {
-      id: 'planning',
+      id: '550e8400-e29b-41d4-a716-446655440004',
+      username: 'planning',
       name: '김기획',
       role: 'planning-team',
       company: 'PIA Corp'
@@ -68,7 +73,8 @@ const mockUsers: Record<string, { password: string; user: User }> = {
   'plan': {
     password: 'plan123',
     user: {
-      id: 'plan',
+      id: '550e8400-e29b-41d4-a716-446655440005',
+      username: 'plan',
       name: '최기획',
       role: 'planning-team',
       company: 'PIA Corp'
@@ -90,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // API User를 Context User로 변환
           const contextUser: User = {
             id: userData.id,
+            username: userData.username,
             name: userData.name,
             role: userData.role as UserRole,
             company: userData.company,
@@ -126,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // API User를 Context User로 변환
       const contextUser: User = {
         id: response.user.id,
+        username: response.user.username,
         name: response.user.name,
         role: response.user.role as UserRole,
         company: response.user.company,

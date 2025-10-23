@@ -43,7 +43,7 @@ apiClient.interceptors.response.use(
 export const api = {
   // 인증 관련
   auth: {
-    login: async (credentials: { id: string; password: string }) => {
+    login: async (credentials: { username: string; password: string }) => {
       const response = await apiClient.post("/auth/login", credentials);
       return response.data;
     },

@@ -17,7 +17,7 @@ export interface PaginatedResponse<T> {
 
 // 사용자 관련 타입
 export interface LoginRequest {
-  id: string;
+  username: string;
   password: string;
 }
 
@@ -28,6 +28,7 @@ export interface LoginResponse {
 
 export interface User {
   id: string;
+  username: string;
   name: string;
   role: UserRole;
   company?: string;

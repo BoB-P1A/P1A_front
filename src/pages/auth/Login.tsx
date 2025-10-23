@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Login() {
-  const [credentials, setCredentials] = useState({ id: '', password: '' });
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const { user, login } = useAuth();
   const { toast } = useToast();
@@ -52,13 +52,13 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="id">아이디</Label>
+              <Label htmlFor="username">아이디</Label>
               <Input
-                id="id"
+                id="username"
                 type="text"
                 placeholder="아이디를 입력하세요"
-                value={credentials.id}
-                onChange={(e) => setCredentials(prev => ({ ...prev, id: e.target.value }))}
+                value={credentials.username}
+                onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
                 required
               />
             </div>
