@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: userData.id,
             name: userData.name,
             email: userData.email,
-            role: mapApiRoleToContextRole(userData.role),
+            role: userData.role as UserRole,
             company: userData.company,
           };
           setUser(contextUser);
@@ -119,16 +119,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  // API UserRole을 Context UserRole로 매핑
-  const mapApiRoleToContextRole = (apiRole: string): UserRole => {
-    switch (apiRole) {
-      case 'super_admin':
-      case 'company_admin':
-        return 'admin';
-      default:
-        return apiRole as UserRole;
-    }
-  };
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     setIsLoading(true);
@@ -145,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: response.user.id,
         name: response.user.name,
         email: response.user.email,
-        role: mapApiRoleToContextRole(response.user.role),
+        role: response.user.role as UserRole,
         company: response.user.company,
       };
       setUser(contextUser);

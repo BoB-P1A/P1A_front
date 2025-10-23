@@ -33,7 +33,7 @@ export interface User {
   company?: string;
 }
 
-export type UserRole = 'super_admin' | 'company_admin' | 'user';
+export type UserRole = 'admin' | 'developer' | 'privacy-team' | 'planning-team';
 
 // 계정 관련 타입
 export interface Account {
