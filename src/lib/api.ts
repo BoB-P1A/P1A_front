@@ -157,25 +157,6 @@ export const api = {
     },
   },
 
-  // 흐름도 이미지 관리 (사용 X)
-  flowCharts: {
-    get: async (taskName: string) => {
-      const response = await apiClient.get(`/flowcharts/${encodeURIComponent(taskName)}`);
-      return response.data;
-    },
-    save: async (taskName: string, imageData: string) => {
-      const response = await apiClient.post("/flowcharts", {
-        taskName,
-        imageData,
-      });
-      return response.data;
-    },
-    getAll: async () => {
-      const response = await apiClient.get("/flowcharts");
-      return response.data;
-    },
-  },
-
   // 파일 업로드 (AWS S3)
   files: {
     upload: async (file: File, folder?: string) => {

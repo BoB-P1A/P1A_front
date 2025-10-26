@@ -8,8 +8,6 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
-import FindId from "./pages/auth/FindId";
-import ResetPassword from "./pages/auth/ResetPassword";
 
 // Main Layout
 import { DashboardLayout } from "./layouts/DashboardLayout";
@@ -47,8 +45,6 @@ const App = () => (
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/find-id" element={<FindId />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Protected Routes */}
             <Route path="/" element={

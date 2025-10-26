@@ -28,7 +28,7 @@ interface Company {
 export default function CompanyManagement() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
-  const { loading, execute } = useApi();
+  const { execute } = useApi();
 
   useEffect(() => {
     const loadData = async () => {

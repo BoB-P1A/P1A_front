@@ -59,7 +59,7 @@ export default function AccountManagement() {
     role: '' as UserRole | '',
     company: '',
   });
-  const { loading, execute } = useApi();
+  const { execute } = useApi();
 
   useEffect(() => {
     const loadData = async () => {

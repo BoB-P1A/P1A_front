@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,6 @@ import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { Task } from '@/types/api';
 
 interface TaskRow {
   id: number;
@@ -23,12 +23,14 @@ interface TaskRow {
   purpose: string;
   personalInfo: string;
   department: string;
+  companyId?: string;
 }
 
 export default function TaskTable() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<TaskRow[]>([]);
-  const { loading, execute } = useApi();
+  const { execute } = useApi();
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -77,9 +79,14 @@ export default function TaskTable() {
         companyId: user?.company,
       });
       setTasks([...tasks, newTask]);
+      toast({ title: "행이 추가되었습니다" });
     } catch (error) {
       console.error('Failed to add task:', error);
-      alert('업무 추가에 실패했습니다.');
+      toast({
+          title: "업무 추가 실패",
+          description: "서버 오류가 발생했습니다.",
+          variant: "destructive"
+      });
     }
   };
 
@@ -87,16 +94,24 @@ export default function TaskTable() {
     try {
       await execute(() => api.tasks.delete(id));
       setTasks(tasks.filter(task => task.id !== id));
+      toast({ title: "행이 삭제되었습니다" });
     } catch (error) {
       console.error('Failed to delete task:', error);
+      toast({ title: "삭제 실패", variant: "destructive" });
     }
   };
 
   const handleSave = async () => {
     try {
       await execute(() => api.tasks.bulkUpdate(tasks));
+      toast({ title: "저장되었습니다" });
     } catch (error) {
       console.error('Failed to save tasks:', error);
+      toast({
+          title: "저장 실패",  // ← 실패 메시지로 변경!
+          description: "서버 오류가 발생했습니다.",
+          variant: "destructive"
+      });
     }
   };
 

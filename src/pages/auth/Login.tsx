@@ -81,21 +81,6 @@ export default function Login() {
               {isLoading ? '로그인 중...' : '로그인'}
             </Button>
           </form>
-          
-          <div className="mt-6 text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              계정을 잊으셨나요?
-            </p>
-            <div className="flex justify-center gap-4 text-sm">
-              <Link to="/find-id" className="text-accent hover:underline">
-                아이디 찾기
-              </Link>
-              <span className="text-muted-foreground">|</span>
-              <Link to="/reset-password" className="text-accent hover:underline">
-                비밀번호 재설정
-              </Link>
-            </div>
-          </div>
 
           <div className="mt-6 p-4 bg-muted rounded-lg">
             <p className="text-xs text-muted-foreground mb-2">테스트 계정:</p>

@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { api } from '@/lib/api';
 import { mockBackend } from '@/lib/mockBackend';
 import { toast } from '@/hooks/use-toast';
-import { User as ApiUser } from '@/types/api';
 
 export type UserRole = 'admin' | 'developer' | 'privacy-team' | 'planning-team';
 
@@ -27,60 +26,6 @@ interface LoginCredentials {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users for development
-const mockUsers: Record<string, { password: string; user: User }> = {
-  'admin': {
-    password: 'admin123',
-    user: {
-      id: '550e8400-e29b-41d4-a716-446655440001',
-      username: 'admin',
-      name: '관리자',
-      role: 'admin',
-      company: 'PIA Corp'
-    }
-  },
-  'developer': {
-    password: 'dev123',
-    user: {
-      id: '550e8400-e29b-41d4-a716-446655440002',
-      username: 'developer',
-      name: '김개발',
-      role: 'developer',
-      company: 'PIA Corp'
-    }
-  },
-  'privacy': {
-    password: 'privacy123',
-    user: {
-      id: '550e8400-e29b-41d4-a716-446655440003',
-      username: 'privacy',
-      name: '박개인정보',
-      role: 'privacy-team',
-      company: 'PIA Corp'
-    }
-  },
-  'planning': {
-    password: 'plan123',
-    user: {
-      id: '550e8400-e29b-41d4-a716-446655440004',
-      username: 'planning',
-      name: '김기획',
-      role: 'planning-team',
-      company: 'PIA Corp'
-    }
-  },
-  'plan': {
-    password: 'plan123',
-    user: {
-      id: '550e8400-e29b-41d4-a716-446655440005',
-      username: 'plan',
-      name: '최기획',
-      role: 'planning-team',
-      company: 'PIA Corp'
-    }
-  }
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
