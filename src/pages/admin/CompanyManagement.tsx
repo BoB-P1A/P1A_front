@@ -34,10 +34,12 @@ export default function CompanyManagement() {
     const loadData = async () => {
       try {
         const [companiesData, accountsData] = await Promise.all([api.companies.getAll(), api.accounts.getAll()]);
-        setCompanies(companiesData);
-        setAccounts(accountsData);
+        setCompanies(Array.isArray(companiesData) ? companiesData : []);
+        setAccounts(Array.isArray(accountsData) ? accountsData : []);
       } catch (error) {
         console.error("Failed to load data:", error);
+        setCompanies([]);
+        setAccounts([]);
       }
     };
     loadData();

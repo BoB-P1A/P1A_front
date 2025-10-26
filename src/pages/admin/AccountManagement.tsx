@@ -68,10 +68,12 @@ export default function AccountManagement() {
           api.accounts.getAll(),
           api.companies.getAll()
         ]);
-        setAccounts(accountsData);
-        setCompanies(companiesData.map((c: any) => ({ id: c.id, name: c.name })));
+        setAccounts(Array.isArray(accountsData) ? accountsData : []);
+        setCompanies(Array.isArray(companiesData) ? companiesData.map((c: any) => ({ id: c.id, name: c.name })) : []);
       } catch (error) {
         console.error('Failed to load data:', error);
+        setAccounts([]);
+        setCompanies([]);
       }
     };
     loadData();
