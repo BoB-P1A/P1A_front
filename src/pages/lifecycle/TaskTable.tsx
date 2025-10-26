@@ -34,8 +34,14 @@ export default function TaskTable() {
   useEffect(() => {
     const loadTasks = async () => {
       try {
-        const data = await api.tasks.getAll(user?.company);
-        setTasks(data);
+          const data = await api.tasks.getAll(user?.company);
+
+          if (Array.isArray(data)) {
+              setTasks(data);
+          } else {
+              console.warn('Tasks data is not an array:', data);
+              setTasks([]);
+          }
       } catch (error) {
         console.error('Failed to load tasks:', error);
         // 에러 시 기본 데이터
@@ -158,47 +164,55 @@ export default function TaskTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell>
-                      <Input 
-                        value={task.taskName}
-                        onChange={(e) => handleUpdateTask(task.id, 'taskName', e.target.value)}
-                        placeholder="평가업무명 입력"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input 
-                        value={task.purpose}
-                        onChange={(e) => handleUpdateTask(task.id, 'purpose', e.target.value)}
-                        placeholder="처리 목적 입력"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input 
-                        value={task.personalInfo}
-                        onChange={(e) => handleUpdateTask(task.id, 'personalInfo', e.target.value)}
-                        placeholder="처리 개인정보 입력"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input 
-                        value={task.department}
-                        onChange={(e) => handleUpdateTask(task.id, 'department', e.target.value)}
-                        placeholder="주관부서 입력"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteRow(task.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                  {Array.isArray(tasks) && tasks.length > 0 ? (
+                      tasks.map((task) => (
+                          <TableRow key={task.id}>
+                              <TableCell>
+                                  <Input
+                                      value={task.taskName}
+                                      onChange={(e) => handleUpdateTask(task.id, 'taskName', e.target.value)}
+                                      placeholder="평가업무명 입력"
+                                  />
+                              </TableCell>
+                              <TableCell>
+                                  <Input
+                                      value={task.purpose}
+                                      onChange={(e) => handleUpdateTask(task.id, 'purpose', e.target.value)}
+                                      placeholder="처리 목적 입력"
+                                  />
+                              </TableCell>
+                              <TableCell>
+                                  <Input
+                                      value={task.personalInfo}
+                                      onChange={(e) => handleUpdateTask(task.id, 'personalInfo', e.target.value)}
+                                      placeholder="처리 개인정보 입력"
+                                  />
+                              </TableCell>
+                              <TableCell>
+                                  <Input
+                                      value={task.department}
+                                      onChange={(e) => handleUpdateTask(task.id, 'department', e.target.value)}
+                                      placeholder="주관부서 입력"
+                                  />
+                              </TableCell>
+                              <TableCell>
+                                  <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteRow(task.id)}
+                                  >
+                                      <Trash2 className="h-4 w-4" />
+                                  </Button>
+                              </TableCell>
+                          </TableRow>
+                      ))
+                  ) : (
+                      <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground">
+                              데이터가 없습니다. '행 추가' 버튼을 눌러 새로운 업무를 추가하세요.
+                          </TableCell>
+                      </TableRow>
+                  )}
               </TableBody>
             </Table>
           </div>
