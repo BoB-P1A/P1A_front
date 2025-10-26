@@ -174,7 +174,6 @@
   "role": String,           // 권한
   "company": String,        // 소속 회사명
   "createdAt": Date,        // 생성일시 (ISO 8601)
-  "message": String         // "계정이 생성되었습니다"
 }
 ```
 - **Response (409 Conflict)**:
@@ -210,7 +209,6 @@
   "username": String,       // 로그인용 ID
   "role": String,           // 권한
   "company": String,        // 소속 회사명
-  "message": String         // "계정이 수정되었습니다"
 }
 ```
 
@@ -279,7 +277,6 @@ No Content
   "managerName": String,    // 담당자명
   "managerPhone": String,   // 담당자 연락처
   "createdAt": Date,        // 생성일시 (ISO 8601)
-  "message": String         // "회사가 등록되었습니다"
 }
 ```
 
@@ -303,7 +300,6 @@ No Content
   "name": String,           // 회사명
   "managerName": String,    // 담당자명
   "managerPhone": String,   // 담당자 연락처
-  "message": String         // "회사 정보가 수정되었습니다"
 }
 ```
 
@@ -362,7 +358,6 @@ No Content
   "purpose": String,        // 업무 목적
   "personalInfo": String,   // 처리하는 개인정보
   "department": String,     // 담당 부서
-  "message": String         // "처리업무가 등록되었습니다"
 }
 ```
 
