@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check for saved auth token and fetch current user
     const checkAuth = async () => {
-      const token = sessionStorage.getItem('auth-token');
+      const token = localStorage.getItem('auth-token');
       if (token) {
         try {
           const userData = await api.auth.getCurrentUser();
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const mockUser = await mockBackend.getCurrentUser();
             setUser(mockUser);
           } catch (mockError) {
-            sessionStorage.removeItem('auth-token');
+            localStorage.removeItem('auth-token');
           }
         }
       }
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.auth.login(credentials);
       
       // 토큰 저장
-      sessionStorage.setItem('auth-token', response.token);
+      localStorage.setItem('auth-token', response.token);
       
       // API User를 Context User로 변환
       const contextUser: User = {
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // API 실패 시 mock 백엔드 시도
       try {
         const response = await mockBackend.login(credentials);
-        sessionStorage.setItem('auth-token', response.token);
+        localStorage.setItem('auth-token', response.token);
         setUser(response.user);
         toast({ title: '로그인 성공 (Mock)' });
         setIsLoading(false);
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
-      sessionStorage.removeItem('auth-token');
+      localStorage.removeItem('auth-token');
       toast({ title: '로그아웃 되었습니다' });
     }
   };
