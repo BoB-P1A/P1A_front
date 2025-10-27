@@ -15,7 +15,7 @@ export const apiClient = axios.create({
 // 요청 인터셉터 - 인증 토큰 추가
 apiClient.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem("auth-token");
+    const token = localStorage.getItem("auth-token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,7 +32,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // 인증 실패 시 로그인 페이지로 리다이렉트
-      sessionStorage.removeItem("auth-token");
+      localStorage.removeItem("auth-token");
       window.location.href = "/login";
     }
     return Promise.reject(error);
