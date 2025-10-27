@@ -120,7 +120,7 @@ export function DashboardSidebar() {
           {!collapsed && (
             <div>
               <h1 className="text-lg font-bold text-sidebar-foreground">EPIA</h1>
-              <p className="text-xs text-sidebar-foreground/70">PIA 관리 플랫폼</p>
+              <p className="text-xs text-sidebar-foreground/70">PIA 관리 프레임워크</p>
             </div>
           )}
         </div>
