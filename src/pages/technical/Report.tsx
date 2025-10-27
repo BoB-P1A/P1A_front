@@ -23,12 +23,15 @@ export default function TechnicalReport() {
           api.technical.improvements.getAll(user.company),
           api.technical.systems.getAll(user.company),
         ]);
-        
-        setTechnicalData(checklistData);
-        setImprovements(improvementsData);
-        setSystems(systemsData);
+
+        setTechnicalData(Array.isArray(checklistData) ? checklistData : []);
+        setImprovements(improvementsData || {});
+        setSystems(Array.isArray(systemsData) ? systemsData : []);
       } catch (error) {
         console.error('Failed to load data:', error);
+        setTechnicalData([]);
+        setImprovements({});
+        setSystems([]);
       }
     };
 
@@ -60,15 +63,17 @@ export default function TechnicalReport() {
       );
 
       const criteriaBySystem: { [key: string]: { [subField: string]: string[] } } = {};
-      technicalData.forEach((item: any) => {
-        if (item.status !== '해당없음') {
-          if (!criteriaBySystem[item.systemName]) criteriaBySystem[item.systemName] = {};
-          if (!criteriaBySystem[item.systemName][item.subField]) {
-            criteriaBySystem[item.systemName][item.subField] = [];
-          }
-          criteriaBySystem[item.systemName][item.subField].push(item.no);
-        }
-      });
+      if (Array.isArray(technicalData)) {
+          technicalData.forEach((item: any) => {
+              if (item.status !== '해당없음') {
+                  if (!criteriaBySystem[item.systemName]) criteriaBySystem[item.systemName] = {};
+                  if (!criteriaBySystem[item.systemName][item.subField]) {
+                      criteriaBySystem[item.systemName][item.subField] = [];
+                  }
+                  criteriaBySystem[item.systemName][item.subField].push(item.no);
+              }
+          });
+      }
 
       const systemOrder = systems.map((s: any) => s.name);
       const sortedSystemNames = Object.keys(criteriaBySystem).sort((a, b) => {
@@ -98,18 +103,20 @@ export default function TechnicalReport() {
       );
 
       const riskItems: any[] = [];
-      technicalData.forEach((item: any) => {
-        if (item.status === '부분이행' || item.status === '미이행') {
-          const itemId = `${item.systemName}-${item.no}`;
-          const saved = improvements[itemId];
-          riskItems.push({
-            systemName: item.systemName,
-            code: item.no,
-            evidence: item.evidence || '',
-            riskFactor: saved?.riskFactor || ''
+      if (Array.isArray(technicalData)) {
+          technicalData.forEach((item: any) => {
+              if (item.status === '부분이행' || item.status === '미이행') {
+                  const itemId = `${item.systemName}-${item.no}`;
+                  const saved = improvements[itemId];
+                  riskItems.push({
+                      systemName: item.systemName,
+                      code: item.no,
+                      evidence: item.evidence || '',
+                      riskFactor: saved?.riskFactor || ''
+                  });
+              }
           });
         }
-      });
 
       if (riskItems.length > 0) {
         const riskRows = [
@@ -207,15 +214,17 @@ export default function TechnicalReport() {
       );
 
       const resultsBySystem: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
-      technicalData.forEach((item: any) => {
-        if (!resultsBySystem[item.systemName]) resultsBySystem[item.systemName] = {};
-        if (!resultsBySystem[item.systemName][item.field]) {
-          resultsBySystem[item.systemName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
-        }
-        if (item.status) {
-          resultsBySystem[item.systemName][item.field][item.status]++;
-        }
-      });
+      if (Array.isArray(technicalData)) {
+          technicalData.forEach((item: any) => {
+              if (!resultsBySystem[item.systemName]) resultsBySystem[item.systemName] = {};
+              if (!resultsBySystem[item.systemName][item.field]) {
+                  resultsBySystem[item.systemName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+              }
+              if (item.status) {
+                  resultsBySystem[item.systemName][item.field][item.status]++;
+              }
+          });
+      }
 
       // Sort by systems order
       const sortedResultSystemNames = Object.keys(resultsBySystem).sort((a, b) => {
@@ -265,49 +274,57 @@ export default function TechnicalReport() {
 
 
   const criteriaBySystem: { [key: string]: { [subField: string]: string[] } } = {};
-  technicalData.forEach((item: any) => {
-    if (item.status !== '해당없음') {
-      if (!criteriaBySystem[item.systemName]) criteriaBySystem[item.systemName] = {};
-      if (!criteriaBySystem[item.systemName][item.subField]) {
-        criteriaBySystem[item.systemName][item.subField] = [];
-      }
-      criteriaBySystem[item.systemName][item.subField].push(item.no);
-    }
-  });
+  if (Array.isArray(technicalData)) {
+      technicalData.forEach((item: any) => {
+          if (item.status !== '해당없음') {
+              if (!criteriaBySystem[item.systemName]) criteriaBySystem[item.systemName] = {};
+              if (!criteriaBySystem[item.systemName][item.subField]) {
+                  criteriaBySystem[item.systemName][item.subField] = [];
+              }
+              criteriaBySystem[item.systemName][item.subField].push(item.no);
+          }
+      });
+  }
 
-  const riskItems = technicalData
-    .filter((item: any) => item.status === '부분이행' || item.status === '미이행')
-    .map((item: any) => {
-      const itemId = `${item.systemName}-${item.no}`;
-      const saved = improvements[itemId];
-      return {
-        systemName: item.systemName,
-        code: item.no,
-        evidence: item.evidence || '',
-        riskFactor: saved?.riskFactor || '',
-      };
-    });
+  const riskItems = Array.isArray(technicalData)
+      ? technicalData
+          .filter((item: any) => item.status === '부분이행' || item.status === '미이행')
+          .map((item: any) => {
+              const itemId = `${item.systemName}-${item.no}`;
+              const saved = improvements[itemId];
+              return {
+                  systemName: item.systemName,
+                  code: item.no,
+                  evidence: item.evidence || '',
+                  riskFactor: saved?.riskFactor || '',
+              };
+          })
+      : [];
 
   const improvementsBySystem: { [key: string]: string[] } = {};
-  technicalData.forEach((item: any) => {
-    if (item.status === '부분이행' || item.status === '미이행') {
-      const itemId = `${item.systemName}-${item.no}`;
-      const saved = improvements[itemId];
-      if (saved?.improvementPlan) {
-        if (!improvementsBySystem[item.systemName]) improvementsBySystem[item.systemName] = [];
-        improvementsBySystem[item.systemName].push(`${item.no}: ${saved.improvementPlan}`);
-      }
-    }
-  });
+  if (Array.isArray(technicalData)) {
+      technicalData.forEach((item: any) => {
+          if (item.status === '부분이행' || item.status === '미이행') {
+              const itemId = `${item.systemName}-${item.no}`;
+              const saved = improvements[itemId];
+              if (saved?.improvementPlan) {
+                  if (!improvementsBySystem[item.systemName]) improvementsBySystem[item.systemName] = [];
+                  improvementsBySystem[item.systemName].push(`${item.no}: ${saved.improvementPlan}`);
+              }
+          }
+      });
+  }
 
   const resultsBySystem: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
-  technicalData.forEach((item: any) => {
-    if (!resultsBySystem[item.systemName]) resultsBySystem[item.systemName] = {};
-    if (!resultsBySystem[item.systemName][item.field]) {
-      resultsBySystem[item.systemName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
-    }
-    if (item.status) resultsBySystem[item.systemName][item.field][item.status]++;
-  });
+  if (Array.isArray(technicalData)) {
+      technicalData.forEach((item: any) => {
+          if (!resultsBySystem[item.systemName]) resultsBySystem[item.systemName] = {};
+          if (!resultsBySystem[item.systemName][item.field]) {
+              resultsBySystem[item.systemName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+          }
+          if (item.status) resultsBySystem[item.systemName][item.field][item.status]++;
+      });
+  }
 
   return (
     <div className="space-y-6">

@@ -67,14 +67,19 @@ export default function TechnicalAdminChecklist() {
 
       try {
         const systemsResponse = await api.technical.systems.getAll(user.company);
-        if (systemsResponse.length > 0) {
-          setSystems(systemsResponse);
-          if (!activeTab) {
-            setActiveTab(systemsResponse[0].name);
-          }
+        const systemsArray = Array.isArray(systemsResponse) ? systemsResponse : [];
+        if (systemsArray.length > 0) {
+            setSystems(systemsArray);
+            if (!activeTab) {
+                setActiveTab(systemsArray[0].name);
+            }
+        } else {
+            setSystems([]);
         }
       } catch (error) {
-        toast({ title: "오류", description: "시스템 목록 로딩 실패", variant: "destructive" });
+          console.error('Failed to load systems:', error);
+          setSystems([]); // 에러 시에도 빈 배열로 설정
+          toast({ title: "오류", description: "시스템 목록 로딩 실패", variant: "destructive" });
       }
     };
 
@@ -298,14 +303,14 @@ export default function TechnicalAdminChecklist() {
         >
           <div className="flex items-center justify-between mb-4">
             <TabsList>
-              {systems.map((system) => (
+              {Array.isArray(systems) && systems.map((system) => (
                 <TabsTrigger key={system.id} value={system.name}>
                   {system.name}
                 </TabsTrigger>
               ))}
             </TabsList>
             <div className="flex gap-2">
-              {systems.map(
+              {Array.isArray(systems) && systems.map(
                 (system) =>
                   activeTab === system.name && (
                     <div key={system.id} className="flex gap-2">
@@ -321,7 +326,7 @@ export default function TechnicalAdminChecklist() {
             </div>
           </div>
 
-          {systems.map((system) => (
+          {Array.isArray(systems) && systems.map((system) => (
             <TabsContent key={system.id} value={system.name}>
               <div className="space-y-6">
                 {getItemsForSystem(system.name).map((item, index, array) => {

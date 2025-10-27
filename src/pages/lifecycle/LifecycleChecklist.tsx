@@ -60,6 +60,7 @@ export default function ProtectionLifecycle() {
       try {
         setLoading(true);
         const processingTasks = await api.lifecycle.tasks.getAll(user.company);
+        const tasksArray = Array.isArray(processingTasks) ? processingTasks : [];
         if (processingTasks.length > 0) {
           setTasks(processingTasks);
           if (!activeTab) {
@@ -190,7 +191,7 @@ export default function ProtectionLifecycle() {
     return items;
   };
 
-  if (tasks.length === 0) {
+  if (!Array.isArray(tasks) || tasks.length === 0) {
     return (
       <div className="container mx-auto py-6">
         <Card>
@@ -234,14 +235,14 @@ export default function ProtectionLifecycle() {
         }}
       >
         <TabsList>
-          {tasks.map((task) => (
+          {Array.isArray(tasks) && tasks.map((task) => (
             <TabsTrigger key={task.id} value={task.taskName}>
               {task.taskName}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {tasks.map((task) => (
+        {Array.isArray(tasks) && tasks.map((task) => (
           <TabsContent key={task.id} value={task.taskName} className="mt-6">
             <div className="space-y-6">
               {getItemsForTask(task.taskName).map((item, index, array) => {

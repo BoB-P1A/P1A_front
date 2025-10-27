@@ -25,13 +25,17 @@ export default function SecurityReport() {
           api.security.actionPlans.getAll(user.company),
           api.security.targets.getAll(user.company),
         ]);
-        
-        setSecurityData(checklistData);
-        setImprovements(improvementsData);
-        setActionPlans(actionsData);
-        setTargets(targetsData);
+
+        setSecurityData(Array.isArray(checklistData) ? checklistData : []);
+        setImprovements(improvementsData || {});
+        setActionPlans(actionsData || {});
+        setTargets(Array.isArray(targetsData) ? targetsData : []);
       } catch (error) {
         console.error('Failed to load data:', error);
+        setSecurityData([]);
+        setImprovements({});
+        setActionPlans({});
+        setTargets([]);
       }
     };
 
@@ -46,13 +50,15 @@ export default function SecurityReport() {
     // 1. 영향평가 기준
     sections.push(new Paragraph({ text: '1. 영향평가 기준', heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
     const criteriaByTarget: { [key: string]: { [subField: string]: string[] } } = {};
-    securityData.forEach((item: any) => {
-      if (item.status !== '해당없음') {
-        if (!criteriaByTarget[item.targetName]) criteriaByTarget[item.targetName] = {};
-        if (!criteriaByTarget[item.targetName][item.subField]) criteriaByTarget[item.targetName][item.subField] = [];
-        criteriaByTarget[item.targetName][item.subField].push(item.no);
-      }
-    });
+    if (Array.isArray(securityData)) {
+        securityData.forEach((item: any) => {
+            if (item.status !== '해당없음') {
+                if (!criteriaByTarget[item.targetName]) criteriaByTarget[item.targetName] = {};
+                if (!criteriaByTarget[item.targetName][item.subField]) criteriaByTarget[item.targetName][item.subField] = [];
+                criteriaByTarget[item.targetName][item.subField].push(item.no);
+            }
+        });
+    }
     
     const targetOrder = targets.map((t: any) => t.name);
     const sortedTargetNames = Object.keys(criteriaByTarget).sort((a, b) => {
@@ -70,12 +76,14 @@ export default function SecurityReport() {
 
     // 2. 침해요인 분석
     sections.push(new Paragraph({ text: '2. 평가기준에 따른 개인정보 침해요인 분석･평가', heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
-    const riskItems = securityData.filter((item: any) => item.status === '부분이행' || item.status === '미이행')
-      .map((item: any) => {
-        const itemId = `${item.targetName}-${item.no}`;
-        const saved = improvements[itemId];
-        return { targetName: item.targetName, code: item.no, evidence: item.evidence || '', riskFactor: saved?.riskFactor || '' };
-      });
+    const riskItems = Array.isArray(securityData)
+        ? securityData.filter((item: any) => item.status === '부분이행' || item.status === '미이행')
+            .map((item: any) => {
+                const itemId = `${item.targetName}-${item.no}`;
+                const saved = improvements[itemId];
+                return { targetName: item.targetName, code: item.no, evidence: item.evidence || '', riskFactor: saved?.riskFactor || '' };
+            })
+        : [];
     if (riskItems.length > 0) {
       const riskRows = [
         new TableRow({ children: [new TableCell({ children: [new Paragraph('검토대상명')] }), new TableCell({ children: [new Paragraph('질의문 코드')] }), new TableCell({ children: [new Paragraph('취약점')] }), new TableCell({ children: [new Paragraph('침해요인')] })] }),
@@ -87,17 +95,19 @@ export default function SecurityReport() {
     // 3. 개선 조치 계획
     sections.push(new Paragraph({ text: '3. 주요 위험요소에 따른 개선 조치 계획', heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
     const actionsByTarget: { [key: string]: any[] } = {};
-    securityData.forEach((item: any) => {
-      if (item.status === '부분이행' || item.status === '미이행') {
-        const itemId = `${item.targetName}-${item.no}`;
-        const savedAction = actionPlans[itemId];
-        const savedImprovement = improvements[itemId];
-        if (savedAction || savedImprovement) {
-          if (!actionsByTarget[item.targetName]) actionsByTarget[item.targetName] = [];
-          actionsByTarget[item.targetName].push({ code: item.no, question: item.item, evidence: item.evidence, guide: savedImprovement?.improvementPlan || '', ...savedAction });
-        }
-      }
-    });
+    if (Array.isArray(securityData)) {
+        securityData.forEach((item: any) => {
+            if (item.status === '부분이행' || item.status === '미이행') {
+                const itemId = `${item.targetName}-${item.no}`;
+                const savedAction = actionPlans[itemId];
+                const savedImprovement = improvements[itemId];
+                if (savedAction || savedImprovement) {
+                    if (!actionsByTarget[item.targetName]) actionsByTarget[item.targetName] = [];
+                    actionsByTarget[item.targetName].push({ code: item.no, question: item.item, evidence: item.evidence, guide: savedImprovement?.improvementPlan || '', ...savedAction });
+                }
+            }
+        });
+    }
     
     // Sort by targets order
     const sortedActionTargetNames = Object.keys(actionsByTarget).sort((a, b) => {
@@ -142,15 +152,17 @@ export default function SecurityReport() {
     // 4. 평가결과
     sections.push(new Paragraph({ text: '4. 평가결과', heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
     const resultsByTarget: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
-    securityData.forEach((item: any) => {
-      if (!resultsByTarget[item.targetName]) resultsByTarget[item.targetName] = {};
-      if (!resultsByTarget[item.targetName][item.field]) {
-        resultsByTarget[item.targetName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
-      }
-      if (item.status) {
-        resultsByTarget[item.targetName][item.field][item.status]++;
-      }
-    });
+    if (Array.isArray(securityData)) {
+        securityData.forEach((item: any) => {
+            if (!resultsByTarget[item.targetName]) resultsByTarget[item.targetName] = {};
+            if (!resultsByTarget[item.targetName][item.field]) {
+                resultsByTarget[item.targetName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+            }
+            if (item.status) {
+                resultsByTarget[item.targetName][item.field][item.status]++;
+            }
+        });
+    }
 
     // Sort by targets order
     const sortedResultTargetNames = Object.keys(resultsByTarget).sort((a, b) => {
@@ -188,44 +200,52 @@ export default function SecurityReport() {
 
 
   const criteriaByTarget: { [key: string]: { [subField: string]: string[] } } = {};
-  securityData.forEach((item: any) => {
-    if (item.status !== '해당없음') {
-      if (!criteriaByTarget[item.targetName]) criteriaByTarget[item.targetName] = {};
-      if (!criteriaByTarget[item.targetName][item.subField]) criteriaByTarget[item.targetName][item.subField] = [];
-      criteriaByTarget[item.targetName][item.subField].push(item.no);
-    }
-  });
+  if (Array.isArray(securityData)) {
+      securityData.forEach((item: any) => {
+          if (item.status !== '해당없음') {
+              if (!criteriaByTarget[item.targetName]) criteriaByTarget[item.targetName] = {};
+              if (!criteriaByTarget[item.targetName][item.subField]) criteriaByTarget[item.targetName][item.subField] = [];
+              criteriaByTarget[item.targetName][item.subField].push(item.no);
+          }
+      });
+  }
 
-  const targetOrder = targets.map((t: any) => t.name);
+  const targetOrder = Array.isArray(targets) ? targets.map((t: any) => t.name) : [];
 
-  const riskItems = securityData.filter((item: any) => item.status === '부분이행' || item.status === '미이행')
-    .map((item: any) => {
-      const itemId = `${item.targetName}-${item.no}`;
-      const saved = improvements[itemId];
-      return { targetName: item.targetName, code: item.no, evidence: item.evidence || '', riskFactor: saved?.riskFactor || '' };
-    });
+  const riskItems = Array.isArray(securityData)
+      ? securityData.filter((item: any) => item.status === '부분이행' || item.status === '미이행')
+          .map((item: any) => {
+              const itemId = `${item.targetName}-${item.no}`;
+              const saved = improvements[itemId];
+              return { targetName: item.targetName, code: item.no, evidence: item.evidence || '', riskFactor: saved?.riskFactor || '' };
+          })
+      : [];
 
   const actionsByTarget: { [key: string]: any[] } = {};
-  securityData.forEach((item: any) => {
-    if (item.status === '부분이행' || item.status === '미이행') {
-      const itemId = `${item.targetName}-${item.no}`;
-      const savedAction = actionPlans[itemId];
-      const savedImprovement = improvements[itemId];
-      if (savedAction || savedImprovement) {
-        if (!actionsByTarget[item.targetName]) actionsByTarget[item.targetName] = [];
-        actionsByTarget[item.targetName].push({ code: item.no, question: item.item, evidence: item.evidence, guide: savedImprovement?.improvementPlan || '', ...savedAction });
-      }
-    }
-  });
+  if (Array.isArray(securityData)) {
+      securityData.forEach((item: any) => {
+          if (item.status === '부분이행' || item.status === '미이행') {
+              const itemId = `${item.targetName}-${item.no}`;
+              const savedAction = actionPlans[itemId];
+              const savedImprovement = improvements[itemId];
+              if (savedAction || savedImprovement) {
+                  if (!actionsByTarget[item.targetName]) actionsByTarget[item.targetName] = [];
+                  actionsByTarget[item.targetName].push({ code: item.no, question: item.item, evidence: item.evidence, guide: savedImprovement?.improvementPlan || '', ...savedAction });
+              }
+          }
+      });
+  }
 
   const resultsByTarget: { [key: string]: { [field: string]: { 이행: number, 부분이행: number, 미이행: number, 해당없음: number } } } = {};
-  securityData.forEach((item: any) => {
-    if (!resultsByTarget[item.targetName]) resultsByTarget[item.targetName] = {};
-    if (!resultsByTarget[item.targetName][item.field]) {
-      resultsByTarget[item.targetName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
-    }
-    if (item.status) resultsByTarget[item.targetName][item.field][item.status]++;
-  });
+  if (Array.isArray(securityData)) {
+      securityData.forEach((item: any) => {
+          if (!resultsByTarget[item.targetName]) resultsByTarget[item.targetName] = {};
+          if (!resultsByTarget[item.targetName][item.field]) {
+              resultsByTarget[item.targetName][item.field] = { 이행: 0, 부분이행: 0, 미이행: 0, 해당없음: 0 };
+          }
+          if (item.status) resultsByTarget[item.targetName][item.field][item.status]++;
+      });
+  }
 
   return (
     <div className="space-y-6">

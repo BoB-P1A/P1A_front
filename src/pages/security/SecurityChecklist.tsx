@@ -67,14 +67,19 @@ export default function SecurityChecklist() {
 
       try {
         const targetsResponse = await api.security.targets.getAll(user.company);
-        if (targetsResponse.length > 0) {
-          setTargets(targetsResponse);
-          if (!activeTab) {
-            setActiveTab(targetsResponse[0].name);
-          }
+        const targetsArray = Array.isArray(targetsResponse) ? targetsResponse : [];
+        if (targetsArray.length > 0) {
+            setTargets(targetsArray);
+            if (!activeTab) {
+                setActiveTab(targetsArray[0].name);
+            }
+        } else {
+            setTargets([]);
         }
       } catch (error) {
-        toast({ title: "오류", description: "데이터 로딩 실패", variant: "destructive" });
+          console.error('Failed to load targets:', error);
+          setTargets([]); // 에러 시에도 빈 배열로 설정
+          toast({ title: "오류", description: "데이터 로딩 실패", variant: "destructive" });
       }
     };
 
@@ -299,14 +304,14 @@ export default function SecurityChecklist() {
         >
           <div className="flex items-center justify-between mb-4">
             <TabsList>
-              {targets.map((target) => (
+              {Array.isArray(targets) && targets.map((target) => (
                 <TabsTrigger key={target.id} value={target.name}>
                   {target.name}
                 </TabsTrigger>
               ))}
             </TabsList>
             <div className="flex gap-2">
-              {targets.map(
+              {Array.isArray(targets) && targets.map(
                 (target) =>
                   activeTab === target.name && (
                     <div key={target.id} className="flex gap-2">
@@ -322,7 +327,7 @@ export default function SecurityChecklist() {
             </div>
           </div>
 
-          {targets.map((target) => (
+          {Array.isArray(targets) && targets.map((target) => (
             <TabsContent key={target.id} value={target.name}>
               <div className="space-y-6">
                 {getItemsForTarget(target.name).map((item, index, array) => {
