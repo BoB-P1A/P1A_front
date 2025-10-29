@@ -138,14 +138,14 @@ export default function ProtectionReport() {
                 if (phaseData.length > 0) {
                     const headers =
                         phase === '수집'
-                            ? ['업무명', '세부업무명', '수집대상', '수집경로', '수집시스템', '수집항목', '수집항목명칭', '수집주기', '수집담당자', '수집근거', '온라인여부', '암호화여부']
+                            ? ['평가업무명', '세부업무명', '수집대상', '수집경로', '수집시스템', '수집항목', '수집항목명칭', '수집목적', '수집부서', '온라인', '암호화']
                             : phase === '보유'
-                                ? ['업무명', '세부업무명', '입력시스템', '보유공간', '보유항목', '보유항목명칭', '암호화항목', '온라인여부', '암호화여부']
+                                ? ['평가업무명', '세부업무명', '보유공간', '수집시스템', '보유항목', '보유항목명칭', '보유목적', '보유형태', '암호화항목', '온라인', '암호화']
                                 : phase === '이용'
-                                    ? ['업무명', '세부업무명', '보유공간', '이용시스템', '이용항목', '이용항목명칭', '이용목적', '이용방법', '개인정보취급자', '온라인여부', '암호화여부']
+                                    ? ['평가업무명', '세부업무명', '보유공간', '이용시스템', '이용항목', '이용항목명칭', '이용목적', '이용방법', '이용부서', '온라인', '암호화']
                                     : phase === '제공'
-                                        ? ['업무명', '세부업무명', '보유공간', '제공시스템', '제공자', '수신자', '제공항목', '제공항목명칭', '제공목적', '제공방법', '제공주기', '암호화방법', '제공근거', '제공시스템온라인', '제공시스템암호화', '수신자온라인', '수신자암호화']
-                                        : ['업무명', '세부업무명', '보유공간', '파기시스템', '파기항목', '파기항목명칭', '보관기간', '파기담당자', '파기절차', '분리보관공간', '분리보관암호화항목', '파기온라인', '분리보관', '분리보관온라인', '분리보관암호화'];
+                                        ? ['평가업무명', '세부업무명', '보유공간', '연계시스템', '제공부서', '수신자', '제공항목', '제공항목명칭', '제공목적', '제공방법', '연계시스템온라인', '연계시스템암호화', '수신자온라인', '수신자암호화']
+                                        : ['평가업무명', '세부업무명', '보유공간', '파기시스템', '파기항목', '파기항목명칭', '보관기간', '파기부서', '파기절차', '온라인'];
 
                     const flowRows = [
                         new TableRow({
@@ -162,9 +162,8 @@ export default function ProtectionReport() {
                                         new TableCell({children: [new Paragraph(row.collectionSystem || '')]}),
                                         new TableCell({children: [new Paragraph(row.collectionItem || '')]}),
                                         new TableCell({children: [new Paragraph(row.collectionItemName || '')]}),
-                                        new TableCell({children: [new Paragraph(row.collectionPeriod || '')]}),
-                                        new TableCell({children: [new Paragraph(row.collectionManager || '')]}),
-                                        new TableCell({children: [new Paragraph(row.collectionBasis || '')]}),
+                                        new TableCell({children: [new Paragraph(row.collectionPurpose || '')]}),
+                                        new TableCell({children: [new Paragraph(row.collectionDepartment || '')]}),
                                         new TableCell({children: [new Paragraph(row.isOnline || '')]}),
                                         new TableCell({children: [new Paragraph(row.isEncrypted || '')]}),
                                     ]
@@ -172,10 +171,12 @@ export default function ProtectionReport() {
                                         ? [
                                             new TableCell({children: [new Paragraph(row.taskName || '')]}),
                                             new TableCell({children: [new Paragraph(row.detailTask || '')]}),
-                                            new TableCell({children: [new Paragraph(row.inputSystem || '')]}),
                                             new TableCell({children: [new Paragraph(row.storageSpace || '')]}),
+                                            new TableCell({children: [new Paragraph(row.collectionSystem || '')]}),
                                             new TableCell({children: [new Paragraph(row.storageItem || '')]}),
                                             new TableCell({children: [new Paragraph(row.storageItemName || '')]}),
+                                            new TableCell({children: [new Paragraph(row.storagePurpose || '')]}),
+                                            new TableCell({children: [new Paragraph(row.storageFormat || '')]}),
                                             new TableCell({children: [new Paragraph(row.encryptionItem || '')]}),
                                             new TableCell({children: [new Paragraph(row.isOnline || '')]}),
                                             new TableCell({children: [new Paragraph(row.isEncrypted || '')]}),
@@ -190,7 +191,7 @@ export default function ProtectionReport() {
                                                 new TableCell({children: [new Paragraph(row.usageItemName || '')]}),
                                                 new TableCell({children: [new Paragraph(row.usagePurpose || '')]}),
                                                 new TableCell({children: [new Paragraph(row.usageMethod || '')]}),
-                                                new TableCell({children: [new Paragraph(row.personalInfoHandler || '')]}),
+                                                new TableCell({children: [new Paragraph(row.usageDepartment || '')]}),
                                                 new TableCell({children: [new Paragraph(row.isOnline || '')]}),
                                                 new TableCell({children: [new Paragraph(row.isEncrypted || '')]}),
                                             ]
@@ -199,18 +200,15 @@ export default function ProtectionReport() {
                                                     new TableCell({children: [new Paragraph(row.taskName || '')]}),
                                                     new TableCell({children: [new Paragraph(row.detailTask || '')]}),
                                                     new TableCell({children: [new Paragraph(row.storageSpace || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.provisionSystem || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.provider || '')]}),
+                                                    new TableCell({children: [new Paragraph(row.linkageSystem || '')]}),
+                                                    new TableCell({children: [new Paragraph(row.provisionDepartment || '')]}),
                                                     new TableCell({children: [new Paragraph(row.recipient || '')]}),
                                                     new TableCell({children: [new Paragraph(row.provisionItem || '')]}),
                                                     new TableCell({children: [new Paragraph(row.provisionItemName || '')]}),
                                                     new TableCell({children: [new Paragraph(row.provisionPurpose || '')]}),
                                                     new TableCell({children: [new Paragraph(row.provisionMethod || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.provisionPeriod || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.encryptionMethod || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.provisionBasis || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.provisionSystemOnline || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.provisionSystemEncrypted || '')]}),
+                                                    new TableCell({children: [new Paragraph(row.linkageSystemOnline || '')]}),
+                                                    new TableCell({children: [new Paragraph(row.linkageSystemEncrypted || '')]}),
                                                     new TableCell({children: [new Paragraph(row.recipientOnline || '')]}),
                                                     new TableCell({children: [new Paragraph(row.recipientEncrypted || '')]}),
                                                 ]
@@ -222,14 +220,9 @@ export default function ProtectionReport() {
                                                     new TableCell({children: [new Paragraph(row.disposalItem || '')]}),
                                                     new TableCell({children: [new Paragraph(row.disposalItemName || '')]}),
                                                     new TableCell({children: [new Paragraph(row.retentionPeriod || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.disposalManager || '')]}),
+                                                    new TableCell({children: [new Paragraph(row.disposalDepartment || '')]}),
                                                     new TableCell({children: [new Paragraph(row.disposalProcedure || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.separateStorageSpace || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.separateStorageEncryptionItem || '')]}),
                                                     new TableCell({children: [new Paragraph(row.disposalOnline || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.hasSeparateStorage || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.separateStorageOnline || '')]}),
-                                                    new TableCell({children: [new Paragraph(row.separateStorageEncrypted || '')]}),
                                                 ],
                         }))
                     ];
@@ -646,36 +639,32 @@ export default function ProtectionReport() {
                                         '세부업무명': ['세부', '업무명'],
                                         '수집대상': ['수집', '대상'],
                                         '수집시스템': ['수집', '시스템'],
-                                        '수집주기': ['수집', '주기'],
-                                        '수집담당자': ['수집', '담당자'],
-                                        '온라인여부': ['온라인', '여부'],
-                                        '암호화여부': ['암호화', '여부'],
+                                        '수집목적': ['수집', '목적'],
+                                        '수집부서': ['수집', '부서'],
+                                        '온라인': ['온라인'],
+                                        '암호화': ['암호화'],
                                         '보유공간': ['보유', '공간'],
-                                        '개인정보취급자': ['개인정보', '취급자'],
-                                        '제공시스템': ['제공', '시스템'],
-                                        '암호화방법': ['암호화', '방법'],
-                                        '제공시스템온라인': ['제공시스템', '온라인'],
-                                        '제공시스템암호화': ['제공시스템', '암호화'],
+                                        '보유목적': ['보유', '목적'],
+                                        '보유형태': ['보유', '형태'],
+                                        '이용부서': ['이용', '부서'],
+                                        '연계시스템': ['연계', '시스템'],
+                                        '제공부서': ['제공', '부서'],
+                                        '연계시스템온라인': ['연계시스템', '온라인'],
+                                        '연계시스템암호화': ['연계시스템', '암호화'],
                                         '수신자온라인': ['수신자', '온라인'],
                                         '수신자암호화': ['수신자', '암호화'],
                                         '파기시스템': ['파기', '시스템'],
-                                        '파기주기': ['파기', '주기'],
                                         '파기항목': ['파기', '항목'],
-                                        '파기담당자': ['파기', '담당자'],
-                                        '분리보관공간': ['분리', '보관', '공간'],
-                                        '파기온라인': ['파기', '온라인'],
-                                        '분리보관여부': ['분리', '보관', '여부'],
-                                        '분리보관온라인': ['분리', '보관', '온라인'],
-                                        '분리보관암호화': ['분리', '보관', '암호화'],
+                                        '파기부서': ['파기', '부서'],
                                     };
 
                                     const parts = breaks[text];
                                     if (parts) {
                                         return parts.map((part, i) => (
                                             <span key={i}>
-                      {i > 0 && <br/>}
+                                                {i > 0 && <br/>}
                                                 {part}
-                    </span>
+                                            </span>
                                         ));
                                     }
                                     return text;
@@ -683,14 +672,14 @@ export default function ProtectionReport() {
 
                                 const headers =
                                     phase === '수집'
-                                        ? ['업무명', '세부업무명', '수집대상', '수집경로', '수집시스템', '수집항목', '수집항목명칭', '수집주기', '수집담당자', '수집근거', '온라인여부', '암호화여부']
+                                        ? ['평가업무명', '세부업무명', '수집대상', '수집경로', '수집시스템', '수집항목', '수집항목명칭', '수집목적', '수집부서', '온라인', '암호화']
                                         : phase === '보유'
-                                            ? ['업무명', '세부업무명', '입력시스템', '보유공간', '보유항목', '보유항목명칭', '암호화항목', '온라인여부', '암호화여부']
+                                            ? ['평가업무명', '세부업무명', '보유공간', '수집시스템', '보유항목', '보유항목명칭', '보유목적', '보유형태', '암호화항목', '온라인', '암호화']
                                             : phase === '이용'
-                                                ? ['업무명', '세부업무명', '보유공간', '이용시스템', '이용항목', '이용항목명칭', '이용목적', '이용방법', '개인정보취급자', '온라인여부', '암호화여부']
+                                                ? ['평가업무명', '세부업무명', '보유공간', '이용시스템', '이용항목', '이용항목명칭', '이용목적', '이용방법', '이용부서', '온라인', '암호화']
                                                 : phase === '제공'
-                                                    ? ['업무명', '세부업무명', '보유공간', '제공시스템', '제공자', '수신자', '제공항목', '제공항목명칭', '제공목적', '제공방법', '제공주기', '암호화방법', '제공근거', '제공시스템온라인', '제공시스템암호화', '수신자온라인', '수신자암호화']
-                                                    : ['업무명', '세부업무명', '보유공간', '파기시스템', '파기항목', '파기항목명칭', '보관기간', '파기담당자', '파기절차', '분리보관공간', '분리보관암호화항목', '파기온라인', '분리보관', '분리보관온라인', '분리보관암호화'];
+                                                    ? ['평가업무명', '세부업무명', '보유공간', '연계시스템', '제공부서', '수신자', '제공항목', '제공항목명칭', '제공목적', '제공방법', '연계시스템온라인', '연계시스템암호화', '수신자온라인', '수신자암호화']
+                                                    : ['평가업무명', '세부업무명', '보유공간', '파기시스템', '파기항목', '파기항목명칭', '보관기간', '파기부서', '파기절차', '온라인'];
                                 return (
                                     <div key={phase} className="space-y-2">
                                         <h4 className="font-medium">{phase} 단계</h4>
@@ -698,8 +687,7 @@ export default function ProtectionReport() {
                                             <UITable>
                                                 <UITableHeader>
                                                     <UITableRow>
-                                                        {headers.map((h) => <UITableHead key={h}
-                                                                                         className="text-center min-w-[80px]">{renderHeader(h)}</UITableHead>)}
+                                                        {headers.map((h) => <UITableHead key={h} className="text-center min-w-[80px]">{renderHeader(h)}</UITableHead>)}
                                                     </UITableRow>
                                                 </UITableHeader>
                                                 <UITableBody>
@@ -714,9 +702,8 @@ export default function ProtectionReport() {
                                                                     <UITableCell>{row.collectionSystem}</UITableCell>
                                                                     <UITableCell>{row.collectionItem}</UITableCell>
                                                                     <UITableCell>{row.collectionItemName}</UITableCell>
-                                                                    <UITableCell>{row.collectionPeriod}</UITableCell>
-                                                                    <UITableCell>{row.collectionManager}</UITableCell>
-                                                                    <UITableCell>{row.collectionBasis}</UITableCell>
+                                                                    <UITableCell>{row.collectionPurpose}</UITableCell>
+                                                                    <UITableCell>{row.collectionDepartment}</UITableCell>
                                                                     <UITableCell>{row.isOnline}</UITableCell>
                                                                     <UITableCell>{row.isEncrypted}</UITableCell>
                                                                 </>
@@ -725,10 +712,12 @@ export default function ProtectionReport() {
                                                                 <>
                                                                     <UITableCell>{row.taskName}</UITableCell>
                                                                     <UITableCell>{row.detailTask}</UITableCell>
-                                                                    <UITableCell>{row.inputSystem}</UITableCell>
                                                                     <UITableCell>{row.storageSpace}</UITableCell>
+                                                                    <UITableCell>{row.collectionSystem}</UITableCell>
                                                                     <UITableCell>{row.storageItem}</UITableCell>
                                                                     <UITableCell>{row.storageItemName}</UITableCell>
+                                                                    <UITableCell>{row.storagePurpose}</UITableCell>
+                                                                    <UITableCell>{row.storageFormat}</UITableCell>
                                                                     <UITableCell>{row.encryptionItem}</UITableCell>
                                                                     <UITableCell>{row.isOnline}</UITableCell>
                                                                     <UITableCell>{row.isEncrypted}</UITableCell>
@@ -744,7 +733,7 @@ export default function ProtectionReport() {
                                                                     <UITableCell>{row.usageItemName}</UITableCell>
                                                                     <UITableCell>{row.usagePurpose}</UITableCell>
                                                                     <UITableCell>{row.usageMethod}</UITableCell>
-                                                                    <UITableCell>{row.personalInfoHandler}</UITableCell>
+                                                                    <UITableCell>{row.usageDepartment}</UITableCell>
                                                                     <UITableCell>{row.isOnline}</UITableCell>
                                                                     <UITableCell>{row.isEncrypted}</UITableCell>
                                                                 </>
@@ -754,18 +743,15 @@ export default function ProtectionReport() {
                                                                     <UITableCell>{row.taskName}</UITableCell>
                                                                     <UITableCell>{row.detailTask}</UITableCell>
                                                                     <UITableCell>{row.storageSpace}</UITableCell>
-                                                                    <UITableCell>{row.provisionSystem}</UITableCell>
-                                                                    <UITableCell>{row.provider}</UITableCell>
+                                                                    <UITableCell>{row.linkageSystem}</UITableCell>
+                                                                    <UITableCell>{row.provisionDepartment}</UITableCell>
                                                                     <UITableCell>{row.recipient}</UITableCell>
                                                                     <UITableCell>{row.provisionItem}</UITableCell>
                                                                     <UITableCell>{row.provisionItemName}</UITableCell>
                                                                     <UITableCell>{row.provisionPurpose}</UITableCell>
                                                                     <UITableCell>{row.provisionMethod}</UITableCell>
-                                                                    <UITableCell>{row.provisionPeriod}</UITableCell>
-                                                                    <UITableCell>{row.encryptionMethod}</UITableCell>
-                                                                    <UITableCell>{row.provisionBasis}</UITableCell>
-                                                                    <UITableCell>{row.provisionSystemOnline}</UITableCell>
-                                                                    <UITableCell>{row.provisionSystemEncrypted}</UITableCell>
+                                                                    <UITableCell>{row.linkageSystemOnline}</UITableCell>
+                                                                    <UITableCell>{row.linkageSystemEncrypted}</UITableCell>
                                                                     <UITableCell>{row.recipientOnline}</UITableCell>
                                                                     <UITableCell>{row.recipientEncrypted}</UITableCell>
                                                                 </>
@@ -779,14 +765,9 @@ export default function ProtectionReport() {
                                                                     <UITableCell>{row.disposalItem}</UITableCell>
                                                                     <UITableCell>{row.disposalItemName}</UITableCell>
                                                                     <UITableCell>{row.retentionPeriod}</UITableCell>
-                                                                    <UITableCell>{row.disposalManager}</UITableCell>
+                                                                    <UITableCell>{row.disposalDepartment}</UITableCell>
                                                                     <UITableCell>{row.disposalProcedure}</UITableCell>
-                                                                    <UITableCell>{row.separateStorageSpace}</UITableCell>
-                                                                    <UITableCell>{row.separateStorageEncryptionItem}</UITableCell>
                                                                     <UITableCell>{row.disposalOnline}</UITableCell>
-                                                                    <UITableCell>{row.hasSeparateStorage}</UITableCell>
-                                                                    <UITableCell>{row.separateStorageOnline}</UITableCell>
-                                                                    <UITableCell>{row.separateStorageEncrypted}</UITableCell>
                                                                 </>
                                                             )}
                                                         </UITableRow>

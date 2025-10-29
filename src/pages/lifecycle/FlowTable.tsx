@@ -20,9 +20,8 @@ interface CollectionData {
   collectionSystem: string;
   collectionItem: string;
   collectionItemName: string;
-  collectionPeriod: string;
-  collectionManager: string;
-  collectionBasis: string;
+  collectionPurpose: string;
+  collectionDepartment: string;
   isOnline: string;
   isEncrypted: string;
 }
@@ -31,10 +30,12 @@ interface CollectionData {
 interface StorageData {
   id: string;
   detailTask: string;
-  inputSystem: string;
   storageSpace: string;
+  collectionSystem: string;
   storageItem: string;
   storageItemName: string;
+  storagePurpose: string;
+  storageFormat: string;
   encryptionItem: string;
   isOnline: string;
   isEncrypted: string;
@@ -50,7 +51,7 @@ interface UsageData {
   usageItemName: string;
   usagePurpose: string;
   usageMethod: string;
-  personalInfoHandler: string;
+  usageDepartment: string;
   isOnline: string;
   isEncrypted: string;
 }
@@ -60,18 +61,15 @@ interface ProvisionData {
   id: string;
   detailTask: string;
   storageSpace: string;
-  provisionSystem: string;
-  provider: string;
+  linkageSystem: string;
+  provisionDepartment: string;
   recipient: string;
   provisionItem: string;
   provisionItemName: string;
   provisionPurpose: string;
   provisionMethod: string;
-  provisionPeriod: string;
-  encryptionMethod: string;
-  provisionBasis: string;
-  provisionSystemOnline: string;
-  provisionSystemEncrypted: string;
+  linkageSystemOnline: string;
+  linkageSystemEncrypted: string;
   recipientOnline: string;
   recipientEncrypted: string;
 }
@@ -85,14 +83,9 @@ interface DisposalData {
   disposalItem: string;
   disposalItemName: string;
   retentionPeriod: string;
-  disposalManager: string;
+  disposalDepartment: string;
   disposalProcedure: string;
-  separateStorageSpace: string;
-  separateStorageEncryptionItem: string;
   disposalOnline: string;
-  hasSeparateStorage: string;
-  separateStorageOnline: string;
-  separateStorageEncrypted: string;
 }
 
 interface TaskFlowData {
@@ -155,21 +148,78 @@ export default function ProtectionFlowTable() {
     let newRow: any;
 
     switch (stage) {
-      case 'collection':
-        newRow = { detailTask: '', collectionTarget: '', collectionPath: '', collectionSystem: '', collectionItem: '', collectionItemName: '', collectionPeriod: '', collectionManager: '', collectionBasis: '', isOnline: '', isEncrypted: '' };
-        break;
-      case 'storage':
-        newRow = { detailTask: '', inputSystem: '', storageSpace: '', storageItem: '', storageItemName: '', encryptionItem: '', isOnline: '', isEncrypted: '' };
-        break;
-      case 'usage':
-        newRow = { detailTask: '', storageSpace: '', usageSystem: '', usageItem: '', usageItemName: '', usagePurpose: '', usageMethod: '', personalInfoHandler: '', isOnline: '', isEncrypted: '' };
-        break;
-      case 'provision':
-        newRow = { detailTask: '', storageSpace: '', provisionSystem: '', provider: '', recipient: '', provisionItem: '', provisionItemName: '', provisionPurpose: '', provisionMethod: '', provisionPeriod: '', encryptionMethod: '', provisionBasis: '', provisionSystemOnline: '', provisionSystemEncrypted: '', recipientOnline: '', recipientEncrypted: '' };
-        break;
-      case 'disposal':
-        newRow = { detailTask: '', storageSpace: '', disposalSystem: '', disposalItem: '', disposalItemName: '', retentionPeriod: '', disposalManager: '', disposalProcedure: '', separateStorageSpace: '', separateStorageEncryptionItem: '', disposalOnline: '', hasSeparateStorage: '', separateStorageOnline: '', separateStorageEncrypted: '' };
-        break;
+        case 'collection':
+            newRow = {
+                detailTask: '',
+                collectionTarget: '',
+                collectionPath: '',
+                collectionSystem: '',
+                collectionItem: '',
+                collectionItemName: '',
+                collectionPurpose: '',
+                collectionDepartment: '',
+                isOnline: '',
+                isEncrypted: ''
+            };
+            break;
+        case 'storage':
+            newRow = {
+                detailTask: '',
+                storageSpace: '',
+                collectionSystem: '',
+                storageItem: '',
+                storageItemName: '',
+                storagePurpose: '',
+                storageFormat: '',
+                encryptionItem: '',
+                isOnline: '',
+                isEncrypted: ''
+            };
+            break;
+        case 'usage':
+            newRow = {
+                detailTask: '',
+                storageSpace: '',
+                usageSystem: '',
+                usageItem: '',
+                usageItemName: '',
+                usagePurpose: '',
+                usageMethod: '',
+                usageDepartment: '',
+                isOnline: '',
+                isEncrypted: ''
+            };
+            break;
+        case 'provision':
+            newRow = {
+                detailTask: '',
+                storageSpace: '',
+                linkageSystem: '',
+                provisionDepartment: '',
+                recipient: '',
+                provisionItem: '',
+                provisionItemName: '',
+                provisionPurpose: '',
+                provisionMethod: '',
+                linkageSystemOnline: '',
+                linkageSystemEncrypted: '',
+                recipientOnline: '',
+                recipientEncrypted: ''
+            };
+            break;
+        case 'disposal':
+            newRow = {
+                detailTask: '',
+                storageSpace: '',
+                disposalSystem: '',
+                disposalItem: '',
+                disposalItemName: '',
+                retentionPeriod: '',
+                disposalDepartment: '',
+                disposalProcedure: '',
+                disposalOnline: ''
+            };
+            break;
     }
 
     setFlowDataByTask(prev => {
@@ -270,15 +320,15 @@ export default function ProtectionFlowTable() {
       let allRows: any[] = [];
       
       if (phase === 'collection') {
-        headers = ['평가업무명', '세부업무명', '수집대상', '수집경로', '수집시스템', '수집항목', '수집항목명칭', '수집주기', '수집담당자', '수집근거', '온라인여부', '암호화여부'];
+        headers = ['평가업무명', '세부업무명', '수집대상', '수집경로', '수집시스템', '수집항목', '수집항목명칭', '수집목적', '수집부서', '온라인', '암호화'];
       } else if (phase === 'storage') {
-        headers = ['평가업무명', '세부업무명', '입력시스템', '보유공간', '보유항목', '보유항목명칭', '암호화항목', '온라인여부', '암호화여부'];
+        headers = ['평가업무명', '세부업무명', '보유공간', '수집시스템', '보유항목', '보유항목명칭', '보유목적', '보유형태', '암호화항목', '온라인', '암호화'];
       } else if (phase === 'usage') {
-        headers = ['평가업무명', '세부업무명', '보유공간', '이용시스템', '이용항목', '이용항목명칭', '이용목적', '이용방법', '개인정보취급자', '온라인여부', '암호화여부'];
+        headers = ['평가업무명', '세부업무명', '보유공간', '이용시스템', '이용항목', '이용항목명칭', '이용목적', '이용방법', '이용부서', '온라인', '암호화'];
       } else if (phase === 'provision') {
-        headers = ['평가업무명', '세부업무명', '보유공간', '제공시스템', '제공자', '수신자', '제공항목', '제공항목명칭', '제공목적', '제공방법', '제공주기', '암호화방법', '제공근거', '제공시스템온라인', '제공시스템암호화', '수신자온라인', '수신자암호화'];
+        headers = ['평가업무명', '세부업무명', '보유공간', '연계시스템', '제공부서', '수신자', '제공항목', '제공항목명칭', '제공목적', '제공방법', '연계시스템온라인', '연계시스템암호화', '수신자온라인', '수신자암호화'];
       } else {
-        headers = ['평가업무명', '세부업무명', '보유공간', '파기시스템', '파기항목', '파기항목명칭', '보관기간', '파기담당자', '파기절차', '분리보관공간', '분리보관암호화항목', '파기온라인', '분리보관', '분리보관온라인', '분리보관암호화'];
+        headers = ['평가업무명', '세부업무명', '보유공간', '파기시스템', '파기항목', '파기항목명칭', '보관기간', '파기부서', '파기절차', '온라인'];
       }
 
       taskNames.forEach(taskName => {
@@ -340,12 +390,11 @@ export default function ProtectionFlowTable() {
                         <TableHead className="min-w-[120px]">수집경로</TableHead>
                         <TableHead className="min-w-[120px]">수집시스템</TableHead>
                         <TableHead className="min-w-[200px]">수집항목</TableHead>
-                        <TableHead className="min-w-[150px]">수집항목명칭</TableHead>
-                        <TableHead className="min-w-[120px]">수집주기</TableHead>
-                        <TableHead className="min-w-[120px]">수집담당자</TableHead>
-                        <TableHead className="min-w-[150px]">수집근거</TableHead>
-                        <TableHead className="min-w-[100px]">온라인여부</TableHead>
-                        <TableHead className="min-w-[100px]">암호화여부</TableHead>
+                        <TableHead className="min-w-[120px]">수집항목명칭</TableHead>
+                        <TableHead className="min-w-[150px]">수집목적</TableHead>
+                        <TableHead className="min-w-[120px]">수집부서</TableHead>
+                        <TableHead className="min-w-[100px]">온라인</TableHead>
+                        <TableHead className="min-w-[100px]">암호화</TableHead>
                         <TableHead className="w-[80px]">작업</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -359,9 +408,8 @@ export default function ProtectionFlowTable() {
                           <TableCell><Input value={row.collectionSystem} onChange={(e) => handleEdit('collection', row.id, 'collectionSystem', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.collectionItem} onChange={(e) => handleEdit('collection', row.id, 'collectionItem', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.collectionItemName} onChange={(e) => handleEdit('collection', row.id, 'collectionItemName', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.collectionPeriod} onChange={(e) => handleEdit('collection', row.id, 'collectionPeriod', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.collectionManager} onChange={(e) => handleEdit('collection', row.id, 'collectionManager', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.collectionBasis} onChange={(e) => handleEdit('collection', row.id, 'collectionBasis', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.collectionPurpose} onChange={(e) => handleEdit('collection', row.id, 'collectionPurpose', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.collectionDepartment} onChange={(e) => handleEdit('collection', row.id, 'collectionDepartment', e.target.value)} /></TableCell>
                           <TableCell>
                             <Select value={row.isOnline} onValueChange={(value) => handleEdit('collection', row.id, 'isOnline', value)}>
                               <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
@@ -377,6 +425,7 @@ export default function ProtectionFlowTable() {
                               <SelectContent>
                                 <SelectItem value="True">True</SelectItem>
                                 <SelectItem value="False">False</SelectItem>
+                                <SelectItem value="Unknown">Unknown</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -409,13 +458,15 @@ export default function ProtectionFlowTable() {
                       <TableRow>
                         <TableHead className="min-w-[120px]">평가업무명</TableHead>
                         <TableHead className="min-w-[120px]">세부업무명</TableHead>
-                        <TableHead className="min-w-[120px]">입력시스템</TableHead>
                         <TableHead className="min-w-[120px]">보유공간</TableHead>
+                        <TableHead className="min-w-[120px]">수집시스템</TableHead>
                         <TableHead className="min-w-[200px]">보유항목</TableHead>
-                        <TableHead className="min-w-[150px]">보유항목명칭</TableHead>
+                        <TableHead className="min-w-[120px]">보유항목명칭</TableHead>
+                        <TableHead className="min-w-[150px]">보유목적</TableHead>
+                        <TableHead className="min-w-[120px]">보유형태</TableHead>
                         <TableHead className="min-w-[200px]">암호화항목</TableHead>
-                        <TableHead className="min-w-[100px]">온라인여부</TableHead>
-                        <TableHead className="min-w-[100px]">암호화여부</TableHead>
+                        <TableHead className="min-w-[100px]">온라인</TableHead>
+                        <TableHead className="min-w-[100px]">암호화</TableHead>
                         <TableHead className="w-[80px]">작업</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -424,10 +475,12 @@ export default function ProtectionFlowTable() {
                         <TableRow key={row.id}>
                           <TableCell className="font-medium">{task}</TableCell>
                           <TableCell><Input value={row.detailTask} onChange={(e) => handleEdit('storage', row.id, 'detailTask', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.inputSystem} onChange={(e) => handleEdit('storage', row.id, 'inputSystem', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.storageSpace} onChange={(e) => handleEdit('storage', row.id, 'storageSpace', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.collectionSystem} onChange={(e) => handleEdit('storage', row.id, 'collectionSystem', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.storageItem} onChange={(e) => handleEdit('storage', row.id, 'storageItem', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.storageItemName} onChange={(e) => handleEdit('storage', row.id, 'storageItemName', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.storagePurpose} onChange={(e) => handleEdit('storage', row.id, 'storagePurpose', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.storageFormat} onChange={(e) => handleEdit('storage', row.id, 'storageFormat', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.encryptionItem} onChange={(e) => handleEdit('storage', row.id, 'encryptionItem', e.target.value)} /></TableCell>
                           <TableCell>
                             <Select value={row.isOnline} onValueChange={(value) => handleEdit('storage', row.id, 'isOnline', value)}>
@@ -444,6 +497,7 @@ export default function ProtectionFlowTable() {
                               <SelectContent>
                                 <SelectItem value="True">True</SelectItem>
                                 <SelectItem value="False">False</SelectItem>
+                                <SelectItem value="Unknown">Unknown</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -479,12 +533,12 @@ export default function ProtectionFlowTable() {
                         <TableHead className="min-w-[120px]">보유공간</TableHead>
                         <TableHead className="min-w-[120px]">이용시스템</TableHead>
                         <TableHead className="min-w-[200px]">이용항목</TableHead>
-                        <TableHead className="min-w-[150px]">이용항목명칭</TableHead>
+                        <TableHead className="min-w-[120px]">이용항목명칭</TableHead>
                         <TableHead className="min-w-[150px]">이용목적</TableHead>
                         <TableHead className="min-w-[200px]">이용방법</TableHead>
-                        <TableHead className="min-w-[120px]">개인정보취급자</TableHead>
-                        <TableHead className="min-w-[100px]">온라인여부</TableHead>
-                        <TableHead className="min-w-[100px]">암호화여부</TableHead>
+                        <TableHead className="min-w-[120px]">이용부서</TableHead>
+                        <TableHead className="min-w-[100px]">온라인</TableHead>
+                        <TableHead className="min-w-[100px]">암호화</TableHead>
                         <TableHead className="w-[80px]">작업</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -499,7 +553,7 @@ export default function ProtectionFlowTable() {
                           <TableCell><Input value={row.usageItemName} onChange={(e) => handleEdit('usage', row.id, 'usageItemName', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.usagePurpose} onChange={(e) => handleEdit('usage', row.id, 'usagePurpose', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.usageMethod} onChange={(e) => handleEdit('usage', row.id, 'usageMethod', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.personalInfoHandler} onChange={(e) => handleEdit('usage', row.id, 'personalInfoHandler', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.usageDepartment} onChange={(e) => handleEdit('usage', row.id, 'usageDepartment', e.target.value)} /></TableCell>
                           <TableCell>
                             <Select value={row.isOnline} onValueChange={(value) => handleEdit('usage', row.id, 'isOnline', value)}>
                               <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
@@ -515,6 +569,7 @@ export default function ProtectionFlowTable() {
                               <SelectContent>
                                 <SelectItem value="True">True</SelectItem>
                                 <SelectItem value="False">False</SelectItem>
+                                <SelectItem value="Unknown">Unknown</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -548,18 +603,15 @@ export default function ProtectionFlowTable() {
                         <TableHead className="min-w-[120px]">평가업무명</TableHead>
                         <TableHead className="min-w-[120px]">세부업무명</TableHead>
                         <TableHead className="min-w-[120px]">보유공간</TableHead>
-                        <TableHead className="min-w-[120px]">제공시스템</TableHead>
-                        <TableHead className="min-w-[100px]">제공자</TableHead>
+                        <TableHead className="min-w-[120px]">연계시스템</TableHead>
+                        <TableHead className="min-w-[100px]">제공부서</TableHead>
                         <TableHead className="min-w-[100px]">수신자</TableHead>
                         <TableHead className="min-w-[200px]">제공항목</TableHead>
                         <TableHead className="min-w-[150px]">제공항목명칭</TableHead>
                         <TableHead className="min-w-[150px]">제공목적</TableHead>
                         <TableHead className="min-w-[200px]">제공방법</TableHead>
-                        <TableHead className="min-w-[100px]">제공주기</TableHead>
-                        <TableHead className="min-w-[150px]">암호화방법</TableHead>
-                        <TableHead className="min-w-[150px]">제공근거</TableHead>
-                        <TableHead className="min-w-[130px]">제공시스템온라인</TableHead>
-                        <TableHead className="min-w-[130px]">제공시스템암호화</TableHead>
+                        <TableHead className="min-w-[130px]">연계시스템온라인</TableHead>
+                        <TableHead className="min-w-[130px]">연계시스템암호화</TableHead>
                         <TableHead className="min-w-[130px]">수신자온라인</TableHead>
                         <TableHead className="min-w-[130px]">수신자암호화</TableHead>
                         <TableHead className="w-[80px]">작업</TableHead>
@@ -570,19 +622,15 @@ export default function ProtectionFlowTable() {
                         <TableRow key={row.id}>
                           <TableCell className="font-medium">{task}</TableCell>
                           <TableCell><Input value={row.detailTask} onChange={(e) => handleEdit('provision', row.id, 'detailTask', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.storageSpace} onChange={(e) => handleEdit('provision', row.id, 'storageSpace', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.provisionSystem} onChange={(e) => handleEdit('provision', row.id, 'provisionSystem', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.provider} onChange={(e) => handleEdit('provision', row.id, 'provider', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.linkageSystem} onChange={(e) => handleEdit('provision', row.id, 'linkageSystem', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.provisionDepartment} onChange={(e) => handleEdit('provision', row.id, 'provisionDepartment', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.recipient} onChange={(e) => handleEdit('provision', row.id, 'recipient', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.provisionItem} onChange={(e) => handleEdit('provision', row.id, 'provisionItem', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.provisionItemName} onChange={(e) => handleEdit('provision', row.id, 'provisionItemName', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.provisionPurpose} onChange={(e) => handleEdit('provision', row.id, 'provisionPurpose', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.provisionMethod} onChange={(e) => handleEdit('provision', row.id, 'provisionMethod', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.provisionPeriod} onChange={(e) => handleEdit('provision', row.id, 'provisionPeriod', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.encryptionMethod} onChange={(e) => handleEdit('provision', row.id, 'encryptionMethod', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.provisionBasis} onChange={(e) => handleEdit('provision', row.id, 'provisionBasis', e.target.value)} /></TableCell>
                           <TableCell>
-                            <Select value={row.provisionSystemOnline} onValueChange={(value) => handleEdit('provision', row.id, 'provisionSystemOnline', value)}>
+                            <Select value={row.linkageSystemOnline} onValueChange={(value) => handleEdit('provision', row.id, 'linkageSystemOnline', value)}>
                               <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="True">True</SelectItem>
@@ -591,11 +639,12 @@ export default function ProtectionFlowTable() {
                             </Select>
                           </TableCell>
                           <TableCell>
-                            <Select value={row.provisionSystemEncrypted} onValueChange={(value) => handleEdit('provision', row.id, 'provisionSystemEncrypted', value)}>
+                            <Select value={row.linkageSystemEncrypted} onValueChange={(value) => handleEdit('provision', row.id, 'linkageSystemEncrypted', value)}>
                               <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="True">True</SelectItem>
                                 <SelectItem value="False">False</SelectItem>
+                                <SelectItem value="Unknown">Unknown</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -614,6 +663,7 @@ export default function ProtectionFlowTable() {
                               <SelectContent>
                                 <SelectItem value="True">True</SelectItem>
                                 <SelectItem value="False">False</SelectItem>
+                                <SelectItem value="Unknown">Unknown</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -649,16 +699,11 @@ export default function ProtectionFlowTable() {
                         <TableHead className="min-w-[120px]">보유공간</TableHead>
                         <TableHead className="min-w-[120px]">파기시스템</TableHead>
                         <TableHead className="min-w-[200px]">파기항목</TableHead>
-                        <TableHead className="min-w-[150px]">파기항목명칭</TableHead>
+                        <TableHead className="min-w-[120px]">파기항목명칭</TableHead>
                         <TableHead className="min-w-[100px]">보관기간</TableHead>
-                        <TableHead className="min-w-[120px]">파기담당자</TableHead>
+                        <TableHead className="min-w-[120px]">파기부서</TableHead>
                         <TableHead className="min-w-[200px]">파기절차</TableHead>
-                        <TableHead className="min-w-[120px]">분리보관공간</TableHead>
-                        <TableHead className="min-w-[150px]">분리보관암호화항목</TableHead>
-                        <TableHead className="min-w-[100px]">파기온라인</TableHead>
-                        <TableHead className="min-w-[120px]">분리보관</TableHead>
-                        <TableHead className="min-w-[130px]">분리보관온라인</TableHead>
-                        <TableHead className="min-w-[130px]">분리보관암호화</TableHead>
+                        <TableHead className="min-w-[100px]">온라인</TableHead>
                         <TableHead className="w-[80px]">작업</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -672,39 +717,10 @@ export default function ProtectionFlowTable() {
                           <TableCell><Input value={row.disposalItem} onChange={(e) => handleEdit('disposal', row.id, 'disposalItem', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.disposalItemName} onChange={(e) => handleEdit('disposal', row.id, 'disposalItemName', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.retentionPeriod} onChange={(e) => handleEdit('disposal', row.id, 'retentionPeriod', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.disposalManager} onChange={(e) => handleEdit('disposal', row.id, 'disposalManager', e.target.value)} /></TableCell>
+                          <TableCell><Input value={row.disposalDepartment} onChange={(e) => handleEdit('disposal', row.id, 'disposalDepartment', e.target.value)} /></TableCell>
                           <TableCell><Input value={row.disposalProcedure} onChange={(e) => handleEdit('disposal', row.id, 'disposalProcedure', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.separateStorageSpace} onChange={(e) => handleEdit('disposal', row.id, 'separateStorageSpace', e.target.value)} /></TableCell>
-                          <TableCell><Input value={row.separateStorageEncryptionItem} onChange={(e) => handleEdit('disposal', row.id, 'separateStorageEncryptionItem', e.target.value)} /></TableCell>
                           <TableCell>
                             <Select value={row.disposalOnline} onValueChange={(value) => handleEdit('disposal', row.id, 'disposalOnline', value)}>
-                              <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="True">True</SelectItem>
-                                <SelectItem value="False">False</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Select value={row.hasSeparateStorage} onValueChange={(value) => handleEdit('disposal', row.id, 'hasSeparateStorage', value)}>
-                              <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="True">True</SelectItem>
-                                <SelectItem value="False">False</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Select value={row.separateStorageOnline} onValueChange={(value) => handleEdit('disposal', row.id, 'separateStorageOnline', value)}>
-                              <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="True">True</SelectItem>
-                                <SelectItem value="False">False</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Select value={row.separateStorageEncrypted} onValueChange={(value) => handleEdit('disposal', row.id, 'separateStorageEncrypted', value)}>
                               <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="True">True</SelectItem>

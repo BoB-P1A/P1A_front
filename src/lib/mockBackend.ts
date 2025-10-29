@@ -74,7 +74,7 @@ export const mockBackend = {
   getCurrentUser: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
     // sessionStorage에서 토큰 확인
-    const token = sessionStorage.getItem('auth-token');
+    const token = localStorage.getItem('auth-token');
     if (token) {
       const username = token.replace('mock-jwt-token-', '');
       const mockUser = mockUsers[username];
