@@ -361,6 +361,88 @@ No Content
 }
 ```
 
+### 4.3 처리업무 수정
+- **URL**: `/tasks/{id}`
+- **Method**: `PUT`
+- **Path Parameter**:
+    - `id`: Integer
+- **Request Body**:
+```json
+{
+  "taskName": String,         // 업무명 (선택)
+  "purpose": String,          // 업무 목적 (선택)
+  "personalInfo": String,     // 처리하는 개인정보 (선택)
+  "department": String        // 담당 부서 (선택)
+}
+```
+- **Response (200 OK)**:
+```json
+{
+  "id": Integer,            // Auto-increment 번호
+  "companyId": String,      // 회사 ID (변경 불가)
+  "taskName": String,       // 업무명
+  "purpose": String,        // 업무 목적
+  "personalInfo": String,   // 처리하는 개인정보
+  "department": String      // 담당 부서
+}
+```
+- **Response (404 Not Found)**:
+```json
+{
+  "error": {
+    "code": "TASK_NOT_FOUND",
+    "message": "처리업무를 찾을 수 없습니다"
+  }
+}
+```
+
+### 4.4 처리업무 삭제
+- **URL**: `/tasks/{id}`
+- **Method**: `DELETE`
+- **Path Parameter**:
+    - `id`: Integer
+- **Response (204 No Content)**:
+```
+No Content
+```
+- **Response (404 Not Found)**:
+```json
+{
+  "error": {
+    "code": "TASK_NOT_FOUND",
+    "message": "처리업무를 찾을 수 없습니다"
+  }
+}
+```
+
+### 4.5 처리업무 일괄 수정
+- **URL**: `/tasks/bulk`
+- **Method**: `PUT`
+- **Request Body**:
+```json
+[
+  {
+    "id": Integer,            // 수정할 업무 번호 (필수)
+    "taskName": String,       // 업무명 (선택)
+    "purpose": String,        // 업무 목적 (선택)
+    "personalInfo": String,   // 처리하는 개인정보 (선택)
+    "department": String      // 담당 부서 (선택)
+  }
+]
+```
+- **Response (200 OK)**:
+```json
+{
+  "updatedCount": Integer,    // 수정된 항목 수
+  "failed": [                 // 실패한 항목 (선택)
+    {
+      "id": Integer,
+      "reason": String
+    }
+  ]
+}
+```
+
 ---
 
 ## 5. 평가항목 관리 API
@@ -420,140 +502,231 @@ No Content
 
 ---
 
-## 6. 관리 체크리스트 API
+## 6. 파일 관리 API
 
-### 6.1 관리적 체크리스트 조회
-- **URL**: `/admin/checklists`
-- **Method**: `GET`
-- **Query Parameters**:
-    - `companyId`: String (필수) - 회사 ID
-    - `status[]`: Array (선택) - 상태 필터 배열
-- **Response (200 OK)**:
-```
-[
-  {
-    "id": Integer,          // 평가항목 ID
-    "companyId": String,    // 회사 ID
-    "field": String,        // 분야
-    "subField": String,     // 세부분야
-    "no": String,           // 평가항목 번호
-    "item": String,         // 평가항목 내용
-    "status": String,       // "이행" | "부분이행" | "미이행" | "해당없음"
-    "evidence": String,     // 평가 근거 및 의견
-    "files": Array          // 증적자료 배열
-  }
-]
-```
-
-### 6.2 관리적 체크리스트 저장
-- **URL**: `/admin/checklists`
+### 6.1 파일 업로드
+- **URL**: `/files/upload`
 - **Method**: `POST`
+- **Content-Type**: `multipart/form-data`
+- **Request Body (Form Data)**:
+```json
+{
+  "file": File,       // (필수) 업로드할 파일
+  "folder": String    // (선택) S3 폴더 경로
+}
+```
+- **Response (200 OK)**:
+```json
+{
+  "fileUrl": String,      // S3 파일 URL
+  "fileName": String,     // 파일명
+  "fileSize": Number,     // 파일 크기 (bytes)
+  "contentType": String   // MIME 타입
+}
+```
+- **Response (400 Bad Request)**:
+```json
+{
+  "error": String,    // 에러 코드
+  "message": String   // 에러 메시지
+}
+```
+
+### 6.2 파일 삭제
+- **URL**: `/files`
+- **Method**: `DELETE`
 - **Request Body**:
-```
+```json
 {
-  "companyId": String,        // 회사 ID (필수)
-  "data": Array               // 체크리스트 데이터 (필수)
+  "fileUrl": String   // (필수) 삭제할 파일 URL
 }
 ```
 - **Response (200 OK)**:
-```
+```json
 {
-  "message": String           // "체크리스트가 저장되었습니다"
-}
-```
-
-### 6.3 관리적 개선가이드 조회
-- **URL**: `/admin/improvements`
-- **Method**: `GET`
-- **Query Parameters**:
-    - `companyId`: String (필수) - 회사 ID
-- **Response (200 OK)**:
-```
-{
-  // Key: 평가항목 번호, Value: 개선사항 객체
-  "[key: string]": {
-    "relatedLaw": String,
-    "riskFactor": String,
-    "improvementPlan": String
-  }
-}
-```
-
-### 6.4 관리적 개선가이드 저장
-- **URL**: `/admin/improvements`
-- **Method**: `POST`
-- **Request Body**:
-```
-{
-  "companyId": String,
-  "improvements": {
-    // Key: 평가항목 번호, Value: 개선사항 객체
-    "[key: string]": {
-      "relatedLaw": String,
-      "riskFactor": String,
-      "improvementPlan": String
-    }
-  }
-}
-```
-- **Response (200 OK)**:
-```
-{
-  "message": String           // "개선사항이 저장되었습니다"
-}
-```
-
-### 6.5 관리적 조치계획 조회
-- **URL**: `/admin/action-plans`
-- **Method**: `GET`
-- **Query Parameters**:
-    - `companyId`: String (필수) - 회사 ID
-- **Response (200 OK)**:
-```
-{
-  // Key: 평가항목 번호, Value: 조치계획 객체
-  "[key: string]": {
-    "actionPlan": String,
-    "actionPeriod": String,
-    "department": String,
-    "manager": String,
-    "actionDate": String
-  }
-}
-```
-
-### 6.6 관리적 조치계획 저장
-- **URL**: `/admin/action-plans`
-- **Method**: `POST`
-- **Request Body**:
-```
-{
-  "companyId": String,
-  "actionPlans": {
-    // Key: 평가항목 번호, Value: 조치계획 객체
-    "[key: string]": {
-      "code": String,
-      "actionPlan": String,
-      "actionPeriod": String,
-      "department": String,
-      "manager": String,
-      "actionDate": String
-    }
-  }
-}
-```
-- **Response (200 OK)**:
-```
-{
-  "message": String           // "조치계획이 저장되었습니다"
+  "message": String   // 성공 메시지
 }
 ```
 
 ---
 
-## 7. 생명주기 체크리스트 API
+## 7. 생애주기 관리 API
 
-### 7.1 생명주기 체크리스트 조회
+### 7.1 흐름도 조회
+- **URL**: `/lifecycle/flowcharts`
+- **Method**: `GET`
+- **Query Parameters**:
+    - `companyId`: String (필수)
+- **Response (200 OK)**:
+```json
+[
+  {
+    "companyId": String,        // 회사 ID
+    "taskName": String,         // 업무명
+    "imageData": String,        // Base64 encoded SVG
+    "flowData": {
+      "icons": [
+        {
+          "id": String,           // 아이콘 ID
+          "type": String,         // 아이콘 타입
+          "x": Number,            // X 좌표
+          "y": Number,            // Y 좌표
+          "text": String          // 표시 텍스트
+        }
+      ]
+    },
+    "personalInfoText": String, // JSON 문자열 형태의 개인정보 텍스트
+    "createdAt": String,        // ISO 8601
+    "updatedAt": String         // ISO 8601
+  }
+]
+```
+
+### 7.2 흐름도 저장
+- **URL**: `/lifecycle/flowcharts`
+- **Method**: `POST`
+- **Request Body**:
+```json
+{
+  "companyId": String,          // (필수) 회사 ID
+  "taskName": String,           // (필수) 업무명
+  "imageData": String,          // (필수) Base64 encoded SVG
+  "flowData": Object,           // (선택) 흐름도 데이터
+  "personalInfoText": String    // (선택) 개인정보 설명
+}
+```
+- **Response (200 OK)**:
+```json
+{
+  "message": String,    // 성공 메시지
+  "flowData": Object    // 저장된 흐름도 데이터
+}
+```
+
+### 7.3 흐름표 조회
+- **URL**: `/lifecycle/flowtables`
+- **Method**: `GET`
+- **Query Parameters**:
+    - `companyId`: String (필수)
+- **Response (200 OK)**:
+```json
+{
+  "[taskName]": {
+    "collection": [
+      {
+        "id": String,                    // ID
+        "detailTask": String,            // 세부업무명
+        "collectionTarget": String,      // 수집대상
+        "collectionPath": String,        // 수집경로
+        "collectionSystem": String,      // 수집시스템
+        "collectionItem": String,        // 수집항목
+        "collectionItemName": String,    // 수집항목명칭
+        "collectionPurpose": String,     // 수집목적
+        "collectionDepartment": String,  // 수집부서
+        "isOnline": String,              // 온라인여부 (True/False)
+        "isEncrypted": String            // 암호화여부 (True/False/Unknown)
+      }
+    ],
+    "storage": [
+      {
+        "id": String,                    // ID
+        "detailTask": String,            // 세부업무명
+        "storageSpace": String,          // 보유공간
+        "collectionSystem": String,      // 수집시스템
+        "storageItem": String,           // 보유항목
+        "storageItemName": String,       // 보유항목명칭
+        "storagePurpose": String,        // 보유목적
+        "storageFormat": String,         // 보유형태
+        "encryptionItem": String,        // 암호화항목
+        "isOnline": String,              // 온라인여부 (True/False)
+        "isEncrypted": String            // 암호화여부 (True/False/Unknown)
+      }
+    ],
+    "usage": [
+      {
+        "id": String,                    // ID
+        "detailTask": String,            // 세부업무명
+        "storageSpace": String,          // 보유공간
+        "usageSystem": String,           // 이용시스템
+        "usageItem": String,             // 이용항목
+        "usageItemName": String,         // 이용항목명칭
+        "usagePurpose": String,          // 이용목적
+        "usageMethod": String,           // 이용방법
+        "usageDepartment": String,       // 이용부서
+        "isOnline": String,              // 온라인여부 (True/False)
+        "isEncrypted": String            // 암호화여부 (True/False/Unknown)
+      }
+    ],
+    "provision": [
+      {
+        "id": String,                    // ID
+        "detailTask": String,            // 세부업무명
+        "storageSpace": String,          // 보유공간
+        "linkageSystem": String,         // 연계시스템
+        "provisionDepartment": String,   // 제공부서
+        "recipient": String,             // 수신자
+        "provisionItem": String,         // 제공항목
+        "provisionItemName": String,     // 제공항목명칭
+        "provisionPurpose": String,      // 제공목적
+        "provisionMethod": String,       // 제공방법
+        "linkageSystemOnline": String,   // 연계시스템온라인 (True/False)
+        "linkageSystemEncrypted": String,// 연계시스템암호화 (True/False/Unknown)
+        "recipientOnline": String,       // 수신자온라인 (True/False)
+        "recipientEncrypted": String     // 수신자암호화 (True/False/Unknown)
+      }
+    ],
+    "disposal": [
+      {
+        "id": String,                    // ID
+        "detailTask": String,            // 세부업무명
+        "storageSpace": String,          // 보유공간
+        "disposalSystem": String,        // 파기시스템
+        "disposalItem": String,          // 파기항목
+        "disposalItemName": String,      // 파기항목명칭
+        "retentionPeriod": String,       // 보관기간
+        "disposalDepartment": String,    // 파기부서
+        "disposalProcedure": String,     // 파기절차
+        "disposalOnline": String         // 온라인여부 (True/False)
+      }
+    ]
+  }
+}
+```
+
+### 7.4 흐름표 저장
+- **URL**: `/lifecycle/flowtables`
+- **Method**: `POST`
+- **Request Body**:
+```json
+{
+  "companyId": String,    // (필수) 회사 ID
+  "data": {
+    "[taskName]": {
+      "collection": Array,    // CollectionData 배열
+      "storage": Array,       // StorageData 배열
+      "usage": Array,         // UsageData 배열
+      "provision": Array,     // ProvisionData 배열
+      "disposal": Array       // DisposalData 배열
+    }
+  }
+}
+```
+- **Response (200 OK)**:
+```json
+{
+  "[taskName]": {
+    "collection": Array,    // CollectionData 배열
+    "storage": Array,       // StorageData 배열
+    "usage": Array,         // UsageData 배열
+    "provision": Array,     // ProvisionData 배열
+    "disposal": Array       // DisposalData 배열
+  }
+}
+```
+
+---
+
+### 7.5 생명주기 체크리스트 조회
 - **URL**: `/lifecycle/checklists`
 - **Method**: `GET`
 - **Query Parameters**:
@@ -576,7 +749,7 @@ No Content
 ]
 ```
 
-### 7.2 생명주기 체크리스트 저장
+### 7.6 생명주기 체크리스트 저장
 - **URL**: `/lifecycle/checklists`
 - **Method**: `POST`
 - **Request Body**:
@@ -593,7 +766,7 @@ No Content
 }
 ```
 
-### 7.3 생명주기 개선가이드 조회
+### 7.7 생명주기 개선가이드 조회
 - **URL**: `/lifecycle/improvements`
 - **Method**: `GET`
 - **Query Parameters**:
@@ -610,7 +783,7 @@ No Content
 }
 ```
 
-### 7.4 생명주기 개선가이드 저장
+### 7.8 생명주기 개선가이드 저장
 - **URL**: `/lifecycle/improvements`
 - **Method**: `POST`
 - **Request Body**:
@@ -634,7 +807,7 @@ No Content
 }
 ```
 
-### 7.5 생명주기 조치계획 조회
+### 7.9 생명주기 조치계획 조회
 - **URL**: `/lifecycle/action-plans`
 - **Method**: `GET`
 - **Query Parameters**:
@@ -653,7 +826,7 @@ No Content
 }
 ```
 
-### 7.6 생명주기 조치계획 저장
+### 7.10 생명주기 조치계획 저장
 - **URL**: `/lifecycle/action-plans`
 - **Method**: `POST`
 - **Request Body**:
@@ -716,7 +889,6 @@ No Content
   "id": Integer,            // 생성된 Auto-increment 번호
   "companyId": String,      // 회사 ID
   "systemName": String,     // 시스템명
-  "message": String         // "시스템이 등록되었습니다"
 }
 ```
 
@@ -736,7 +908,6 @@ No Content
 {
   "id": Integer,            // Auto-increment 번호
   "systemName": String,     // 시스템명
-  "message": String         // "시스템이 수정되었습니다"
 }
 ```
 
@@ -916,7 +1087,6 @@ No Content
   "id": Integer,            // 생성된 Auto-increment 번호
   "companyId": String,      // 회사 ID
   "targetName": String,     // 검토 대상명
-  "message": String         // "검토 대상이 등록되었습니다"
 }
 ```
 
@@ -936,7 +1106,6 @@ No Content
 {
   "id": Integer,            // Auto-increment 번호
   "targetName": String,     // 검토 대상명
-  "message": String         // "검토 대상이 수정되었습니다"
 }
 ```
 
