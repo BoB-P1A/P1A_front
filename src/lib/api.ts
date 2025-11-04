@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // API 베이스 URL - 환경변수로 설정 (추후 실제 백엔드 URL로 변경)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081/api";
 
 // Axios 인스턴스 생성
 export const apiClient = axios.create({
