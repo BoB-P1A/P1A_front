@@ -100,14 +100,13 @@ export default function TechnicalAdminChecklist() {
                 // 기존 체크리스트 조회
                 const checklistResponse = await api.technical.checklists.getAll({
                     companyId: user.companyId,
+                    systemName: activeTab,
                     status: [],
                 });
 
-                const savedForSystem = checklistResponse.filter((item: any) => item.systemName === activeTab);
-
                 // 평가항목과 저장된 체크리스트 병합
                 const merged: TechnicalItem[] = filtered.map((evalItem: any) => {
-                    const saved = savedForSystem.find((s: any) => s.evaluationItemId === evalItem.id);
+                    const saved = checklistResponse.find((s: any) => s.no === evalItem.no);
                     return {
                         id: evalItem.id,
                         systemName: activeTab,
