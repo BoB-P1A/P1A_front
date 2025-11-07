@@ -42,12 +42,12 @@ export default function TechnicalImprovementPlan() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user?.company) return;
+    if (!user?.companyId) return;
 
     const loadData = async () => {
       try {
         setLoading(true);
-        const systems = await api.technical.systems.getAll(user.company);
+        const systems = await api.technical.systems.getAll(user.companyId);
         const names = systems.map((s: any) => s.name);
         setSystemNames(names);
       } catch (error) {
@@ -58,44 +58,48 @@ export default function TechnicalImprovementPlan() {
     };
 
     loadData();
-  }, [user?.company]);
+  }, [user?.companyId]);
 
   useEffect(() => {
-    if (!user?.company) return;
+    if (!user?.companyId) return;
 
     const loadImprovements = async () => {
       try {
         setLoading(true);
-        const [checklists, saved] = await Promise.all([
-          api.technical.checklists.getAll({ companyId: user.company, status: ['부분이행', '미이행'] }),
-          api.technical.improvements.getAll(user.company),
-        ]);
+          const [checklists, saved] = await Promise.all([
+              api.technical.checklists.getAll({
+                  companyId: user.companyId,
+                  status: ['부분이행', '미이행']
+              }),
+              api.technical.improvements.getAll(user.companyId),
+          ]);
 
-        const improvementItems: ImprovementItem[] = checklists.map((item: any) => {
-          const itemId = `${item.systemName}-${item.no}`;
-          const savedItem = saved[itemId];
-          return {
-            id: itemId,
-            systemName: item.systemName,
-            code: item.no,
-            question: item.item,
-            evidence: item.evidence,
-            relatedLaw: savedItem?.relatedLaw || '',
-            riskFactor: savedItem?.riskFactor || '',
-            improvementPlan: savedItem?.improvementPlan || '',
-          };
-        });
+          // 백엔드 응답을 프론트엔드 형식으로 변환
+          const improvementItems: ImprovementItem[] = checklists.map((item: any) => {
+              const itemId = `${item.systemName}-${item.no}`;
+              const savedItem = saved[itemId];
+              return {
+                  id: itemId,
+                  systemName: item.systemName,
+                  code: item.no,                    // ← no를 code로 매핑
+                  question: item.item || '',         // ← item을 question으로 매핑
+                  evidence: item.evidence || '',
+                  relatedLaw: item.law || '',        // ← law를 relatedLaw로 매핑
+                  riskFactor: item.riskFactors || '', // ← riskFactors를 riskFactor로 매핑
+                  improvementPlan: item.improvementGuides || '', // ← improvementGuides를 improvementPlan으로 매핑
+              };
+          });
 
-        setItems(improvementItems);
+          setItems(improvementItems);
       } catch (error) {
-        toast({ title: '개선 가이드 로딩 실패', variant: 'destructive' });
+          toast({ title: '개선 가이드 로딩 실패', variant: 'destructive' });
       } finally {
-        setLoading(false);
+          setLoading(false);
       }
     };
 
     loadImprovements();
-  }, [user?.company]);
+  }, [user?.companyId]);
 
   const handleRelatedLawChange = (id: string, value: string) => {
     setItems(prev => prev.map(item => 
@@ -129,7 +133,7 @@ const handleSave = async () => {
           improvementPlan: item.improvementPlan,
         };
       });
-      await api.technical.improvements.save(user?.company as string, improvements);
+      await api.technical.improvements.save(user?.companyId as string, improvements);
       setHasChanges(false);
       toast({ title: '저장되었습니다' });
     } catch (error) {
@@ -178,10 +182,10 @@ const filteredItems = activeTab === '전체'
             <Download className="mr-2 h-4 w-4" />
             엑셀 다운로드
           </Button>
-          <Button onClick={handleSave} disabled={!hasChanges}>
-            <Save className="mr-2 h-4 w-4" />
-            저장
-          </Button>
+          {/*<Button onClick={handleSave} disabled={!hasChanges}>*/}
+          {/*  <Save className="mr-2 h-4 w-4" />*/}
+          {/*  저장*/}
+          {/*</Button>*/}
         </div>
       </div>
 
@@ -234,8 +238,8 @@ const filteredItems = activeTab === '전체'
                     <Textarea
                       id={`law-${item.id}`}
                       value={item.relatedLaw}
+                      readOnly
                       onChange={(e) => handleRelatedLawChange(item.id, e.target.value)}
-                      placeholder="관련 법률을 입력하세요"
                       className="mt-1"
                       rows={2}
                     />
@@ -246,8 +250,8 @@ const filteredItems = activeTab === '전체'
                     <Textarea
                       id={`risk-${item.id}`}
                       value={item.riskFactor}
+                      readOnly
                       onChange={(e) => handleRiskFactorChange(item.id, e.target.value)}
-                      placeholder="침해요인을 입력하세요"
                       className="mt-1"
                       rows={3}
                     />
@@ -258,8 +262,8 @@ const filteredItems = activeTab === '전체'
                     <Textarea
                       id={`plan-${item.id}`}
                       value={item.improvementPlan}
+                      readOnly
                       onChange={(e) => handleImprovementPlanChange(item.id, e.target.value)}
-                      placeholder="개선 가이드를 입력하세요"
                       className="mt-1"
                       rows={3}
                     />
