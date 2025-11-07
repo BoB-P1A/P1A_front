@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 username: response.user.username,
                 name: response.user.name,
                 role: response.user.role as UserRole,
+				companyId: response.user.companyId,
                 company: response.user.company,
             });
 

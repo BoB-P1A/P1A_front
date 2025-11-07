@@ -380,7 +380,7 @@ export const api = {
             },
         },
         checklists: {
-            getAll: async (params: { companyId: string; systemName: string; status?: string[] }) => {
+            getAll: async (params: { companyId: string; status?: string[] }) => {
                 const response = await apiClient.get("/technical/checklists", {
                     params,
                 });

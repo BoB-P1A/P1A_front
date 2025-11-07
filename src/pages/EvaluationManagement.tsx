@@ -35,14 +35,15 @@ export default function EvaluationManagement() {
   // 초기 데이터 로드
   useEffect(() => {
     const loadEvaluations = async () => {
-      try {
-        const data = await api.evaluations.getAll(user?.company);
-        // No. 기준으로 정렬
-        const sorted = data.sort((a: EvaluationItem, b: EvaluationItem) => {
-          return a.no.localeCompare(b.no, undefined, { numeric: true });
-        });
-        setItems(sorted);
-      } catch (error) {
+		if (!user?.companyId) return; 
+		try {
+        	const data = await api.evaluations.getAll(user?.company);
+        	// No. 기준으로 정렬
+        	const sorted = data.sort((a: EvaluationItem, b: EvaluationItem) => {
+          	return a.no.localeCompare(b.no, undefined, { numeric: true });
+        	});
+        	setItems(sorted);
+			} catch (error) {
         console.error("Failed to load evaluations:", error);
         // 에러 시 기본 데이터 로드
         const defaultItems = [
@@ -79,7 +80,7 @@ export default function EvaluationManagement() {
     };
 
     loadEvaluations();
-  }, [user?.company]);
+  }, [user?.companyId]);
 
   const [editingItem, setEditingItem] = useState<EvaluationItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -186,7 +187,7 @@ export default function EvaluationManagement() {
                 <Label htmlFor="no">No.</Label>
                 <Input
                   id="no"
-                  placeholder="예: 1.1.1"
+                placeholder="예: 1.1.1"
                   value={formData.no || ""}
                   onChange={(e) => setFormData({ ...formData, no: e.target.value })}
                 />
