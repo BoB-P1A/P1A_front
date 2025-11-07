@@ -45,12 +45,12 @@ export default function TechnicalActionPlan() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user?.company) return;
+    if (!user?.companyId) return;
 
     const loadData = async () => {
       try {
         setLoading(true);
-        const systems = await api.technical.systems.getAll(user.company);
+        const systems = await api.technical.systems.getAll(user.companyId);
         const names = systems.map((s: any) => s.name);
         setSystemNames(names);
       } catch (error) {
@@ -61,18 +61,18 @@ export default function TechnicalActionPlan() {
     };
 
     loadData();
-  }, [user?.company]);
+  }, [user?.companyId]);
 
   useEffect(() => {
-    if (!user?.company) return;
+    if (!user?.companyId) return;
 
     const loadActionPlans = async () => {
       try {
         setLoading(true);
         const [checklist, improvements, existingPlans] = await Promise.all([
-          api.technical.checklists.getAll({ companyId: user.company, status: ["부분이행", "미이행"] }),
-          api.technical.improvements.getAll(user.company),
-          api.technical.actionPlans.getAll(user.company),
+          api.technical.checklists.getAll({ companyId: user.companyId, status: ["부분이행", "미이행"] }),
+          api.technical.improvements.getAll(user.companyId),
+          api.technical.actionPlans.getAll(user.companyId),
         ]);
 
         const actionPlanItems: ActionPlanItem[] = checklist.map((item: any) => {
@@ -85,7 +85,7 @@ export default function TechnicalActionPlan() {
             code: item.no,
             question: item.item,
             evidence: item.evidence,
-            improvementGuide: improvement?.improvementPlan || "",
+              improvementGuide: item.improvementGuides || "",
             actionPlan: savedPlan?.actionPlan || "",
             actionPeriod: savedPlan?.actionPeriod || "",
             department: savedPlan?.department || "",
@@ -103,7 +103,7 @@ export default function TechnicalActionPlan() {
     };
 
     loadActionPlans();
-  }, [user?.company]);
+  }, [user?.companyId]);
 
   const handleFieldChange = (id: string, field: keyof ActionPlanItem, value: string) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
@@ -125,7 +125,7 @@ export default function TechnicalActionPlan() {
           actionDate: item.actionDate,
         };
       });
-      await api.technical.actionPlans.save(user?.company as string, actionPlans);
+      await api.technical.actionPlans.save(user?.companyId as string, actionPlans);
       setHasChanges(false);
       toast({ title: "저장되었습니다" });
     } catch (error) {
