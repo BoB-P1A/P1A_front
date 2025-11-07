@@ -383,6 +383,9 @@ export const api = {
             getAll: async (params: { companyId: string; status?: string[] }) => {
                 const response = await apiClient.get("/technical/checklists", {
                     params,
+                    paramsSerializer: {
+                        indexes: null, // status[]=미이행 대신 status=미이행&status=부분이행 형식으로
+                    },
                 });
                 return response.data;
             },
