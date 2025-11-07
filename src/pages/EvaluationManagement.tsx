@@ -37,7 +37,7 @@ export default function EvaluationManagement() {
     const loadEvaluations = async () => {
 		if (!user?.companyId) return; 
 		try {
-        	const data = await api.evaluations.getAll(user?.company);
+        	const data = await api.evaluations.getAll(user?.companyId);
         	// No. 기준으로 정렬
         	const sorted = data.sort((a: EvaluationItem, b: EvaluationItem) => {
           	return a.no.localeCompare(b.no, undefined, { numeric: true });
@@ -109,7 +109,7 @@ export default function EvaluationManagement() {
         const created = await execute(() =>
           api.evaluations.create({
             ...formData,
-            companyId: user?.company,
+            companyId: user?.companyId,
           }),
         );
         setItems((prev) => {
