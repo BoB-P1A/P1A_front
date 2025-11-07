@@ -36,7 +36,7 @@ export default function EvaluationManagement() {
   useEffect(() => {
     const loadEvaluations = async () => {
       try {
-        const data = await api.evaluations.getAll(user?.company);
+        const data = await api.evaluations.getAll(user.companyId);
         // No. 기준으로 정렬
         const sorted = data.sort((a: EvaluationItem, b: EvaluationItem) => {
           return a.no.localeCompare(b.no, undefined, { numeric: true });
@@ -79,7 +79,7 @@ export default function EvaluationManagement() {
     };
 
     loadEvaluations();
-  }, [user?.company]);
+  }, [user?.companyId]);
 
   const [editingItem, setEditingItem] = useState<EvaluationItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

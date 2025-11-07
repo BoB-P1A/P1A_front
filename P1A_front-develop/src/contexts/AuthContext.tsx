@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             username: userData.username,
             name: userData.name,
             role: userData.role as UserRole,
+			companyId: userData.CompanyId,
             company: userData.company,
           });
         } catch (error) {
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         username: response.user.username,
         name: response.user.name,
         role: response.user.role as UserRole,
+		companyId: response.user.companyId,
         company: response.user.company,
       });
 
