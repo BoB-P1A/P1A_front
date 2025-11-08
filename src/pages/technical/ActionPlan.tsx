@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface TechnicalItem {
   id: number;
+  systemId: string;
   systemName: string;
   subField: string;
   no: string;
@@ -24,6 +25,7 @@ interface TechnicalItem {
 
 interface ActionPlanItem {
   id: string;
+  systemId: string;
   systemName: string;
   code: string;
   question: string;
@@ -41,7 +43,7 @@ export default function TechnicalActionPlan() {
   const [items, setItems] = useState<ActionPlanItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("전체");
-  const [systemNames, setSystemNames] = useState<string[]>([]);
+  const [systems, setSystems] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -50,9 +52,8 @@ export default function TechnicalActionPlan() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const systems = await api.technical.systems.getAll(user.companyId);
-        const names = systems.map((s: any) => s.name);
-        setSystemNames(names);
+        const systemsData = await api.technical.systems.getAll(user.companyId);
+        setSystems(systemsData);
       } catch (error) {
         toast({ title: "시스템 목록 로딩 실패", variant: "destructive" });
       } finally {
@@ -76,16 +77,17 @@ export default function TechnicalActionPlan() {
         ]);
 
         const actionPlanItems: ActionPlanItem[] = checklist.map((item: any) => {
-          const itemId = `${item.systemName}-${item.no}`;
+          const itemId = `${item.systemId}-${item.no}`;
           const improvement = improvements[itemId];
           const savedPlan = existingPlans[itemId];
           return {
             id: itemId,
+            systemId: item.systemId,
             systemName: item.systemName,
             code: item.no,
             question: item.item,
             evidence: item.evidence,
-              improvementGuide: item.improvementGuides || "",
+            improvementGuide: item.improvementGuides || "",
             actionPlan: savedPlan?.actionPlan || "",
             actionPeriod: savedPlan?.actionPeriod || "",
             department: savedPlan?.department || "",
@@ -116,6 +118,7 @@ export default function TechnicalActionPlan() {
       const actionPlans: { [key: string]: any } = {};
       items.forEach((item) => {
         actionPlans[item.id] = {
+          systemId: item.systemId,
           systemName: item.systemName,
           code: item.code,
           actionPlan: item.actionPlan,
@@ -155,7 +158,7 @@ export default function TechnicalActionPlan() {
     XLSX.writeFile(wb, "기술적_조치_계획_수립.xlsx");
   };
 
-  const filteredItems = activeTab === "전체" ? items : items.filter((item) => item.systemName === activeTab);
+  const filteredItems = activeTab === "전체" ? items : items.filter((item) => item.systemId === activeTab);
 
   if (loading) {
     return <div>로딩 중...</div>;
@@ -183,9 +186,9 @@ export default function TechnicalActionPlan() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="전체">전체</TabsTrigger>
-          {systemNames.map((name) => (
-            <TabsTrigger key={name} value={name}>
-              {name}
+          {systems.map((system) => (
+            <TabsTrigger key={system.id} value={system.id}>  {/* ← name → id */}
+                {system.name}
             </TabsTrigger>
           ))}
         </TabsList>

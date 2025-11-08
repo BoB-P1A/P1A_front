@@ -47,8 +47,8 @@ interface FileAttachment {
 }
 
 interface SystemInfo {
-    id: number;
-    name: string;
+    id: string;      // ObjectId
+    name: string;    // 시스템명
 }
 
 export default function TechnicalAdminChecklist() {
@@ -71,7 +71,7 @@ export default function TechnicalAdminChecklist() {
                 if (systemsArray.length > 0) {
                     setSystems(systemsArray);
                     if (!activeTab) {
-                        setActiveTab(systemsArray[0].name);
+                        setActiveTab(systemsArray[0].id);
                     }
                 } else {
                     setSystems([]);
@@ -100,7 +100,7 @@ export default function TechnicalAdminChecklist() {
                 // 기존 체크리스트 조회
                 const checklistResponse = await api.technical.checklists.getAll({
                     companyId: user.companyId,
-                    systemName: activeTab,
+                    systemId: activeTab,
                     status: [],
                 });
 
@@ -109,7 +109,7 @@ export default function TechnicalAdminChecklist() {
                     const saved = checklistResponse.find((s: any) => s.no === evalItem.no);
                     return {
                         id: evalItem.id,
-                        systemName: activeTab,
+                        systemName: saved?.systemName || "",
                         field: evalItem.field,
                         subField: evalItem.subField,
                         no: evalItem.no,
@@ -151,7 +151,7 @@ export default function TechnicalAdminChecklist() {
             const uploadResult = await api.files.uploadTechnical(
                 file,
                 user.companyId,
-                activeTab, // systemName
+                activeTab, // systemId (ObjectId)
                 currentItem.no // no (예: 2.1.1)
             );
 
@@ -265,7 +265,7 @@ export default function TechnicalAdminChecklist() {
                 const newSystem = await api.technical.systems.create(user?.companyId as string, systemName);
                 setSystems((prev) => [...prev, newSystem]);
                 if (systems.length === 0) {
-                    setActiveTab(newSystem.name);
+                    setActiveTab(newSystem.id);
                 }
                 toast({ title: "시스템이 추가되었습니다" });
             }
@@ -278,7 +278,7 @@ export default function TechnicalAdminChecklist() {
         }
     };
 
-    const handleDeleteSystem = async (id: number) => {
+    const handleDeleteSystem = async (id: string) => {
         const system = systems.find((s) => s.id === id);
         if (!system || !confirm(`${system.name} 시스템을 삭제하시겠습니까?`)) {
             return;
@@ -290,16 +290,16 @@ export default function TechnicalAdminChecklist() {
             setSystems(updatedSystems);
             toast({ title: "시스템이 삭제되었습니다" });
 
-            if (activeTab === system.name && updatedSystems.length > 0) {
-                setActiveTab(updatedSystems[0].name);
+            if (activeTab === id && updatedSystems.length > 0) {
+                setActiveTab(updatedSystems[0].id);
             }
         } catch (error) {
             toast({ title: "삭제 실패", variant: "destructive" });
         }
     };
 
-    const getItemsForSystem = (systemName: string) => {
-        return systemName === activeTab ? items : [];
+    const getItemsForSystem = (systemId: string) => {
+        return systemId === activeTab ? items : [];
     };
 
     return (
@@ -371,7 +371,7 @@ export default function TechnicalAdminChecklist() {
                     <div className="flex items-center justify-between mb-4">
                         <TabsList>
                             {Array.isArray(systems) && systems.map((system) => (
-                                <TabsTrigger key={system.id} value={system.name}>
+                                <TabsTrigger key={system.id} value={system.id}>
                                     {system.name}
                                 </TabsTrigger>
                             ))}
@@ -379,7 +379,7 @@ export default function TechnicalAdminChecklist() {
                         <div className="flex gap-2">
                             {Array.isArray(systems) && systems.map(
                                 (system) =>
-                                    activeTab === system.name && (
+                                    activeTab === system.id && (
                                         <div key={system.id} className="flex gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(system)}>
                                                 <Edit className="h-4 w-4" />
@@ -394,9 +394,9 @@ export default function TechnicalAdminChecklist() {
                     </div>
 
                     {Array.isArray(systems) && systems.map((system) => (
-                        <TabsContent key={system.id} value={system.name}>
+                        <TabsContent key={system.id} value={system.id}>
                             <div className="space-y-6">
-                                {getItemsForSystem(system.name).map((item, index, array) => {
+                                {getItemsForSystem(system.id).map((item, index, array) => {
                                     const prevItem = index > 0 ? array[index - 1] : null;
                                     const showFieldHeader = !prevItem || prevItem.field !== item.field;
 
@@ -506,7 +506,7 @@ export default function TechnicalAdminChecklist() {
                                     );
                                 })}
 
-                                {getItemsForSystem(system.name).length === 0 && (
+                                {getItemsForSystem(system.id).length === 0 && (
                                     <Card>
                                         <CardContent className="py-8">
                                             <p className="text-center text-muted-foreground">

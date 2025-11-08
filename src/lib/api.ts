@@ -176,14 +176,14 @@ export const api = {
         uploadTechnical: async (
             file: File,
             companyId: string,
-            systemName: string,
+            systemId: string,
             no: string
         ) => {
             const formData = new FormData();
             formData.append("file", file);
             formData.append("companyId", companyId);
             formData.append("category", "개인정보처리시스템(Admin)");
-            formData.append("systemName", systemName);
+            formData.append("systemId", systemId);
             formData.append("no", no);
             const response = await apiClient.post("/files/upload/technical", formData, {
                 headers: {
@@ -196,12 +196,6 @@ export const api = {
         getDownloadUrl: async (fileUrl: string) => {
             const response = await apiClient.get("/files/download", {
                 params: { fileUrl },
-            });
-            return response.data;
-        },
-        delete: async (fileUrl: string) => {
-            const response = await apiClient.delete("/files", {
-                data: { fileUrl },
             });
             return response.data;
         },
@@ -401,31 +395,31 @@ export const api = {
                 });
                 return response.data;
             },
-            update: async (id: number, systemName: string) => {
+            update: async (id: string, systemName: string) => {
                 const response = await apiClient.put(`/technical/systems/${id}`, {
                     systemName,
                 });
                 return response.data;
             },
-            delete: async (id: number) => {
+            delete: async (id: string) => {
                 const response = await apiClient.delete(`/technical/systems/${id}`);
                 return response.data;
             },
         },
         checklists: {
-            getAll: async (params: { companyId: string; systemName?: string; status?: string[] }) => {
+            getAll: async (params: { companyId: string; systemId?: string; status?: string[] }) => {
                 const response = await apiClient.get("/technical/checklists", {
                     params,
                     paramsSerializer: {
-                        indexes: null, // status[]=미이행 대신 status=미이행&status=부분이행 형식으로
+                        indexes: null,
                     },
                 });
                 return response.data;
             },
-            save: async (companyId: string, systemName: string, data: any[]) => {
+            save: async (companyId: string, systemId: string, data: any[]) => {
                 const response = await apiClient.post("/technical/checklists", {
                     companyId,
-                    systemName,
+                    systemId,  // ← systemName → systemId
                     data,
                 });
                 return response.data;
