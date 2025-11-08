@@ -15,13 +15,13 @@ export default function TechnicalReport() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!user?.company) return;
+      if (!user?.companyId) return;
       
       try {
         const [checklistData, improvementsData, systemsData] = await Promise.all([
-          api.technical.checklists.getAll({ companyId: user.company }),
-          api.technical.improvements.getAll(user.company),
-          api.technical.systems.getAll(user.company),
+          api.technical.checklists.getAll({ companyId: user.companyId }),
+          api.technical.improvements.getAll(user.companyId),
+          api.technical.systems.getAll(user.companyId),
         ]);
 
         setTechnicalData(Array.isArray(checklistData) ? checklistData : []);
@@ -36,7 +36,7 @@ export default function TechnicalReport() {
     };
 
     loadData();
-  }, [user?.company]);
+  }, [user?.companyId]);
   
   const handleDownload = async () => {
     try {
@@ -106,17 +106,15 @@ export default function TechnicalReport() {
       if (Array.isArray(technicalData)) {
           technicalData.forEach((item: any) => {
               if (item.status === '부분이행' || item.status === '미이행') {
-                  const itemId = `${item.systemName}-${item.no}`;
-                  const saved = improvements[itemId];
                   riskItems.push({
                       systemName: item.systemName,
                       code: item.no,
                       evidence: item.evidence || '',
-                      riskFactor: saved?.riskFactor || ''
+                      riskFactor: item.riskFactors || ''
                   });
               }
           });
-        }
+       }
 
       if (riskItems.length > 0) {
         const riskRows = [
@@ -149,15 +147,46 @@ export default function TechnicalReport() {
         })
       );
 
-      const actionPlansData = await api.technical.actionPlans.getAll(user.company);
+      // technicalData 기반으로 생성
       const actionPlansBySystem: { [key: string]: any[] } = {};
-      
+
+      if (Array.isArray(technicalData)) {
+          technicalData.forEach((item: any) => {
+              if (item.status === '부분이행' || item.status === '미이행') {
+                  if (!actionPlansBySystem[item.systemName]) {
+                      actionPlansBySystem[item.systemName] = [];
+                  }
+                  actionPlansBySystem[item.systemName].push({
+                      code: item.no,
+                      question: item.item || '',  // ✅ technicalData에서
+                      evidence: item.evidence || '',  // ✅ technicalData에서
+                      improvementGuide: item.improvementGuides || '',  // ✅ technicalData에서
+                      actionPlan: '',
+                      actionPeriod: '',
+                      department: '',
+                      manager: '',
+                      actionDate: ''
+                  });
+              }
+          });
+      }
+
+      // actionPlans API 데이터와 병합
+      const actionPlansData = await api.technical.actionPlans.getAll(user.companyId);
       Object.keys(actionPlansData).forEach(id => {
-        const plan = actionPlansData[id];
-        if (plan && plan.systemName) {
-          if (!actionPlansBySystem[plan.systemName]) actionPlansBySystem[plan.systemName] = [];
-          actionPlansBySystem[plan.systemName].push(plan);
-        }
+          const plan = actionPlansData[id];
+          if (plan && plan.systemName && actionPlansBySystem[plan.systemName]) {
+              const targetItem = actionPlansBySystem[plan.systemName].find(
+                  (item: any) => item.code === plan.code
+              );
+              if (targetItem) {
+                  targetItem.actionPlan = plan.actionPlan || '';
+                  targetItem.actionPeriod = plan.actionPeriod || '';
+                  targetItem.department = plan.department || '';
+                  targetItem.manager = plan.manager || '';
+                  targetItem.actionDate = plan.actionDate || '';
+              }
+          }
       });
 
       // Sort by systems order
@@ -286,20 +315,18 @@ export default function TechnicalReport() {
       });
   }
 
-  const riskItems = Array.isArray(technicalData)
-      ? technicalData
-          .filter((item: any) => item.status === '부분이행' || item.status === '미이행')
-          .map((item: any) => {
-              const itemId = `${item.systemName}-${item.no}`;
-              const saved = improvements[itemId];
-              return {
-                  systemName: item.systemName,
-                  code: item.no,
-                  evidence: item.evidence || '',
-                  riskFactor: saved?.riskFactor || '',
-              };
-          })
-      : [];
+    const riskItems = Array.isArray(technicalData)
+        ? technicalData
+            .filter((item: any) => item.status === '부분이행' || item.status === '미이행')
+            .map((item: any) => {
+                return {
+                    systemName: item.systemName,
+                    code: item.no,
+                    evidence: item.evidence || '',
+                    riskFactor: item.riskFactors || '',
+                };
+            })
+        : [];
 
   const improvementsBySystem: { [key: string]: string[] } = {};
   if (Array.isArray(technicalData)) {
@@ -416,25 +443,44 @@ export default function TechnicalReport() {
             
             useEffect(() => {
               const loadActionPlans = async () => {
-                if (!user?.company) return;
+                if (!user?.companyId) return;
                 try {
-                  const data = await api.technical.actionPlans.getAll(user.company);
+                  const data = await api.technical.actionPlans.getAll(user.companyId);
                   setActionPlansData(data);
                 } catch (error) {
                   console.error('Failed to load action plans:', error);
                 }
               };
               loadActionPlans();
-            }, [user?.company]);
+            }, [user?.companyId]);
+
+            // technicalData 기반으로 생성
             const actionPlansBySystem: { [key: string]: any[] } = {};
-            
-            Object.keys(actionPlansData).forEach(id => {
-              const plan = actionPlansData[id];
-              if (plan && plan.systemName) {
-                if (!actionPlansBySystem[plan.systemName]) actionPlansBySystem[plan.systemName] = [];
-                actionPlansBySystem[plan.systemName].push(plan);
-              }
-            });
+
+            if (Array.isArray(technicalData)) {
+                technicalData.forEach((item: any) => {
+                    if (item.status === '부분이행' || item.status === '미이행') {
+                        if (!actionPlansBySystem[item.systemName]) {
+                            actionPlansBySystem[item.systemName] = [];
+                        }
+
+                        const itemId = `${item.systemName}-${item.no}`;
+                        const savedPlan = actionPlansData[itemId];
+
+                        actionPlansBySystem[item.systemName].push({
+                            code: item.no,
+                            question: item.item || '',
+                            evidence: item.evidence || '',
+                            improvementGuide: item.improvementGuides || '',
+                            actionPlan: savedPlan?.actionPlan || '',
+                            actionPeriod: savedPlan?.actionPeriod || '',
+                            department: savedPlan?.department || '',
+                            manager: savedPlan?.manager || '',
+                            actionDate: savedPlan?.actionDate || ''
+                        });
+                    }
+                });
+            }
 
             const systemOrder = systems.map((s: any) => s.name);
             const sortedSystemNames = Object.keys(actionPlansBySystem).sort((a, b) => {
