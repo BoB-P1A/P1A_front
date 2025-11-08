@@ -140,43 +140,86 @@ export default function TechnicalAdminChecklist() {
 
     const handleFileUpload = async (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            try {
-                // FormData로 AWS S3에 직접 업로드
-                const uploadResult = await api.files.upload(file, "technical-checklist");
+        if (!file || !user?.companyId) return;
 
-                const fileData: FileAttachment = {
-                    name: file.name,
-                    url: uploadResult.fileUrl,
-                    type: file.type,
-                };
+        // 해당 항목 찾기
+        const currentItem = items.find(item => item.id === id);
+        if (!currentItem) return;
 
-                setItems((prev) => prev.map((item) => (item.id === id ? { ...item, files: [...item.files, fileData] } : item)));
-                setHasChanges(true);
-                toast({ title: "파일이 업로드되었습니다" });
-            } catch (error) {
-                toast({ title: "파일 업로드 실패", variant: "destructive" });
-            }
+        try {
+            // 1. S3에 파일 업로드
+            const uploadResult = await api.files.uploadTechnical(
+                file,
+                user.companyId,
+                activeTab, // systemName
+                currentItem.no // no (예: 2.1.1)
+            );
+
+            const fileData: FileAttachment = {
+                name: file.name,
+                url: uploadResult.fileUrl,
+                type: file.type,
+            };
+
+            // 2. 로컬 상태 업데이트
+            const updatedItems = items.map((item) =>
+                item.id === id
+                    ? { ...item, files: [...item.files, fileData] }
+                    : item
+            );
+            setItems(updatedItems);
+
+            // 3. 즉시 DB에 저장
+            await api.technical.checklists.save(user.companyId, activeTab, updatedItems);
+
+            // hasChanges 상태는 변경하지 않음 (이미 저장되었으므로)
+            toast({ title: "파일이 업로드되었습니다" });
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.message || "파일 업로드 중 오류가 발생했습니다";
+            toast({ title: "파일 업로드 실패", description: errorMessage, variant: "destructive" });
+        } finally {
+            event.target.value = '';
         }
     };
 
     const handleFileDelete = async (itemId: number, fileUrl: string) => {
         try {
+            // 1. S3에서 파일 삭제
             await api.files.delete(fileUrl);
-            setItems((prev) =>
-                prev.map((item) =>
-                    item.id === itemId ? { ...item, files: item.files.filter((f) => f.url !== fileUrl) } : item,
-                ),
+
+            // 2. 로컬 상태 업데이트
+            const updatedItems = items.map((item) =>
+                item.id === itemId
+                    ? { ...item, files: item.files.filter((f) => f.url !== fileUrl) }
+                    : item
             );
-            setHasChanges(true);
+            setItems(updatedItems);
+
+            // 3. 즉시 DB에 저장
+            await api.technical.checklists.save(user.companyId!, activeTab, updatedItems);
+
+            // hasChanges 상태는 변경하지 않음 (이미 저장되었으므로)
             toast({ title: "파일이 삭제되었습니다" });
         } catch (error) {
             toast({ title: "파일 삭제 실패", variant: "destructive" });
         }
     };
 
-    const handleFileDownload = (file: FileAttachment) => {
-        window.open(file.url, "_blank");
+    const handleFileDownload = async (file: FileAttachment) => {
+        try {
+            // 백엔드에서 Pre-signed URL 받기
+            const response = await api.files.getDownloadUrl(file.url);
+
+            // Pre-signed URL로 다운로드
+            window.open(response.downloadUrl, "_blank");
+        } catch (error) {
+            console.error("다운로드 실패:", error);
+            toast({
+                title: "다운로드 실패",
+                description: "파일 다운로드 중 오류가 발생했습니다",
+                variant: "destructive"
+            });
+        }
     };
 
     const handleSave = async () => {

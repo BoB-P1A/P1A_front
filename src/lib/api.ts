@@ -172,6 +172,39 @@ export const api = {
             });
             return response.data;
         },
+        // 기술적 보호조치 전용 업로드 - S3 경로 구조화
+        uploadTechnical: async (
+            file: File,
+            companyId: string,
+            systemName: string,
+            no: string
+        ) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("companyId", companyId);
+            formData.append("category", "개인정보처리시스템(Admin)");
+            formData.append("systemName", systemName);
+            formData.append("no", no);
+            const response = await apiClient.post("/files/upload/technical", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            return response.data;
+        },
+        // Pre-signed URL 받기
+        getDownloadUrl: async (fileUrl: string) => {
+            const response = await apiClient.get("/files/download", {
+                params: { fileUrl },
+            });
+            return response.data;
+        },
+        delete: async (fileUrl: string) => {
+            const response = await apiClient.delete("/files", {
+                data: { fileUrl },
+            });
+            return response.data;
+        },
         delete: async (fileUrl: string) => {
             const response = await apiClient.delete("/files", {
                 data: { fileUrl },
@@ -380,7 +413,7 @@ export const api = {
             },
         },
         checklists: {
-            getAll: async (params: { companyId: string; status?: string[] }) => {
+            getAll: async (params: { companyId: string; systemName?: string; status?: string[] }) => {
                 const response = await apiClient.get("/technical/checklists", {
                     params,
                     paramsSerializer: {
