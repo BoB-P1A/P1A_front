@@ -172,6 +172,26 @@ export const api = {
             });
             return response.data;
         },
+        // 생애주기 전용 업로드 - S3 경로 구조화
+        uploadLifecycle: async (
+            file: File,
+            companyId: string,
+            taskId: string,
+            no: string
+        ) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("companyId", companyId);
+            formData.append("category", "개인정보처리단계(Lifecycle)");
+            formData.append("taskId", taskId);
+            formData.append("no", no);
+            const response = await apiClient.post("/files/upload/lifecycle", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            return response.data;
+        },
         // 기술적 보호조치 전용 업로드 - S3 경로 구조화
         uploadTechnical: async (
             file: File,
@@ -192,7 +212,7 @@ export const api = {
             });
             return response.data;
         },
-        // 보안성 검토 전용 업로드 - S3 경로 구조화 (추가 필요)
+        // 보안성 검토 전용 업로드 - S3 경로 구조화
         uploadSecurity: async (
             file: File,
             companyId: string,
@@ -237,17 +257,20 @@ export const api = {
                 return response.data;
             },
         },
-        lifecycle: {
-            getAll: async (companyId: string) => {
-                const response = await apiClient.get("/lifecycle/lifecycle", {
-                    params: { companyId },
+        checklists: {
+            getAll: async (params: { companyId: string; taskId?: string; status?: string[] }) => {
+                const response = await apiClient.get("/lifecycle/checklists", {
+                    params,
+                    paramsSerializer: {
+                        indexes: null,
+                    },
                 });
                 return response.data;
             },
-            save: async (companyId: string, taskName: string, data: any[]) => {
-                const response = await apiClient.post("/lifecycle/lifecycle", {
+            save: async (companyId: string, taskId: string, data: any[]) => {
+                const response = await apiClient.post("/lifecycle/checklists", {
                     companyId,
-                    taskName,
+                    taskId,
                     data,
                 });
                 return response.data;
