@@ -172,6 +172,53 @@ export const api = {
             });
             return response.data;
         },
+        // 기술적 보호조치 전용 업로드 - S3 경로 구조화
+        uploadTechnical: async (
+            file: File,
+            companyId: string,
+            systemId: string,
+            no: string
+        ) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("companyId", companyId);
+            formData.append("category", "개인정보처리시스템(Admin)");
+            formData.append("systemId", systemId);
+            formData.append("no", no);
+            const response = await apiClient.post("/files/upload/technical", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            return response.data;
+        },
+        // 보안성 검토 전용 업로드 - S3 경로 구조화 (추가 필요)
+        uploadSecurity: async (
+            file: File,
+            companyId: string,
+            systemId: string,
+            no: string
+        ) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("companyId", companyId);
+            formData.append("category", "보안성검토");
+            formData.append("systemId", systemId);
+            formData.append("no", no);
+            const response = await apiClient.post("/files/upload/security", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            return response.data;
+        },
+        // Pre-signed URL 받기
+        getDownloadUrl: async (fileUrl: string) => {
+            const response = await apiClient.get("/files/download", {
+                params: { fileUrl },
+            });
+            return response.data;
+        },
         delete: async (fileUrl: string) => {
             const response = await apiClient.delete("/files", {
                 data: { fileUrl },
@@ -293,28 +340,31 @@ export const api = {
                 });
                 return response.data;
             },
-            update: async (id: number, targetName: string) => {
+            update: async (id: string, targetName: string) => {
                 const response = await apiClient.put(`/security/targets/${id}`, {
                     targetName,
                 });
                 return response.data;
             },
-            delete: async (id: number) => {
+            delete: async (id: string) => {
                 const response = await apiClient.delete(`/security/targets/${id}`);
                 return response.data;
             },
         },
         checklists: {
-            getAll: async (params: { companyId: string; status?: string[] }) => {
+            getAll: async (params: { companyId: string; systemId?: string; status?: string[] }) => {
                 const response = await apiClient.get("/security/checklists", {
                     params,
+                    paramsSerializer: {
+                        indexes: null,
+                    },
                 });
                 return response.data;
             },
-            save: async (companyId: string, targetName: string, data: any[]) => {
+            save: async (companyId: string, systemId: string, data: any[]) => {
                 const response = await apiClient.post("/security/checklists", {
                     companyId,
-                    targetName,
+                    systemId,
                     data,
                 });
                 return response.data;
@@ -368,31 +418,31 @@ export const api = {
                 });
                 return response.data;
             },
-            update: async (id: number, systemName: string) => {
+            update: async (id: string, systemName: string) => {
                 const response = await apiClient.put(`/technical/systems/${id}`, {
                     systemName,
                 });
                 return response.data;
             },
-            delete: async (id: number) => {
+            delete: async (id: string) => {
                 const response = await apiClient.delete(`/technical/systems/${id}`);
                 return response.data;
             },
         },
         checklists: {
-            getAll: async (params: { companyId: string; status?: string[] }) => {
+            getAll: async (params: { companyId: string; systemId?: string; status?: string[] }) => {
                 const response = await apiClient.get("/technical/checklists", {
                     params,
                     paramsSerializer: {
-                        indexes: null, // status[]=미이행 대신 status=미이행&status=부분이행 형식으로
+                        indexes: null,
                     },
                 });
                 return response.data;
             },
-            save: async (companyId: string, systemName: string, data: any[]) => {
+            save: async (companyId: string, systemId: string, data: any[]) => {
                 const response = await apiClient.post("/technical/checklists", {
                     companyId,
-                    systemName,
+                    systemId,  // ← systemName → systemId
                     data,
                 });
                 return response.data;

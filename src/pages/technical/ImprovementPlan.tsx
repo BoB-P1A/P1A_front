@@ -24,6 +24,7 @@ interface TechnicalItem {
 
 interface ImprovementItem {
   id: string;
+  systemId: string;
   systemName: string;
   code: string;
   question: string;
@@ -38,7 +39,7 @@ export default function TechnicalImprovementPlan() {
   const [items, setItems] = useState<ImprovementItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('전체');
-  const [systemNames, setSystemNames] = useState<string[]>([]);
+    const [systems, setSystems] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -47,9 +48,8 @@ export default function TechnicalImprovementPlan() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const systems = await api.technical.systems.getAll(user.companyId);
-        const names = systems.map((s: any) => s.name);
-        setSystemNames(names);
+        const systemsData = await api.technical.systems.getAll(user.companyId);
+        setSystems(systemsData);
       } catch (error) {
         toast({ title: '시스템 목록 로딩 실패', variant: 'destructive' });
       } finally {
@@ -76,10 +76,11 @@ export default function TechnicalImprovementPlan() {
 
           // 백엔드 응답을 프론트엔드 형식으로 변환
           const improvementItems: ImprovementItem[] = checklists.map((item: any) => {
-              const itemId = `${item.systemName}-${item.no}`;
+              const itemId = `${item.systemId}-${item.no}`;
               const savedItem = saved[itemId];
               return {
                   id: itemId,
+                  systemId: item.systemId,
                   systemName: item.systemName,
                   code: item.no,                    // ← no를 code로 매핑
                   question: item.item || '',         // ← item을 question으로 매핑
@@ -162,7 +163,7 @@ const handleSave = async () => {
 
 const filteredItems = activeTab === '전체' 
     ? items 
-    : items.filter(item => item.systemName === activeTab);
+    : items.filter(item => item.systemId === activeTab);
 
   if (loading) {
     return <div>로딩 중...</div>;
@@ -192,8 +193,10 @@ const filteredItems = activeTab === '전체'
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="전체">전체</TabsTrigger>
-          {systemNames.map(name => (
-            <TabsTrigger key={name} value={name}>{name}</TabsTrigger>
+          {systems.map(system => (
+              <TabsTrigger key={system.id} value={system.id}>
+                  {system.name}
+              </TabsTrigger>
           ))}
         </TabsList>
 

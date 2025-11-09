@@ -47,8 +47,8 @@ interface FileAttachment {
 }
 
 interface SystemInfo {
-    id: number;
-    name: string;
+    id: string;      // ObjectId
+    name: string;    // 시스템명
 }
 
 export default function TechnicalAdminChecklist() {
@@ -71,7 +71,7 @@ export default function TechnicalAdminChecklist() {
                 if (systemsArray.length > 0) {
                     setSystems(systemsArray);
                     if (!activeTab) {
-                        setActiveTab(systemsArray[0].name);
+                        setActiveTab(systemsArray[0].id);
                     }
                 } else {
                     setSystems([]);
@@ -100,7 +100,7 @@ export default function TechnicalAdminChecklist() {
                 // 기존 체크리스트 조회
                 const checklistResponse = await api.technical.checklists.getAll({
                     companyId: user.companyId,
-                    systemName: activeTab,
+                    systemId: activeTab,
                     status: [],
                 });
 
@@ -109,7 +109,7 @@ export default function TechnicalAdminChecklist() {
                     const saved = checklistResponse.find((s: any) => s.no === evalItem.no);
                     return {
                         id: evalItem.id,
-                        systemName: activeTab,
+                        systemName: saved?.systemName || "",
                         field: evalItem.field,
                         subField: evalItem.subField,
                         no: evalItem.no,
@@ -140,43 +140,86 @@ export default function TechnicalAdminChecklist() {
 
     const handleFileUpload = async (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            try {
-                // FormData로 AWS S3에 직접 업로드
-                const uploadResult = await api.files.upload(file, "technical-checklist");
+        if (!file || !user?.companyId) return;
 
-                const fileData: FileAttachment = {
-                    name: file.name,
-                    url: uploadResult.fileUrl,
-                    type: file.type,
-                };
+        // 해당 항목 찾기
+        const currentItem = items.find(item => item.id === id);
+        if (!currentItem) return;
 
-                setItems((prev) => prev.map((item) => (item.id === id ? { ...item, files: [...item.files, fileData] } : item)));
-                setHasChanges(true);
-                toast({ title: "파일이 업로드되었습니다" });
-            } catch (error) {
-                toast({ title: "파일 업로드 실패", variant: "destructive" });
-            }
+        try {
+            // 1. S3에 파일 업로드
+            const uploadResult = await api.files.uploadTechnical(
+                file,
+                user.companyId,
+                activeTab, // systemId (ObjectId)
+                currentItem.no // no (예: 2.1.1)
+            );
+
+            const fileData: FileAttachment = {
+                name: file.name,
+                url: uploadResult.fileUrl,
+                type: file.type,
+            };
+
+            // 2. 로컬 상태 업데이트
+            const updatedItems = items.map((item) =>
+                item.id === id
+                    ? { ...item, files: [...item.files, fileData] }
+                    : item
+            );
+            setItems(updatedItems);
+
+            // 3. 즉시 DB에 저장
+            await api.technical.checklists.save(user.companyId, activeTab, updatedItems);
+
+            // hasChanges 상태는 변경하지 않음 (이미 저장되었으므로)
+            toast({ title: "파일이 업로드되었습니다" });
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.message || "파일 업로드 중 오류가 발생했습니다";
+            toast({ title: "파일 업로드 실패", description: errorMessage, variant: "destructive" });
+        } finally {
+            event.target.value = '';
         }
     };
 
     const handleFileDelete = async (itemId: number, fileUrl: string) => {
         try {
+            // 1. S3에서 파일 삭제
             await api.files.delete(fileUrl);
-            setItems((prev) =>
-                prev.map((item) =>
-                    item.id === itemId ? { ...item, files: item.files.filter((f) => f.url !== fileUrl) } : item,
-                ),
+
+            // 2. 로컬 상태 업데이트
+            const updatedItems = items.map((item) =>
+                item.id === itemId
+                    ? { ...item, files: item.files.filter((f) => f.url !== fileUrl) }
+                    : item
             );
-            setHasChanges(true);
+            setItems(updatedItems);
+
+            // 3. 즉시 DB에 저장
+            await api.technical.checklists.save(user.companyId!, activeTab, updatedItems);
+
+            // hasChanges 상태는 변경하지 않음 (이미 저장되었으므로)
             toast({ title: "파일이 삭제되었습니다" });
         } catch (error) {
             toast({ title: "파일 삭제 실패", variant: "destructive" });
         }
     };
 
-    const handleFileDownload = (file: FileAttachment) => {
-        window.open(file.url, "_blank");
+    const handleFileDownload = async (file: FileAttachment) => {
+        try {
+            // 백엔드에서 Pre-signed URL 받기
+            const response = await api.files.getDownloadUrl(file.url);
+
+            // Pre-signed URL로 다운로드
+            window.open(response.downloadUrl, "_blank");
+        } catch (error) {
+            console.error("다운로드 실패:", error);
+            toast({
+                title: "다운로드 실패",
+                description: "파일 다운로드 중 오류가 발생했습니다",
+                variant: "destructive"
+            });
+        }
     };
 
     const handleSave = async () => {
@@ -222,7 +265,7 @@ export default function TechnicalAdminChecklist() {
                 const newSystem = await api.technical.systems.create(user?.companyId as string, systemName);
                 setSystems((prev) => [...prev, newSystem]);
                 if (systems.length === 0) {
-                    setActiveTab(newSystem.name);
+                    setActiveTab(newSystem.id);
                 }
                 toast({ title: "시스템이 추가되었습니다" });
             }
@@ -235,7 +278,7 @@ export default function TechnicalAdminChecklist() {
         }
     };
 
-    const handleDeleteSystem = async (id: number) => {
+    const handleDeleteSystem = async (id: string) => {
         const system = systems.find((s) => s.id === id);
         if (!system || !confirm(`${system.name} 시스템을 삭제하시겠습니까?`)) {
             return;
@@ -247,16 +290,16 @@ export default function TechnicalAdminChecklist() {
             setSystems(updatedSystems);
             toast({ title: "시스템이 삭제되었습니다" });
 
-            if (activeTab === system.name && updatedSystems.length > 0) {
-                setActiveTab(updatedSystems[0].name);
+            if (activeTab === id && updatedSystems.length > 0) {
+                setActiveTab(updatedSystems[0].id);
             }
         } catch (error) {
             toast({ title: "삭제 실패", variant: "destructive" });
         }
     };
 
-    const getItemsForSystem = (systemName: string) => {
-        return systemName === activeTab ? items : [];
+    const getItemsForSystem = (systemId: string) => {
+        return systemId === activeTab ? items : [];
     };
 
     return (
@@ -328,7 +371,7 @@ export default function TechnicalAdminChecklist() {
                     <div className="flex items-center justify-between mb-4">
                         <TabsList>
                             {Array.isArray(systems) && systems.map((system) => (
-                                <TabsTrigger key={system.id} value={system.name}>
+                                <TabsTrigger key={system.id} value={system.id}>
                                     {system.name}
                                 </TabsTrigger>
                             ))}
@@ -336,7 +379,7 @@ export default function TechnicalAdminChecklist() {
                         <div className="flex gap-2">
                             {Array.isArray(systems) && systems.map(
                                 (system) =>
-                                    activeTab === system.name && (
+                                    activeTab === system.id && (
                                         <div key={system.id} className="flex gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(system)}>
                                                 <Edit className="h-4 w-4" />
@@ -351,9 +394,9 @@ export default function TechnicalAdminChecklist() {
                     </div>
 
                     {Array.isArray(systems) && systems.map((system) => (
-                        <TabsContent key={system.id} value={system.name}>
+                        <TabsContent key={system.id} value={system.id}>
                             <div className="space-y-6">
-                                {getItemsForSystem(system.name).map((item, index, array) => {
+                                {getItemsForSystem(system.id).map((item, index, array) => {
                                     const prevItem = index > 0 ? array[index - 1] : null;
                                     const showFieldHeader = !prevItem || prevItem.field !== item.field;
 
@@ -463,7 +506,7 @@ export default function TechnicalAdminChecklist() {
                                     );
                                 })}
 
-                                {getItemsForSystem(system.name).length === 0 && (
+                                {getItemsForSystem(system.id).length === 0 && (
                                     <Card>
                                         <CardContent className="py-8">
                                             <p className="text-center text-muted-foreground">
