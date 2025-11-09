@@ -155,7 +155,7 @@ export default function TechnicalActionPlan() {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "조치 계획 수립");
-    XLSX.writeFile(wb, "기술적_조치_계획_수립.xlsx");
+    XLSX.writeFile(wb, "개인정보_처리시스템_조치_계획_수립.xlsx");
   };
 
   const filteredItems = activeTab === "전체" ? items : items.filter((item) => item.systemId === activeTab);
@@ -168,8 +168,8 @@ export default function TechnicalActionPlan() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">기술적 보호조치 조치 계획 수립</h1>
-          <p className="text-muted-foreground mt-2">기술적 보호조치 침해요인에 대한 조치 계획을 수립하고 관리합니다</p>
+          <h1 className="text-3xl font-bold text-primary">개인정보 처리시스템(Admin) 조치 계획 수립</h1>
+          <p className="text-muted-foreground mt-2">개인정보 처리시스템(Admin) 침해요인에 대한 조치 계획을 수립하고 관리합니다</p>
         </div>
         <div className="space-x-2">
           <Button variant="outline" onClick={handleExportToExcel}>
@@ -200,7 +200,7 @@ export default function TechnicalActionPlan() {
                 <ClipboardList className="h-5 w-5 text-primary" />
                 조치 계획 목록
               </CardTitle>
-              <CardDescription>각 침해요인에 대한 조치 계획을 수립하세요</CardDescription>
+              <CardDescription>각 취약점에 대한 조치 계획을 수립하세요</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">

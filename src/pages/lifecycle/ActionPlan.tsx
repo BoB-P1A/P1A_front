@@ -170,7 +170,7 @@ export default function LifecycleActionPlan() {
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, '조치 계획 수립');
-        XLSX.writeFile(wb, '개인정보_처리단계별_조치_계획_수립.xlsx');
+        XLSX.writeFile(wb, '개인정보_처리단계_조치_계획_수립.xlsx');
     };
 
     // 필터링 로직
@@ -186,9 +186,9 @@ export default function LifecycleActionPlan() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-primary">개인정보 처리단계별 보호조치 조치 계획 수립</h1>
+                    <h1 className="text-3xl font-bold text-primary">개인정보 처리단계(Lifecycle) 조치 계획 수립</h1>
                     <p className="text-muted-foreground mt-2">
-                        생애주기 보호조치 침해요인에 대한 조치 계획을 수립하고 관리합니다
+                        개인정보 처리단계(Lifecycle) 침해요인에 대한 조치 계획을 수립하고 관리합니다
                     </p>
                 </div>
                 <div className="space-x-2">
@@ -220,7 +220,7 @@ export default function LifecycleActionPlan() {
                                 <ClipboardList className="h-5 w-5 text-primary" />
                                 조치 계획 목록
                             </CardTitle>
-                            <CardDescription>각 침해요인에 대한 조치 계획을 수립하세요</CardDescription>
+                            <CardDescription>각 취약점에 대한 조치 계획을 수립하세요</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-6">

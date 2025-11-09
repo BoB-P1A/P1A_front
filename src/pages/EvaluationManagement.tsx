@@ -140,82 +140,78 @@ export default function EvaluationManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">평가항목 관리</h1>
+          <h1 className="text-3xl font-bold text-primary">평가항목 목록</h1>
           <p className="text-muted-foreground mt-2">평가항목을 구성하고 관리합니다</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="mr-2 h-4 w-4" />
-              항목 추가
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{editingItem ? "항목 수정" : "새 항목 추가"}</DialogTitle>
-              <DialogDescription>평가항목의 정보를 입력해주세요</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="area">평가영역</Label>
-                <Input
-                  id="area"
-                  placeholder="예: 1. 개인정보 처리단계별 보호조치"
-                  value={formData.area || ""}
-                  onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="field">평가분야</Label>
-                <Input
-                  id="field"
-                  placeholder="예: 1.1 수집"
-                  value={formData.field || ""}
-                  onChange={(e) => setFormData({ ...formData, field: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="subField">세부분야</Label>
-                <Input
-                  id="subField"
-                  placeholder="예: 개인정보 수집의 적합성"
-                  value={formData.subField || ""}
-                  onChange={(e) => setFormData({ ...formData, subField: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="no">No.</Label>
-                <Input
-                  id="no"
-                placeholder="예: 1.1.1"
-                  value={formData.no || ""}
-                  onChange={(e) => setFormData({ ...formData, no: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="item">평가항목</Label>
-                <Textarea
-                  id="item"
-                  placeholder="예: 개인정보를 수집하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 수집하도록 계획하고 있습니까?"
-                  className="min-h-[100px]"
-                  value={formData.item || ""}
-                  onChange={(e) => setFormData({ ...formData, item: e.target.value })}
-                />
-              </div>
-              <Button onClick={handleSave} className="w-full">
-                <Save className="mr-2 h-4 w-4" />
-                저장
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/*<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>*/}
+        {/*  <DialogTrigger asChild>*/}
+        {/*    <Button onClick={() => handleOpenDialog()}>*/}
+        {/*      <Plus className="mr-2 h-4 w-4" />*/}
+        {/*      항목 추가*/}
+        {/*    </Button>*/}
+        {/*  </DialogTrigger>*/}
+        {/*  <DialogContent className="max-w-2xl">*/}
+        {/*    <DialogHeader>*/}
+        {/*      <DialogTitle>{editingItem ? "항목 수정" : "새 항목 추가"}</DialogTitle>*/}
+        {/*      <DialogDescription>평가항목의 정보를 입력해주세요</DialogDescription>*/}
+        {/*    </DialogHeader>*/}
+        {/*    <div className="space-y-4">*/}
+        {/*      <div>*/}
+        {/*        <Label htmlFor="area">평가영역</Label>*/}
+        {/*        <Input*/}
+        {/*          id="area"*/}
+        {/*          placeholder="예: 1. 개인정보 처리단계별 보호조치"*/}
+        {/*          value={formData.area || ""}*/}
+        {/*          onChange={(e) => setFormData({ ...formData, area: e.target.value })}*/}
+        {/*        />*/}
+        {/*      </div>*/}
+        {/*      <div>*/}
+        {/*        <Label htmlFor="field">평가분야</Label>*/}
+        {/*        <Input*/}
+        {/*          id="field"*/}
+        {/*          placeholder="예: 1.1 수집"*/}
+        {/*          value={formData.field || ""}*/}
+        {/*          onChange={(e) => setFormData({ ...formData, field: e.target.value })}*/}
+        {/*        />*/}
+        {/*      </div>*/}
+        {/*      <div>*/}
+        {/*        <Label htmlFor="subField">세부분야</Label>*/}
+        {/*        <Input*/}
+        {/*          id="subField"*/}
+        {/*          placeholder="예: 개인정보 수집의 적합성"*/}
+        {/*          value={formData.subField || ""}*/}
+        {/*          onChange={(e) => setFormData({ ...formData, subField: e.target.value })}*/}
+        {/*        />*/}
+        {/*      </div>*/}
+        {/*      <div>*/}
+        {/*        <Label htmlFor="no">No.</Label>*/}
+        {/*        <Input*/}
+        {/*          id="no"*/}
+        {/*        placeholder="예: 1.1.1"*/}
+        {/*          value={formData.no || ""}*/}
+        {/*          onChange={(e) => setFormData({ ...formData, no: e.target.value })}*/}
+        {/*        />*/}
+        {/*      </div>*/}
+        {/*      <div>*/}
+        {/*        <Label htmlFor="item">평가항목</Label>*/}
+        {/*        <Textarea*/}
+        {/*          id="item"*/}
+        {/*          placeholder="예: 개인정보를 수집하는 경우 정보주체의 동의를 받거나, 법령 등에 따라 적법하게 수집하도록 계획하고 있습니까?"*/}
+        {/*          className="min-h-[100px]"*/}
+        {/*          value={formData.item || ""}*/}
+        {/*          onChange={(e) => setFormData({ ...formData, item: e.target.value })}*/}
+        {/*        />*/}
+        {/*      </div>*/}
+        {/*      <Button onClick={handleSave} className="w-full">*/}
+        {/*        <Save className="mr-2 h-4 w-4" />*/}
+        {/*        저장*/}
+        {/*      </Button>*/}
+        {/*    </div>*/}
+        {/*  </DialogContent>*/}
+        {/*</Dialog>*/}
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>평가항목 목록</CardTitle>
-          <CardDescription>담당자가 평가항목을 구성, 수정, 삭제할 수 있습니다</CardDescription>
-        </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
@@ -226,7 +222,7 @@ export default function EvaluationManagement() {
                   <TableHead className="min-w-[150px]">세부분야</TableHead>
                   <TableHead className="w-[80px]">No.</TableHead>
                   <TableHead className="min-w-[300px]">평가항목</TableHead>
-                  <TableHead className="w-[100px] text-right">작업</TableHead>
+                  {/*<TableHead className="w-[100px] text-right">작업</TableHead>*/}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -237,16 +233,16 @@ export default function EvaluationManagement() {
                     <TableCell>{item.subField}</TableCell>
                     <TableCell>{item.no}</TableCell>
                     <TableCell className="max-w-md">{item.item}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                    {/*<TableCell className="text-right">*/}
+                    {/*  <div className="flex justify-end gap-2">*/}
+                    {/*    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>*/}
+                    {/*      <Edit className="h-4 w-4" />*/}
+                    {/*    </Button>*/}
+                    {/*    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>*/}
+                    {/*      <Trash2 className="h-4 w-4" />*/}
+                    {/*    </Button>*/}
+                    {/*  </div>*/}
+                    {/*</TableCell>*/}
                   </TableRow>
                 ))}
               </TableBody>

@@ -210,7 +210,7 @@ export default function SecurityActionPlan() {
                                 조치 계획 목록
                             </CardTitle>
                             <CardDescription>
-                                각 침해요인에 대한 조치 계획을 수립하세요
+                                각 취약점에 대한 조치 계획을 수립하세요
                             </CardDescription>
                         </CardHeader>
                         <CardContent>

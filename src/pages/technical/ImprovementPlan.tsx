@@ -158,7 +158,7 @@ const handleSave = async () => {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '침해요인별 개선 가이드');
-    XLSX.writeFile(wb, '기술적_침해요인별_개선_가이드.xlsx');
+    XLSX.writeFile(wb, '개인정보_처리시스템_침해요인별_개선_가이드.xlsx');
   };
 
 const filteredItems = activeTab === '전체' 
@@ -173,9 +173,9 @@ const filteredItems = activeTab === '전체'
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary">기술적 보호조치 침해요인별 개선 가이드</h1>
+          <h1 className="text-3xl font-bold text-primary">개인정보 처리시스템(Admin) 침해요인별 개선 가이드</h1>
           <p className="text-muted-foreground mt-2">
-            기술적 보호조치의 침해요인과 개선 가이드를 관리합니다
+              개인정보 처리시스템(Admin)의 침해요인과 개선 가이드를 관리합니다
           </p>
         </div>
         <div className="space-x-2">
@@ -205,10 +205,10 @@ const filteredItems = activeTab === '전체'
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                기술적 침해요인 목록 및 개선 가이드
+                침해요인 목록 및 개선 가이드
               </CardTitle>
               <CardDescription>
-                기술적 보호조치 관련 침해요인과 개선 가이드를 확인하세요
+                  개인정보 처리시스템(Admin) 침해요인과 개선 가이드를 확인하세요
               </CardDescription>
             </CardHeader>
             <CardContent>

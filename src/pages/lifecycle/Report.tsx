@@ -577,7 +577,7 @@ export default function LifecycleReport() {
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = '개인정보_처리단계별_보호조치_결과보고서.docx';
+            link.download = '개인정보_처리단계_평가_결과보고서.docx';
             link.click();
             window.URL.revokeObjectURL(url);
         } catch (error) {
@@ -685,7 +685,7 @@ export default function LifecycleReport() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-primary">개인정보 처리단계별 보호조치 결과보고서</h1>
+                    <h1 className="text-3xl font-bold text-primary">개인정보 처리단계(Lifecycle) 평가 결과보고서</h1>
                     <p className="text-muted-foreground mt-2">
                         개인정보 처리단계별 보호조치 수행 과정의 전체 결과를 확인합니다
                     </p>
