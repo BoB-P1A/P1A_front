@@ -45,7 +45,7 @@ const getMenuItems = (userRole?: string) => {
   // 영향평가 관리 페이지는 관리자와 개인정보팀만 접근 가능
   if (userRole === 'admin' || userRole === 'privacy-team') {
     items.push({
-      title: '평가항목 관리',
+      title: '평가항목 목록',
       url: '/evaluation-management',
       icon: ListChecks,
     });
@@ -53,7 +53,7 @@ const getMenuItems = (userRole?: string) => {
 
   items.push(
     {
-      title: '처리단계별 보호조치',
+      title: '개인정보 처리단계',
       icon: Shield,
       items: [
         { title: '개인정보 처리 업무표', url: '/lifecycle/task-table', icon: Table },
@@ -66,7 +66,7 @@ const getMenuItems = (userRole?: string) => {
       ],
     },
     {
-      title: '기술적 보호조치',
+      title: '개인정보 처리시스템',
       icon: Settings,
       items: [
         { title: 'Admin Checklist', url: '/technical/checklist', icon: CheckSquare },

@@ -58,9 +58,9 @@ export default function Dashboard() {
           <CardDescription>자주 사용하는 기능에 빠르게 접근하세요</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* 개인정보 처리단계별 보호조치 */}
+          {/* 개인정보 처리단계(Lifecycle) */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg text-primary">개인정보 처리단계별 보호조치</h3>
+            <h3 className="font-semibold text-lg text-primary">개인정보 처리단계(Lifecycle)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/lifecycle/task-table')}>
                 <FileText className="h-5 w-5 mb-2 text-pia-primary" />
@@ -93,9 +93,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* 기술적 보호조치 */}
+          {/* 개인정보 처리시스템(Admin) */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg text-primary">기술적 보호조치</h3>
+            <h3 className="font-semibold text-lg text-primary">개인정보 처리시스템(Admin)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button variant="outline" className="h-auto flex-col py-4 hover:bg-accent/10" onClick={() => navigate('/technical/checklist')}>
                 <CheckSquare className="h-5 w-5 mb-2 text-pia-primary" />

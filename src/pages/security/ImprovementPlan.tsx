@@ -206,7 +206,7 @@ export default function SecurityImprovementPlan() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                                보안성 검토 침해요인 목록 및 개선 가이드
+                                침해요인 목록 및 개선 가이드
                             </CardTitle>
                             <CardDescription>
                                 보안성 검토 관련 침해요인과 개선 가이드를 확인하세요
