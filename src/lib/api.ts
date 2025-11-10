@@ -502,4 +502,13 @@ export const api = {
             },
         },
     },
+    // 대시보드 통계 API
+    dashboard: {
+        getStats: async (companyId: string) => {
+            const response = await apiClient.get("/dashboard/stats", {
+                params: { companyId },
+            });
+            return response.data;
+        },
+    },
 };
