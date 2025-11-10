@@ -24,7 +24,7 @@ interface ChecklistItem {
     no: string;
     status: '이행' | '부분이행' | '미이행' | '해당없음' | null;
     evidence?: string;
-    files?: any[];
+    files?: unknown[];
 }
 
 interface EvaluationItem {
@@ -176,7 +176,7 @@ export default function Dashboard() {
 
                 const allLifecycleChecklists: ChecklistItem[] = [];
                 if (lifecycleResponse.data) {
-                    lifecycleResponse.data.forEach((task: any) => {
+                    lifecycleResponse.data.forEach((task: { lifecycleChecklist?: ChecklistItem[] }) => {
                         if (task.lifecycleChecklist) {
                             allLifecycleChecklists.push(...task.lifecycleChecklist);
                         }
@@ -193,7 +193,7 @@ export default function Dashboard() {
 
                 const allTechnicalChecklists: ChecklistItem[] = [];
                 if (technicalResponse.data) {
-                    technicalResponse.data.forEach((system: any) => {
+                    technicalResponse.data.forEach((system: { technicalChecklist?: ChecklistItem[] }) => {
                         if (system.technicalChecklist) {
                             allTechnicalChecklists.push(...system.technicalChecklist);
                         }
@@ -210,7 +210,7 @@ export default function Dashboard() {
 
                 const allSecurityChecklists: ChecklistItem[] = [];
                 if (securityResponse.data) {
-                    securityResponse.data.forEach((system: any) => {
+                    securityResponse.data.forEach((system: { securityChecklist?: ChecklistItem[] }) => {
                         if (system.securityChecklist) {
                             allSecurityChecklists.push(...system.securityChecklist);
                         }
@@ -296,7 +296,7 @@ export default function Dashboard() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+                    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'area' | 'field' | 'subField')}>
                         <TabsList className="grid w-full grid-cols-3 mb-6">
                             <TabsTrigger value="area">영역별</TabsTrigger>
                             <TabsTrigger value="field">분야별</TabsTrigger>
@@ -392,7 +392,7 @@ export default function Dashboard() {
                                                     formatter={(value: number) => `${value.toFixed(1)}%`}
                                                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                                                 />
-                                                <Legend />
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     </CardContent>
@@ -432,7 +432,7 @@ export default function Dashboard() {
                                                     formatter={(value: number) => `${value.toFixed(1)}%`}
                                                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                                                 />
-                                                <Legend />
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     </CardContent>
@@ -472,7 +472,7 @@ export default function Dashboard() {
                                                     formatter={(value: number) => `${value.toFixed(1)}%`}
                                                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                                                 />
-                                                <Legend />
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     </CardContent>
@@ -517,7 +517,7 @@ export default function Dashboard() {
                                                     formatter={(value: number) => `${value.toFixed(1)}%`}
                                                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                                                 />
-                                                <Legend />
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     </CardContent>
@@ -557,7 +557,7 @@ export default function Dashboard() {
                                                     formatter={(value: number) => `${value.toFixed(1)}%`}
                                                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                                                 />
-                                                <Legend />
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     </CardContent>
@@ -597,7 +597,7 @@ export default function Dashboard() {
                                                     formatter={(value: number) => `${value.toFixed(1)}%`}
                                                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                                                 />
-                                                <Legend />
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     </CardContent>
