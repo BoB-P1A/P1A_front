@@ -271,7 +271,7 @@ export default function Dashboard() {
                 <div>
                     <h1 className="text-3xl font-bold text-primary">대시보드</h1>
                     <p className="text-muted-foreground mt-2">
-                        안녕하세요, {user?.name}님! 현재 역할: {getRoleDisplayName(user?.role || '')}
+                        안녕하세요, {user?.name}님!
                     </p>
                 </div>
                 <div className="flex gap-2">
