@@ -241,9 +241,9 @@ export default function Dashboard() {
 
     // 영역별 이행률 데이터 (도넛 차트용)
     const areaImplementationData = [
-        { name: '개인정보 처리단계(Lifecycle)', value: lifecycleRate, color: '#6366f1' },
-        { name: '개인정보 처리시스템(Admin)', value: adminRate, color: '#8b5cf6' },
-        { name: '보안성 검토', value: securityRate, color: '#ec4899' }
+        { name: '개인정보 처리단계(Lifecycle)', value: lifecycleRate, color: '#9566b2' },
+        { name: '개인정보 처리시스템(Admin)', value: adminRate, color: '#00a0af' },
+        { name: '보안성 검토', value: securityRate, color: '#2d364c' }
     ];
 
     // 분야별 레이더 차트 데이터 (각 영역에 해당하는 평가항목만 사용)
@@ -361,7 +361,7 @@ export default function Dashboard() {
                                 {/* Lifecycle 분야별 */}
                                 <Card className="shadow-sm">
                                     <CardHeader>
-                                        <CardTitle className="text-blue-600 text-center">
+                                        <CardTitle className="text-center" style={{ color: '#9566b2' }}>
                                             개인정보 처리단계(Lifecycle)
                                         </CardTitle>
                                         <CardDescription className="text-center">
@@ -384,8 +384,8 @@ export default function Dashboard() {
                                                 <Radar
                                                     name="이행률"
                                                     dataKey="value"
-                                                    stroke="#6366f1"
-                                                    fill="#6366f1"
+                                                    stroke="#9566b2"
+                                                    fill="#9566b2"
                                                     fillOpacity={0.5}
                                                 />
                                                 <Tooltip
@@ -401,7 +401,7 @@ export default function Dashboard() {
                                 {/* Admin 분야별 */}
                                 <Card className="shadow-sm">
                                     <CardHeader>
-                                        <CardTitle className="text-purple-600 text-center">
+                                        <CardTitle className="text-center" style={{ color: '#00a0af' }}>
                                             개인정보 처리시스템(Admin)
                                         </CardTitle>
                                         <CardDescription className="text-center">
@@ -424,8 +424,8 @@ export default function Dashboard() {
                                                 <Radar
                                                     name="이행률"
                                                     dataKey="value"
-                                                    stroke="#8b5cf6"
-                                                    fill="#8b5cf6"
+                                                    stroke="#00a0af"
+                                                    fill="#00a0af"
                                                     fillOpacity={0.5}
                                                 />
                                                 <Tooltip
@@ -441,7 +441,7 @@ export default function Dashboard() {
                                 {/* Security 분야별 */}
                                 <Card className="shadow-sm">
                                     <CardHeader>
-                                        <CardTitle className="text-pink-600 text-center">
+                                        <CardTitle className="text-center" style={{ color: '#2d364c' }}>
                                             보안성 검토
                                         </CardTitle>
                                         <CardDescription className="text-center">
@@ -464,8 +464,8 @@ export default function Dashboard() {
                                                 <Radar
                                                     name="이행률"
                                                     dataKey="value"
-                                                    stroke="#ec4899"
-                                                    fill="#ec4899"
+                                                    stroke="#2d364c"
+                                                    fill="#2d364c"
                                                     fillOpacity={0.5}
                                                 />
                                                 <Tooltip
@@ -486,7 +486,7 @@ export default function Dashboard() {
                                 {/* Lifecycle 세부분야별 */}
                                 <Card className="shadow-sm">
                                     <CardHeader>
-                                        <CardTitle className="text-blue-600 text-center">
+                                        <CardTitle className="text-center" style={{ color: '#9566b2' }}>
                                             개인정보 처리단계(Lifecycle)
                                         </CardTitle>
                                         <CardDescription className="text-center">
@@ -509,8 +509,8 @@ export default function Dashboard() {
                                                 <Radar
                                                     name="이행률"
                                                     dataKey="value"
-                                                    stroke="#6366f1"
-                                                    fill="#6366f1"
+                                                    stroke="#9566b2"
+                                                    fill="#9566b2"
                                                     fillOpacity={0.5}
                                                 />
                                                 <Tooltip
@@ -526,7 +526,7 @@ export default function Dashboard() {
                                 {/* Admin 세부분야별 */}
                                 <Card className="shadow-sm">
                                     <CardHeader>
-                                        <CardTitle className="text-purple-600 text-center">
+                                        <CardTitle className="text-center" style={{ color: '#00a0af' }}>
                                             개인정보 처리시스템(Admin)
                                         </CardTitle>
                                         <CardDescription className="text-center">
@@ -549,8 +549,8 @@ export default function Dashboard() {
                                                 <Radar
                                                     name="이행률"
                                                     dataKey="value"
-                                                    stroke="#8b5cf6"
-                                                    fill="#8b5cf6"
+                                                    stroke="#00a0af"
+                                                    fill="#00a0af"
                                                     fillOpacity={0.5}
                                                 />
                                                 <Tooltip
@@ -566,7 +566,7 @@ export default function Dashboard() {
                                 {/* Security 세부분야별 */}
                                 <Card className="shadow-sm">
                                     <CardHeader>
-                                        <CardTitle className="text-pink-600 text-center">
+                                        <CardTitle className="text-center" style={{ color: '#2d364c' }}>
                                             보안성 검토
                                         </CardTitle>
                                         <CardDescription className="text-center">
@@ -589,8 +589,8 @@ export default function Dashboard() {
                                                 <Radar
                                                     name="이행률"
                                                     dataKey="value"
-                                                    stroke="#ec4899"
-                                                    fill="#ec4899"
+                                                    stroke="#2d364c"
+                                                    fill="#2d364c"
                                                     fillOpacity={0.5}
                                                 />
                                                 <Tooltip
