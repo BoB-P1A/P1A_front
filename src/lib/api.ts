@@ -106,30 +106,46 @@ export const api = {
     },
 
     // 처리업무 관리
-    tasks: {
-        getAll: async (companyId?: string) => {
-            const response = await apiClient.get("/tasks", {
-                params: { companyId },
-            });
-            return response.data;
-        },
-        create: async (task: any) => {
-            const response = await apiClient.post("/tasks", task);
-            return response.data;
-        },
-        update: async (id: number, task: any) => {
-            const response = await apiClient.put(`/tasks/${id}`, task);
-            return response.data;
-        },
-        delete: async (id: number) => {
-            const response = await apiClient.delete(`/tasks/${id}`);
-            return response.data;
-        },
-        bulkUpdate: async (tasks: any[]) => {
-            const response = await apiClient.put("/tasks/bulk", tasks);
-            return response.data;
-        },
-    },
+	tasks: {
+	    getAll: async (companyId?: string) => {
+	      const res = await apiClient.get("/tasks", { params: { companyId } });
+	      return res.data; // TaskDtos[]
+	    },
+	    create: async (task: {
+	      companyId: string;
+	      taskName?: string;
+	      purpose?: string;
+	      personalInfo?: string;
+	      department?: string;
+	    }) => {
+	      const res = await apiClient.post("/tasks", task);
+	      return res.data; // TaskDtos
+	    },
+	    update: async (id: string, patch: Partial<{
+	      taskName: string;
+	      purpose: string;
+	      personalInfo: string;
+	      department: string;
+	    }>) => {
+	      const res = await apiClient.put(`/tasks/${id}`, patch);
+	      return res.data; // TaskDtos
+	    },
+	    delete: async (id: string) => {
+	      const res = await apiClient.delete(`/tasks/${id}`);
+	      return res.data;
+	    },
+	    // 화면 상태 전체 저장(통째 교체)
+	    bulkReplace: async (companyId: string, tasks: Array<{
+	      id?: string;            // 신규는 생략 가능
+	      taskName?: string;
+	      purpose?: string;
+	      personalInfo?: string;
+	      department?: string;
+	    }>) => {
+	      const res = await apiClient.put(`/tasks/bulk`, tasks, { params: { companyId } });
+	      return res.data;
+	    },
+	  },
 
     // 평가 관리
     evaluations: {
