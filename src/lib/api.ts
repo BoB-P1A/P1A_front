@@ -301,16 +301,20 @@ export const api = {
             },
         },
         flowTables: {
+            // companyId로 모든 processingTasks의 flow.sheets 데이터를 가져옴
+            // 반환 형식: { taskId: { taskName, sheets: { collect: [], retain: [], ... } }, ... }
             getAll: async (companyId: string) => {
                 const response = await apiClient.get("/lifecycle/flowtables", {
                     params: { companyId },
                 });
                 return response.data;
             },
-            save: async (companyId: string, data: any) => {
+            // taskId와 sheets 데이터를 저장
+            save: async (companyId: string, taskId: string, sheets: any) => {
                 const response = await apiClient.post("/lifecycle/flowtables", {
                     companyId,
-                    data,
+                    taskId,
+                    sheets,
                 });
                 return response.data;
             },
