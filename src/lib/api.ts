@@ -117,16 +117,16 @@ export const api = {
             const response = await apiClient.post("/tasks", task);
             return response.data;
         },
-        update: async (id: number, task: any) => {
+        update: async (id: string, task: any) => {  // ← id를 string으로 변경
             const response = await apiClient.put(`/tasks/${id}`, task);
             return response.data;
         },
-        delete: async (id: number) => {
+        delete: async (id: string) => {  // ← id를 string으로 변경
             const response = await apiClient.delete(`/tasks/${id}`);
             return response.data;
         },
-        bulkUpdate: async (tasks: any[]) => {
-            const response = await apiClient.put("/tasks/bulk", tasks);
+        bulkSave: async (tasks: any[]) => {
+            const response = await apiClient.post("/tasks/bulk", tasks);
             return response.data;
         },
     },
