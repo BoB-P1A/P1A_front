@@ -117,16 +117,16 @@ export const api = {
             const response = await apiClient.post("/tasks", task);
             return response.data;
         },
-        update: async (id: number, task: any) => {
+        update: async (id: string, task: any) => {  // ← id를 string으로 변경
             const response = await apiClient.put(`/tasks/${id}`, task);
             return response.data;
         },
-        delete: async (id: number) => {
+        delete: async (id: string) => {  // ← id를 string으로 변경
             const response = await apiClient.delete(`/tasks/${id}`);
             return response.data;
         },
-        bulkUpdate: async (tasks: any[]) => {
-            const response = await apiClient.put("/tasks/bulk", tasks);
+        bulkSave: async (tasks: any[]) => {
+            const response = await apiClient.post("/tasks/bulk", tasks);
             return response.data;
         },
     },
@@ -301,16 +301,20 @@ export const api = {
             },
         },
         flowTables: {
+            // companyId로 모든 processingTasks의 flow.sheets 데이터를 가져옴
+            // 반환 형식: { taskId: { taskName, sheets: { collect: [], retain: [], ... } }, ... }
             getAll: async (companyId: string) => {
                 const response = await apiClient.get("/lifecycle/flowtables", {
                     params: { companyId },
                 });
                 return response.data;
             },
-            save: async (companyId: string, data: any) => {
+            // taskId와 sheets 데이터를 저장
+            save: async (companyId: string, taskId: string, sheets: any) => {
                 const response = await apiClient.post("/lifecycle/flowtables", {
                     companyId,
-                    data,
+                    taskId,
+                    sheets,
                 });
                 return response.data;
             },

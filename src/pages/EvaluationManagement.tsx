@@ -40,7 +40,7 @@ export default function EvaluationManagement() {
         	const data = await api.evaluations.getAll(user?.companyId);
         	// No. 기준으로 정렬
         	const sorted = data.sort((a: EvaluationItem, b: EvaluationItem) => {
-          	return a.no.localeCompare(b.no, undefined, { numeric: true });
+          	return String(a.id).localeCompare(String(b.id), undefined, { numeric: true });
         	});
         	setItems(sorted);
 			} catch (error) {
