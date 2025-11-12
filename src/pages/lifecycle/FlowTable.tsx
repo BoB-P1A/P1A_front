@@ -206,7 +206,7 @@ const mapDbToFrontend = {
         collectionPurpose: dbItem.collect_purpose || '',
         collectionDepartment: dbItem.collect_dept || '',
         isOnline: dbItem.collect_online === true ? 'True' : dbItem.collect_online === false ? 'False' : '',
-        isEncrypted: dbItem.collect_encrypt === true ? 'True' : dbItem.collect_encrypt === false ? 'False' : '',
+        isEncrypted: dbItem.collect_encrypt === true ? 'True' : dbItem.collect_encrypt === false ? 'False' : dbItem.collect_encrypt === null ? 'Unknown' : '',
     }),
     storage: (dbItem: DbRetainItem): StorageData => ({
         id: dbItem._id || dbItem.id || '',
@@ -219,7 +219,7 @@ const mapDbToFrontend = {
         storageFormat: dbItem.retain_form || '',
         encryptionItem: dbItem.retain_enc_items || '',
         isOnline: dbItem.retain_online === true ? 'True' : dbItem.retain_online === false ? 'False' : '',
-        isEncrypted: dbItem.retain_encrypt === true ? 'True' : dbItem.retain_encrypt === false ? 'False' : '',
+        isEncrypted: dbItem.retain_encrypt === true ? 'True' : dbItem.retain_encrypt === false ? 'False' : dbItem.retain_encrypt === null ? 'Unknown' : '',
     }),
     usage: (dbItem: DbUseItem): UsageData => ({
         id: dbItem._id || dbItem.id || '',
@@ -232,7 +232,7 @@ const mapDbToFrontend = {
         usageMethod: dbItem.use_method || '',
         usageDepartment: dbItem.use_dept || '',
         isOnline: dbItem.use_online === true ? 'True' : dbItem.use_online === false ? 'False' : '',
-        isEncrypted: dbItem.use_encrypt === true ? 'True' : dbItem.use_encrypt === false ? 'False' : '',
+        isEncrypted: dbItem.use_encrypt === true ? 'True' : dbItem.use_encrypt === false ? 'False' : dbItem.use_encrypt === null ? 'Unknown' : '',
     }),
     provision: (dbItem: DbProvideItem): ProvisionData => ({
         id: dbItem._id || dbItem.id || '',
@@ -246,9 +246,9 @@ const mapDbToFrontend = {
         provisionPurpose: dbItem.provide_purpose || '',
         provisionMethod: dbItem.provide_method || '',
         linkageSystemOnline: dbItem.provide_sys_online === true ? 'True' : dbItem.provide_sys_online === false ? 'False' : '',
-        linkageSystemEncrypted: dbItem.provide_sys_encrypt === true ? 'True' : dbItem.provide_sys_encrypt === false ? 'False' : '',
+        linkageSystemEncrypted: dbItem.provide_sys_encrypt === true ? 'True' : dbItem.provide_sys_encrypt === false ? 'False' : dbItem.provide_sys_encrypt === null ? 'Unknown' : '',
         recipientOnline: dbItem.receiver_online === true ? 'True' : dbItem.receiver_online === false ? 'False' : '',
-        recipientEncrypted: dbItem.receiver_encrypt === true ? 'True' : dbItem.receiver_encrypt === false ? 'False' : '',
+        recipientEncrypted: dbItem.receiver_encrypt === true ? 'True' : dbItem.receiver_encrypt === false ? 'False' : dbItem.receiver_encrypt === null ? 'Unknown' : '',
     }),
     disposal: (dbItem: DbDiscardItem): DisposalData => ({
         id: dbItem._id || dbItem.id || '',
@@ -275,7 +275,7 @@ const mapFrontendToDb = {
         collect_purpose: frontItem.collectionPurpose,
         collect_dept: frontItem.collectionDepartment,
         collect_online: frontItem.isOnline === 'True',
-        collect_encrypt: frontItem.isEncrypted === 'True',
+        collect_encrypt: frontItem.isEncrypted === 'True' ? true : frontItem.isEncrypted === 'False' ? false : null,
     }),
     storage: (frontItem: StorageData) => ({
         retain_task: frontItem.detailTask,
@@ -287,7 +287,7 @@ const mapFrontendToDb = {
         retain_form: frontItem.storageFormat,
         retain_enc_items: frontItem.encryptionItem,
         retain_online: frontItem.isOnline === 'True',
-        retain_encrypt: frontItem.isEncrypted === 'True',
+        retain_encrypt: frontItem.isEncrypted === 'True' ? true : frontItem.isEncrypted === 'False' ? false : null,
     }),
     usage: (frontItem: UsageData) => ({
         use_task: frontItem.detailTask,
@@ -299,7 +299,7 @@ const mapFrontendToDb = {
         use_method: frontItem.usageMethod,
         use_dept: frontItem.usageDepartment,
         use_online: frontItem.isOnline === 'True',
-        use_encrypt: frontItem.isEncrypted === 'True',
+        use_encrypt: frontItem.isEncrypted === 'True' ? true : frontItem.isEncrypted === 'False' ? false : null,
     }),
     provision: (frontItem: ProvisionData) => ({
         provide_task: frontItem.detailTask,
@@ -312,9 +312,9 @@ const mapFrontendToDb = {
         provide_purpose: frontItem.provisionPurpose,
         provide_method: frontItem.provisionMethod,
         provide_sys_online: frontItem.linkageSystemOnline === 'True',
-        provide_sys_encrypt: frontItem.linkageSystemEncrypted === 'True',
+        provide_sys_encrypt: frontItem.linkageSystemEncrypted === 'True' ? true : frontItem.linkageSystemEncrypted === 'False' ? false : null,
         receiver_online: frontItem.recipientOnline === 'True',
-        receiver_encrypt: frontItem.recipientEncrypted === 'True',
+        receiver_encrypt: frontItem.recipientEncrypted === 'True' ? true : frontItem.recipientEncrypted === 'False' ? false : null,
     }),
     disposal: (frontItem: DisposalData) => ({
         discard_task: frontItem.detailTask,
@@ -690,6 +690,7 @@ export default function ProtectionFlowTable() {
                                                             <SelectContent>
                                                                 <SelectItem value="True">True</SelectItem>
                                                                 <SelectItem value="False">False</SelectItem>
+                                                                <SelectItem value="Unknown">Unknown</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </TableCell>
@@ -761,6 +762,7 @@ export default function ProtectionFlowTable() {
                                                             <SelectContent>
                                                                 <SelectItem value="True">True</SelectItem>
                                                                 <SelectItem value="False">False</SelectItem>
+                                                                <SelectItem value="Unknown">Unknown</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </TableCell>
@@ -832,6 +834,7 @@ export default function ProtectionFlowTable() {
                                                             <SelectContent>
                                                                 <SelectItem value="True">True</SelectItem>
                                                                 <SelectItem value="False">False</SelectItem>
+                                                                <SelectItem value="Unknown">Unknown</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </TableCell>
@@ -907,6 +910,7 @@ export default function ProtectionFlowTable() {
                                                             <SelectContent>
                                                                 <SelectItem value="True">True</SelectItem>
                                                                 <SelectItem value="False">False</SelectItem>
+                                                                <SelectItem value="Unknown">Unknown</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </TableCell>
@@ -925,6 +929,7 @@ export default function ProtectionFlowTable() {
                                                             <SelectContent>
                                                                 <SelectItem value="True">True</SelectItem>
                                                                 <SelectItem value="False">False</SelectItem>
+                                                                <SelectItem value="Unknown">Unknown</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </TableCell>

@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EPIA 개인정보 흐름도</title>
+
+    <!-- GoJS -->
+    <script src="https://cdn.jsdelivr.net/npm/gojs@3.0.22/release/go.js"></script>
+    <script src="https://gojs.net/latest/extensions/Figures.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+        :root{
+            --bg:#f5f7fa;
+            --header:#2f6fb0;
+            --header-text:#fff;
+            --col-header:#e5e7eb;
+            --grid:#cbd5e1;
+            --border:#9ca3af;
+            --leftcol:#eef2f7;
+
+            --left-w:90px;    /* 행 라벨 열 */
+            --col-w:210px;     /* 수집/보유/... 각 단계 열 넓이 */
+
+            --cell-min-h:100px;
+
+            --palette-w:160px;
+            --layout-gap:10px;
+            --pii-panel-w:180px;
+        }
+
+        *{box-sizing:border-box;}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
+        }
+        .page{
+            max-width:1540px;      /* 전체 폭 */
+            margin:16px auto;
+            padding:10px;
+        }
+
+        .toolbar{
+            margin:6px 0 12px 6px;
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+        .toolbar button{
+            padding:6px 10px;
+            font-size:16px;
+            line-height:1.3;
+            cursor:pointer;
+        }
+
+        .frame{
+            background:#fff;
+            border:1.5px solid var(--border);
+            border-radius:10px;
+            position:relative;
+            /* overflow:visible;  기본적으로 visible, 스크롤 막음 */
+        }
+
+        .bluebar{
+            height:56px;
+            background:var(--header);
+            color:var(--header-text);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:800;
+            font-size:18px;
+            border-top-left-radius:10px;
+            border-top-right-radius:10px;
+            flex-shrink:0;
+        }
+
+        /* ===== 메인 가로 레이아웃: [팔레트] [가운데 표+다이어그램] [PII 패널] */
+        .main-row{
+            display:flex;
+            flex-direction:row;
+            align-items:flex-start;
+            justify-content:flex-start;
+            gap:var(--layout-gap);
+            padding:16px;
+            /* 스크롤 제거 */
+            overflow:visible;
+        }
+
+        /* ===== 팔레트 (이제 absolute 아님, 그냥 첫 컬럼으로 자리 잡음) ===== */
+        #paletteCol{
+            flex:0 0 var(--palette-w);
+            max-width:var(--palette-w);
+            margin-left: -8px;
+        }
+        #palette{
+            width:100%;
+            border:1px solid #bbb;
+            background:#f8f9fb;
+            border-radius:8px;
+            box-shadow:0 4px 12px rgba(0,0,0,.08);
+            height:600px;
+
+            /* 스크롤 제거 */
+            overflow:hidden;
+        }
+
+        /* ===== 가운데 표 컨테이너 ===== */
+        #tableWrapOuter{
+            position:relative;
+            flex:0 0 auto;
+        }
+        .tableHeader{
+            display:grid;
+            grid-template-columns: var(--left-w) repeat(5, var(--col-w));
+            border-bottom:1px solid var(--grid);
+            background:var(--col-header);
+            font-weight:700;
+            font-size:16px;
+        }
+        .tableHeader>div{
+            padding:10px 12px;
+            border-right:1px solid var(--grid);
+            text-align:center;
+            white-space:pre-line;   /* ← \n 줄바꿈 인식 */
+        }
+        .tableHeader>div:last-child{border-right:none}
+
+        /* 실제 표 영역 */
+        #gridWrap{
+            position:relative;
+            border:1px solid var(--grid);
+            border-top:none;
+            background:#fff;
+            /* 스크롤 제거 */
+            overflow:visible;
+        }
+
+        #tableGrid{
+            display:grid;
+            grid-template-columns: var(--left-w) repeat(5, var(--col-w));
+            font-size:16px;
+            line-height:1.35;
+        }
+
+        /* 공통 셀 */
+        .cell{
+            min-height:var(--cell-min-h);
+            border-right:1px solid var(--grid);
+            border-bottom:1px solid var(--grid);
+            padding:4px;
+            position:relative;
+        }
+        .cell:nth-child(6n){ border-right:none; } /* 6열마다 끊기 (라벨열+5단계=6칸) */
+
+        .rowlabel{
+            background:var(--leftcol);
+            font-weight:700;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            white-space:pre-line;
+            text-align:center;
+            font-size:16px;
+        }
+
+        /* textarea 공통 */
+        .cell textarea{
+            width: 100%;
+            height: auto;           /* scrollHeight로 키움 */
+            min-height: 0;          /* 고정값 제거 */
+            border: none;
+            background: transparent;
+            resize: none;           /* 사용자 드래그 금지 */
+            overflow: hidden;       /* 내부 스크롤 제거 */
+            font-size: 16px;
+            line-height: 1.35;
+            /*font-family: inherit;*/
+            white-space: pre-wrap;
+            word-break: break-word;
+            padding: 4px 6px;
+            box-sizing: border-box;
+        }
+        .cell textarea:focus{
+            outline:1px solid #60a5fa;
+        }
+
+        /* 처리흐름 칸 */
+        .flowcell textarea{
+            font-weight:500;
+        }
+
+        /* 단계 설명 칸 행 자체도 텍스트 높이에 맞춰 늘어나게 */
+        .descRow {
+            align-items: stretch;
+            min-height: 0 !important;      /* flex/grid 부모의 overflow 방지 핵심 */
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        /* ===== GoJS 다이어그램 오버레이 (표 위에 겹침) ===== */
+        #diagramOverlay{
+            position:absolute;
+            /* 이 영역은 수집~파기 5열 부분 전체 덮도록 계산해서 JS에서 리사이즈 */
+            left:0;
+            top:0;
+            right:0;
+            bottom:0;
+            background:transparent;
+            pointer-events:auto;
+            border:none;
+            z-index:10;
+        }
+
+        /* ===== 오른쪽 처리 개인정보 패널 ===== */
+        #piiPanel{
+            flex:0 0 auto;
+            width:var(--pii-panel-w);
+            border:1px solid var(--border);
+            border-radius:8px;
+            background:#fff;
+            box-shadow:0 4px 12px rgba(0,0,0,.05);
+            display:flex;
+            flex-direction:column;
+            max-height:none;
+            height:auto;
+            overflow:visible;
+        }
+
+        .piiPanelHeader{
+            background:var(--col-header);
+            border-bottom:1px solid var(--grid);
+            border-top-left-radius:8px;
+            border-top-right-radius:8px;
+            font-weight:700;
+            font-size:16px;
+            text-align:center;
+            padding:10px 8px;
+            line-height:1.4;
+        }
+
+        #piiListScroll{
+            flex:1 1 auto;
+            padding:8px;
+            font-size:16px;
+            line-height:1.4;
+            background:#fff;
+            overflow:visible;
+        }
+
+        .piiRow{
+            border-bottom:1px dashed var(--grid);
+            padding:8px 6px;
+            display:flex;
+            flex-direction:row;
+            align-items:stretch;
+            gap:6px;
+        }
+        .piiRow:last-child{ border-bottom:none; }
+
+        .pii-bullet{
+            flex:0 0 auto;
+            font-size:20px;
+            font-weight:600;
+            min-width:20px;
+            text-align:center;
+            line-height:1.4;
+        }
+
+        .pii-textwrap{
+            flex:1 1 auto;
+            width:100%;
+        }
+
+        .pii-textwrap textarea{
+            width:100%;
+            min-height:0px;
+            border:none;
+            background:transparent;
+            resize:none;          /* 사용자가 드래그로 크기 변경 못함 */
+            font-size:16px;
+            line-height:1.35;
+            padding:4px;
+            height:auto;          /* 고정/최소 높이 제거 */
+            white-space:pre-wrap; /* 줄바꿈 보존 */
+            /* 텍스트가 늘면 스크롤 대신 높이 확장 */
+            overflow:hidden;
+        }
+        .pii-textwrap textarea:focus{
+            outline:1px solid #60a5fa;
+        }
+
+        /* modelBox 아래 */
+        #modelBox{
+            width:100%;
+            height:180px;
+            margin-top:10px;
+            font-size:16px;
+            line-height:1.4;
+            font-family:ui-monospace,Consolas,monospace;
+            border:1px solid var(--border);
+            border-radius:6px;
+            padding:8px;
+        }
+
+        /* 캡쳐 모드일 때 제외할 요소 숨기기 */
+        .capture-mode #paletteCol,
+        .capture-mode #modelBox{
+            display: none !important;
+        }
+        /* 한 줄 유지 + 콘텐츠 전체 폭으로 확장 */
+        .capture-mode .frame {
+            width: max-content !important;
+        }
+        .capture-mode .bluebar {
+            position: static !important;
+        }
+        /* 캡쳐 시에도 좌/중앙/우(PII) 한 줄 유지를 강제 */
+        .capture-mode .main-row {
+            display: flex !important;
+            flex-wrap: nowrap !important;     /* 줄바꿈 금지 */
+            align-items: flex-start !important;
+            width: max-content !important;     /* 콘텐츠 너비만큼 확장(뷰포트보다 넓어도 OK) */
+        }
+        /* 중앙 표+다이어그램 래퍼는 유동 폭(콘텐츠만큼) */
+        .capture-mode #tableWrapOuter {
+            flex: 0 0 auto !important;        /* 줄바꿈 방지 + 내용만큼 차지 */
+            width: max-content !important;
+        }
+        /* 우측 PII 패널도 한 줄에 고정 */
+        .capture-mode #piiPanel {
+            position: static !important;       /* sticky/fixed 영향 제거, 루트 안에 포함 */
+            flex: 0 0 auto !important;         /* 줄바꿈 방지 */
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="toolbar">
+        <button id="fetchBtn">흐름표에서 불러오기</button>
+        <button id="saveBtn">저장</button>
+        <button id="loadBtn">불러오기</button>
+
+        <button id="clearDiagramBtn" title="흐름도를 모두 비웁니다">흐름도 비우기</button>
+
+        <button id="clearPIIBtn">처리 개인정보 비우기</button>
+        <button id="addRowBtn">처리 개인정보 행 추가</button>
+        <button id="delRowBtn">처리 개인정보 행 삭제(마지막)</button>
+
+        <button id="linkStyleToggleBtn" title="실선/점선 전환">링크 스타일: 실선</button>
+        <button id="linkColorToggleBtn" title="검정/빨강 전환">링크 색상: 검정</button>
+
+        <button id="editModeToggleBtn">
+            <span class="icon" aria-hidden="true">🖱️</span>
+            <span class="label">흐름도 편집 모드</span>
+        </button>
+    </div>
+
+    <div class="frame">
+        <div class="bluebar" id="flowTitleBar">업무명 : </div>
+
+        <div class="main-row">
+            <!-- 팔레트 열 -->
+            <div id="paletteCol">
+                <div id="palette"></div>
+            </div>
+
+            <!-- 가운데 표 + 다이어그램 -->
+            <div id="tableWrapOuter">
+                <div class="tableHeader">
+                    <div>생명주기</div>
+                    <div>수집</div>
+                    <div>보유</div>
+                    <div>이용</div>
+                    <div>제공</div>
+                    <div>파기</div>
+                </div>
+
+                <div id="gridWrap">
+                    <div id="tableGrid">
+                        <!-- Row 1: 처리흐름 -->
+                        <div class="cell rowlabel" data-rowtype="flow">처리흐름</div>
+                        <div class="cell flowcell" data-col="collect"><textarea></textarea></div>
+                        <div class="cell flowcell" data-col="retain"><textarea></textarea></div>
+                        <div class="cell flowcell" data-col="use"><textarea></textarea></div>
+                        <div class="cell flowcell" data-col="provide"><textarea></textarea></div>
+                        <div class="cell flowcell" data-col="discard"><textarea></textarea></div>
+
+                        <!-- Row 2: 단계 설명 -->
+                        <div class="cell rowlabel" data-rowtype="desc">설명</div>
+                        <div class="cell desc-row autosize-target" data-phase="collect"><textarea class="desc-collect"></textarea></div>
+                        <div class="cell desc-row autosize-target" data-phase="retain"><textarea class="desc-retain"></textarea></div>
+                        <div class="cell desc-row autosize-target" data-phase="use"><textarea class="desc-use"></textarea></div>
+                        <div class="cell desc-row autosize-target" data-phase="provide"><textarea class="desc-provide"></textarea></div>
+                        <div class="cell desc-row autosize-target" data-phase="discard"><textarea class="desc-discard"></textarea></div>
+                    </div>
+
+                    <!-- 다이어그램은 표 위에 겹친다 -->
+                    <div id="diagramOverlay"></div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 처리 개인정보 패널 -->
+            <div id="piiPanel">
+                <div class="piiPanelHeader">처리 개인정보</div>
+                <div id="piiListScroll">
+                    <!-- 동적 행 -->
+                </div>
+            </div>
+        </div> <!-- /main-row -->
+    </div> <!-- /frame -->
+
+    <textarea id="modelBox" placeholder="저장을 누르면 현재 흐름도가 JSON 형태로 저장됩니다."></textarea>
+</div>
+
+<script>
+    /* ====== GoJS 라이선스 ====== */
+    (() => {
+        const key = new URLSearchParams(location.search).get("gojs_key");
+        if (key) go.Diagram.licenseKey = key;
+    })();
+
+    /* ========= 레이아웃/좌표 계산 ========= */
+    function getMetrics() {
+        const rootStyles = getComputedStyle(document.documentElement);
+        const leftW = parseFloat(rootStyles.getPropertyValue('--left-w'));
+        const colW  = parseFloat(rootStyles.getPropertyValue('--col-w'));
+
+        // gridWrap 기준으로 계산
+        const gridWrap = document.getElementById('gridWrap');
+        const gridRect = gridWrap.getBoundingClientRect();
+
+        // overlay는 "수집~파기" 5열 위에만 올려야 하므로
+        // overlay의 left는 leftW 만큼 우측으로 밀려야 함
+        const offsetLeft = leftW;
+        const overlayW   = colW * 5;
+        const overlayH   = gridRect.height;
+
+        return {
+            offsetLeft,
+            offsetTop: 0,
+            width:overlayW,
+            height:overlayH,
+            leftW, colW
+        };
+    }
+
+    function resizeOverlay(){
+        const m = getMetrics();
+        const overlay = document.getElementById('diagramOverlay');
+        overlay.style.left   = m.offsetLeft + 'px';
+        overlay.style.top    = m.offsetTop  + 'px';
+        overlay.style.width  = m.width + 'px';
+        overlay.style.height = m.height + 'px';
+        autosizeAllTextareas();
+    }
+
+    /* desc textarea 자동 높이 */
+    function autosizeAllTextareas(){
+        document.querySelectorAll('.cell textarea').forEach(ta=>{
+            ta.style.overflow = 'hidden';
+            ta.style.minHeight = '0px';
+            ta.style.height = 'auto';
+            ta.style.height = ta.scrollHeight + 'px';
+
+            const cell = ta.closest('.cell');
+            if (cell){
+                const min = Math.max(ta.scrollHeight, 32);  // 최소 높이 보장
+                cell.style.minHeight = min + 'px';
+                cell.style.height = 'auto';
+            }
+        });
+    }
+
+    /* 입력 시 즉시 반영 */
+    function wireAutosizeAll(){
+        document.querySelectorAll('.cell textarea').forEach(ta=>{
+            if (ta._wired) return;
+            ta._wired = true;
+            ta.addEventListener('input', autosizeAllTextareas);
+        });
+    }
+
+    // --- URL 파라미터 파싱: task_idx, company_id ---
+    const url = new URL(window.location.href);
+    const taskId = url.searchParams.get("task_id");
+    const companyId = url.searchParams.get("company_id");
+    if (!companyId) alert("company_id가 필요합니다");
+    if (!taskId)    alert("task_id가 필요합니다");
+    console.log("Loaded company_id =", companyId, "task_id =", taskId);
+
+    /* ========= 포트/링크 유틸 ========= */
+    const $ = go.GraphObject.make;
+
+    const sideSpotMap = {
+        L: go.Spot.LeftSide,
+        R: go.Spot.RightSide,
+        T: go.Spot.TopSide,
+        B: go.Spot.BottomSide
+    };
+    function sideOf(pid){ return (pid && pid[0]) || 'T'; }
+
+    const baseNode = { locationSpot: go.Spot.TopLeft };
+
+    function makeSideSlabPort(side) {
+        const sideSpotMap = { L: go.Spot.LeftSide, R: go.Spot.RightSide, T: go.Spot.TopSide, B: go.Spot.BottomSide };
+        const isH = side === "T" || side === "B";
+        return $(go.Shape, "Rectangle", {
+            name: side + "_SLAB",
+            fill: "transparent",       // 투명 (결계 X)
+            stroke: null,
+            stretch: isH ? go.Stretch.Horizontal : go.Stretch.Vertical,  // 면 전체 활성화 (분산 가능)
+            geometryStretch: go.GeometryStretch.None,                    // 노드 크기 영향 차단
+            alignment: ({T:go.Spot.Top,B:go.Spot.Bottom,L:go.Spot.Left,R:go.Spot.Right})[side],
+            alignmentFocus: ({T:go.Spot.Top,B:go.Spot.Bottom,L:go.Spot.Left,R:go.Spot.Right})[side],
+            portId: side,
+            fromLinkable: true, toLinkable: true,
+            fromLinkableDuplicates: true, toLinkableDuplicates: true,
+            fromSpot: sideSpotMap[side], toSpot: sideSpotMap[side],
+            cursor: null,              // 십자커서 제거
+            opacity: 0.01              // 마우스 감지만 하고 시각적 영향 거의 없음
+        });
+    }
+
+    /* ========= 노드 템플릿 ========= */
+    function commonNodePanel(shapeName, fill, stroke, opts = {}){
+        return $(go.Panel, "Auto",
+            $(go.Shape, shapeName,
+                Object.assign({
+                    fill, stroke, strokeWidth: 2,
+                    portId: "",
+                    fromLinkable: true, toLinkable: true,
+                    fromLinkableDuplicates: true, toLinkableDuplicates: true,
+                    fromSpot: go.Spot.AllSides, toSpot: go.Spot.AllSides // 면 전체
+                }, opts.shape || {})),
+            $(go.Panel, "Vertical",
+                { margin: new go.Margin(8, 8, 10, 10), defaultAlignment: go.Spot.Center },
+                $(go.TextBlock,
+                    { editable: true, wrap: go.Wrap.Fit, width: 160, font: "16px sans-serif",
+                        textAlign: "center", margin: new go.Margin(0, 0, 1, 0), overflow: go.TextOverflow.Ellipsis },
+                    new go.Binding("text").makeTwoWay()
+                )
+            )
+        );
+    }
+
+    let myDiagram, myPalette;
+
+    function initDiagram(){
+        resizeOverlay();
+
+        myDiagram = $(go.Diagram, "diagramOverlay", {
+            "undoManager.isEnabled": true,
+            allowLink: true
+        });
+        // === 다이어그램 이동/줌 완전 잠금 ===
+        const d = myDiagram;
+
+        // 휠 동작 자체를 비활성화 (줌/스크롤 모두 막기)
+        d.toolManager.mouseWheelBehavior = go.ToolManager.WheelNone;
+
+        // 스크롤 불가 (휠·트랙패드 스크롤이 다이어그램에 먹지 않음)
+        d.allowHorizontalScroll = false;
+        d.allowVerticalScroll   = false;
+
+        // 패닝(드래그로 화면 이동) 비활성화
+        d.toolManager.panningTool.isEnabled = false;
+
+        // 가장자리 자동 스크롤도 차단(드래그가 가장자리에 가도 안 움직이게)
+        d.autoScrollRegion = new go.Margin(0, 0, 0, 0);
+
+        // (선택) 줌 자체를 전면 금지하고 싶다면 같이 켜기
+        // d.allowZoom = false;
+
+        myDiagram.toolManager.linkingTool.portGravity = 20;
+        myDiagram.toolManager.linkingTool.temporaryLink.routing  = go.Routing.AvoidsNodes;
+        myDiagram.toolManager.linkingTool.temporaryLink.fromSpot = go.Spot.AllSides;
+        myDiagram.toolManager.linkingTool.temporaryLink.toSpot   = go.Spot.AllSides;
+
+        myDiagram.toolManager.relinkingTool.temporaryLink.routing = go.Routing.AvoidsNodes;
+
+        // subject
+        myDiagram.nodeTemplateMap.add("subject",
+            $(go.Node, "Spot",
+                Object.assign({}, baseNode, { avoidable:true, portSpreading:go.Node.SpreadingEvenly }),
+                new go.Binding("location","loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("RoundedRectangle", "#fff", "#4b5563"),
+            )
+        );
+
+        // recipient (회색 배경)
+        myDiagram.nodeTemplateMap.add("recipient",
+            $(go.Node, "Spot",
+                Object.assign({}, baseNode, { avoidable:true, portSpreading:go.Node.SpreadingEvenly }),
+                new go.Binding("location","loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("RoundedRectangle", "#ECECEC", "#4b5563"),
+            )
+        );
+
+        // system / system_offline
+        myDiagram.nodeTemplateMap.add("system",
+            $(go.Node,"Spot",
+                Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
+                new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("Rectangle","#E8F0FE","#4682B4"),
+            )
+        );
+        myDiagram.nodeTemplateMap.add("system_offline",
+            $(go.Node,"Spot",
+                Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
+                new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("Rectangle","#ECECEC","#6B7280",{shape:{strokeDashArray:[6,3]}}),
+            )
+        );
+
+        // database / database_offline
+        myDiagram.nodeTemplateMap.add("database",
+            $(go.Node,"Spot",
+                Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
+                new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("Cylinder1","#FFF0F5","#B22222"),
+            )
+        );
+        myDiagram.nodeTemplateMap.add("database_offline",
+            $(go.Node,"Spot",
+                Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
+                new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("Cylinder1","#F3F4F6","#6B7280",{shape:{strokeDashArray:[6,3]}}),
+            )
+        );
+
+        // discard / discard_offline
+        myDiagram.nodeTemplateMap.add("discard",
+            $(go.Node,"Spot",
+                Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
+                new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("Document","#FDEDEC","#CD5C5C"),
+            )
+        );
+        myDiagram.nodeTemplateMap.add("discard_offline",
+            $(go.Node,"Spot",
+                Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
+                new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
+                commonNodePanel("Document","#F5F5F5","#6B7280",{shape:{strokeDashArray:[6,3]}}),
+            )
+        );
+
+        // 링크 템플릿
+        const LINK_COMMON = {
+            routing: go.Routing.AvoidsNodes,
+            curve: go.Curve.JumpOver,
+            corner: 6,
+            fromEndSegmentLength: 6, // 출발과 도착시 직선을 보장하는 건데 끔
+            toEndSegmentLength: 6,   // 출발과 도착시 직선을 보장하는 건데 끔
+            fromShortLength: 0,      // 들뜸 제거
+            toShortLength: 0,        // 들뜸 제거
+            // adjusting: go.LinkAdjusting.None, // 포트 부근 보정 끔 (튀는 거 방지)
+            relinkableFrom:true, relinkableTo:true,
+            reshapable:true, resegmentable:true,
+            adjusting: go.LinkAdjusting.End // 시작점, 끝점만 유지하고 경로 재계산
+        };
+        function siblingsCurvinessBinding(){
+            return new go.Binding("curviness", "", (_, obj) => {
+                const link = obj.part; if (!link) return 0;
+                const siblings = link.fromNode && link.toNode
+                    ? link.fromNode.findLinksBetween(link.toNode, true) : null;
+                let i = 0, n = 0;
+                if (siblings) { siblings.each(l => { if (l === link) i = n; n++; }); }
+                if (n <= 1) return 0;
+                const step = 22, mid = (n - 1) / 2;
+                return (i - mid) * step;
+            });
+        }
+
+        myDiagram.linkTemplateMap.add("solid",
+            $(go.Link,
+                Object.assign({}, LINK_COMMON),
+                $(go.Shape,{strokeWidth:2},
+                    new go.Binding("stroke","stroke",c=>c||"black")),
+                $(go.Shape,{toArrow:"Standard"},
+                    new go.Binding("stroke","stroke",c=>c||"black"),
+                    new go.Binding("fill","stroke",c=>c||"black")),
+                $(go.TextBlock,{segmentOffset:new go.Point(0,-10),editable:true,font: "bold 20px sans-serif"},
+                    new go.Binding("text").makeTwoWay()),
+                siblingsCurvinessBinding()
+            )
+        );
+        myDiagram.linkTemplateMap.add("dashed",
+            $(go.Link,
+                Object.assign({}, LINK_COMMON),
+                $(go.Shape,{strokeDashArray:[6,3],strokeWidth:2},
+                    new go.Binding("stroke","stroke",c=>c||"black")),
+                $(go.Shape,{toArrow:"OpenTriangle"},
+                    new go.Binding("stroke","stroke",c=>c||"black")),
+                $(go.TextBlock,{segmentOffset:new go.Point(0,-10),editable:true,font: "bold 20px sans-serif"},
+                    new go.Binding("text").makeTwoWay()),
+                siblingsCurvinessBinding()
+            )
+        );
+
+        // 다이어그램 이벤트
+        myDiagram.addDiagramListener("LinkDrawn", e => {
+            const link = e.subject;
+            link.routing = go.Routing.AvoidsNodes;
+            myDiagram.model.commit(m => {
+                m.setDataProperty(link.data, "points", undefined);
+            }, "force-reroute");
+            link.invalidateRoute();
+
+        });
+        myDiagram.addDiagramListener("LinkRelinked", e => {
+            const link = e.subject;
+            link.routing = go.Routing.AvoidsNodes;
+            myDiagram.model.commit(m => {
+                m.setDataProperty(link.data, "points", undefined);
+            }, "force-reroute");
+            link.invalidateRoute();
+        });
+
+        myDiagram.addDiagramListener("SelectionMoved", e => {
+            e.subject.each(part => {
+                if (!(part instanceof go.Node)) return;
+                // 포트 배정은 자동이므로 경로만 재계산
+                part.findLinksConnected().each(l => {
+                    l.invalidateRoute();
+                });
+            });
+        });
+
+        // 노드가 이동/추가/삭제될 때마다 높이 재계산
+        myDiagram.addDiagramListener("LayoutCompleted", adjustFlowRowHeight);
+        myDiagram.addDiagramListener("SelectionMoved", adjustFlowRowHeight);
+        myDiagram.addDiagramListener("PartResized", adjustFlowRowHeight);
+        myDiagram.addDiagramListener("ExternalObjectsDropped", adjustFlowRowHeight);
+
+        // 팔레트
+        myPalette = $(go.Palette, "palette", {
+            maxSelectionCount:1,
+            nodeTemplateMap: myDiagram.nodeTemplateMap,
+            model: new go.GraphLinksModel([
+                { text:"정보주체", category:"subject" },
+                { text:"수신자", category:"recipient" },
+                { text:"시스템(온라인)", category:"system" },
+                { text:"시스템(오프라인)", category:"system_offline" },
+                { text:"DB(온라인)", category:"database" },
+                { text:"DB(오프라인)", category:"database_offline" },
+                { text:"파기(온라인)", category:"discard" },
+                { text:"파기(오프라인)", category:"discard_offline" }
+            ])
+        });
+
+        // 빈 모델
+        myDiagram.model = go.Model.fromJson({
+            "class":"go.GraphLinksModel",
+            "modelData":{"position":"-5 -5"},
+            "nodeDataArray":[],
+            "linkDataArray":[]
+        });
+        if (myDiagram.model instanceof go.GraphLinksModel){
+            myDiagram.model.linkFromPortIdProperty = "fromPort";
+            myDiagram.model.linkToPortIdProperty   = "toPort";
+        }
+        myDiagram.addModelChangedListener(e => {
+            if (e.isTransactionFinished) {
+                myDiagram.model.setDataProperty(
+                    myDiagram.model.modelData,
+                    "position",
+                    go.Point.stringify(myDiagram.position)
+                );
+            }
+        });
+        myDiagram.addDiagramListener("InitialLayoutCompleted", e => {
+            const pos = myDiagram.model.modelData.position;
+            if (pos) myDiagram.position = go.Point.parse(pos);
+        });
+
+        myDiagram.isEnabled = true;
+        myDiagram.allowLink = true;
+        myDiagram.toolManager.linkingTool.isEnabled = true;
+        myDiagram.toolManager.relinkingTool.isEnabled = true;
+        myDiagram.toolManager.linkingTool.portGravity = 20;
+    }
+
+    /* ====== 노드 높이 기반으로 처리흐름 행 높이 자동 조정 ====== */
+    function adjustFlowRowHeight() {
+        if (!myDiagram) return;
+
+        // 다이어그램의 노드 중 가장 아래쪽(y+height) 위치 계산
+        let maxY = 0;
+        myDiagram.nodes.each(node => {
+            const b = node.actualBounds;
+            const bottom = b.y + b.height;
+            if (bottom > maxY) maxY = bottom;
+        });
+
+        // 약간의 여백 추가
+        const targetH = Math.ceil(maxY + 80);  // 80px 여백
+
+        // CSS 변수 업데이트
+        document.documentElement.style.setProperty('--cell-min-h', `${targetH}px`);
+
+        // 실제 셀 스타일도 강제로 갱신
+        document.querySelectorAll('.flowcell, .cell.rowlabel[data-rowtype="flow"]').forEach(el => {
+            el.style.minHeight = `${targetH}px`;
+            el.style.height = `${targetH}px`;
+        });
+
+        // overlay 영역 다시 계산
+        resizeOverlay();
+    }
+
+    /* ========= 원형숫자 만들기 (PII와 흐름도에서 사용) ========= */
+    function numToCircle(n){
+        if (n >= 1 && n <= 20) {
+            return String.fromCharCode(0x2460 + (n - 1));
+        }
+        // ㉑(21)~㊿(50)
+        if (n >= 21 && n <= 35) {
+            return String.fromCharCode(0x3250 + (n - 20)); // ㉑은 U+3251 (0x3250 + 1)
+        }
+        if (n >= 36 && n <= 50) {
+            return String.fromCharCode(0x32B1 + (n - 35));
+        }
+    }
+
+    /* ========= PII 패널 ========= */
+    function buildPIIRowDom(idx, initialVal){
+        const row = document.createElement('div');
+        row.className = 'piiRow';
+        row.setAttribute('data-type','pii');
+
+        const bullet = document.createElement('div');
+        bullet.className = 'pii-bullet';
+        bullet.textContent = numToCircle(idx);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'pii-textwrap';
+
+        const ta = document.createElement('textarea');
+        ta.value = initialVal || "";
+
+        wrap.appendChild(ta);
+        row.appendChild(bullet);
+        row.appendChild(wrap);
+        return row;
+    }
+    function renumberPIIRows(){
+        const list = document.getElementById('piiListScroll');
+        const rows = Array.from(list.querySelectorAll('.piiRow'));
+        rows.forEach((r,i)=>{
+            const b = r.querySelector('.pii-bullet');
+            if (b) b.textContent = numToCircle(i+1);
+        });
+    }
+    function addPIIRow(val=""){
+        const list = document.getElementById('piiListScroll');
+        const idx = list.querySelectorAll('.piiRow').length + 1;
+        list.appendChild(buildPIIRowDom(idx, val));
+        renumberPIIRows();
+    }
+    function delLastPIIRow(){
+        const list = document.getElementById('piiListScroll');
+        const rows = list.querySelectorAll('.piiRow');
+        if (!rows.length) return;
+        list.removeChild(rows[rows.length-1]);
+        renumberPIIRows();
+    }
+    function clearAllPIIRows(){
+        const list = document.getElementById('piiListScroll');
+        list.innerHTML = "";
+        addPIIRow("");
+    }
+    function getPIIArrayFromPanel(){
+        const list = document.getElementById('piiListScroll');
+        const rows = Array.from(list.querySelectorAll('.piiRow'));
+        return rows.map(r=>{
+            const ta  = r.querySelector('textarea');
+            const div = r.querySelector('.pii-text');
+            return ta ? ta.value : (div ? div.innerText : "");
+        });
+    }
+    function formatPIIItem(item){
+        if (!item) return "";
+        if (typeof item === "string") return item;
+        if (item.id || item.fields){
+            const head = item.id ? `<b>${item.id}</b>` : "";
+            const body = Array.isArray(item.fields) ? item.fields.join(", ") : "";
+            return head + (body ? " : " + body : "");
+        }
+        return JSON.stringify(item);
+    }
+
+    function renderPIIFromJSON(arrInput){
+        const arr = Array.isArray(arrInput) ? arrInput : (window.piiArr || []);  // ★ 추가
+        const list = document.getElementById('piiListScroll');
+        list.innerHTML = "";
+
+        if (!Array.isArray(arr) || arr.length === 0){
+            renumberPIIRows();
+            return;
+        }
+
+        arr.forEach((item, i) => {
+            const row = document.createElement("div");
+            row.className = "piiRow";
+            row.innerHTML = `
+      <div class="pii-bullet">${numToCircle(i + 1)}</div>
+      <div class="pii-textwrap">
+        <div class="pii-text">${formatPIIItem(item)}</div>
+      </div>
+    `;
+            list.appendChild(row);
+        });
+
+        renumberPIIRows();
+    }
+
+    // ===== PII textarea 자동 높이(동적 추가까지 대응) =====
+    (function () {
+        const ROOT_ID = 'piiListScroll';
+        const SEL = `#${ROOT_ID} textarea`;
+
+        function autoResize(ta) {
+            ta.style.height = 'auto';
+            ta.style.height = ta.scrollHeight + 'px';
+        }
+        function wire(ta) {
+            if (!ta || ta._wired) return;
+            ta._wired = true;
+            ta.style.overflow = 'hidden';   // 내부 스크롤 숨김
+            ta.style.height = 'auto';
+            ta.addEventListener('input', () => autoResize(ta));
+            // 폰트/레이아웃 적용 직후 한번 더
+            requestAnimationFrame(() => autoResize(ta));
+        }
+        function scanAll() {
+            document.querySelectorAll(SEL).forEach(wire);
+        }
+
+        // 초기 DOM 완성/리소스 로드 후 1회
+        document.addEventListener('DOMContentLoaded', scanAll);
+        window.addEventListener('load', scanAll);
+
+        // 동적 추가(렌더/append) 감시
+        function observe() {
+            const root = document.getElementById(ROOT_ID);
+            if (!root) return;
+            new MutationObserver(muts => {
+                for (const m of muts) {
+                    for (const n of m.addedNodes) {
+                        if (n.nodeType !== 1) continue;
+                        if (n.matches?.('textarea')) wire(n);
+                        n.querySelectorAll?.('textarea').forEach(wire);
+                    }
+                }
+            }).observe(root, { childList: true, subtree: true });
+        }
+        observe();
+    })();
+
+    /* ========= 단계 설명 채우기 (문자열/배열 모두 지원) ========= */
+    function fillDescriptions(descJson){
+        const mapping = [
+            ["수집",".desc-collect"],
+            ["보유",".desc-retain"],
+            ["이용",".desc-use"],
+            ["제공",".desc-provide"],
+            ["파기",".desc-discard"]
+        ];
+
+        mapping.forEach(([phase, sel])=>{
+            const ta = document.querySelector(sel);
+            if (!ta) return;
+            const v = descJson ? descJson[phase] : null;
+            ta.value = (typeof v === "string" ? v : Array.isArray(v) ? v.join("\n") : "");
+            ta.style.height = "auto"; // 자동 높이 처리(스크롤 방지)
+            ta.style.height = (ta.scrollHeight) + "px";
+        });
+
+        if (typeof autosizeAllTextareas === "function") autosizeAllTextareas();
+        if (typeof resizeOverlay === "function") resizeOverlay();
+    }
+
+    /* ========= fetch/save/load ========= */
+
+    // ===== Backend API base URL helper =====
+    // Override by setting: window.__API_BASE__ = 'http://localhost:8000' from parent page if needed.
+    function getAPIBase() {
+        return (window.__API_BASE__ && typeof window.__API_BASE__ === 'string')
+            ? window.__API_BASE__
+            : 'http://localhost:8000';
+    }
+
+    async function fetchJSONSafe(url){
+        const r = await fetch(url,{cache:'no-store'});
+        if (!r.ok) throw new Error('HTTP '+r.status);
+        return r.json();
+    }
+    // 현재 task의 이름을 DB에서 가져오기
+    async function fetchTaskNameFromDB() {
+        const API_BASE = getAPIBase();
+        const url = `${API_BASE}/api/tasks?company_id=${encodeURIComponent(companyId)}`;
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) return null;
+        const arr = await r.json();                // [{id, taskName}, ...]
+        const row = arr.find(x => String(x.id) === String(taskId));
+        return row?.taskName || null;
+    }
+
+    // 서버에서 derived 받기 (task_id 우선)
+    async function fetchCombinedFromDB(){
+        const API_BASE = getAPIBase();
+        const url = `${API_BASE}/api/combined/?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}&ts=${Date.now()}`;
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status} while GET ${url}`);
+        return await r.json();
+    }
+
+    // 서버에 현재 combined 저장하기 (task_id 기준)
+    async function saveCombinedToDB(combined){
+        const API_BASE = getAPIBase();
+        const url = `${API_BASE}/api/derived/?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}`;
+        const r = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(combined)
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status} while PUT ${url}`);
+        return await r.json();
+    }
+
+    // 서버에 build 트리거(= sheets -> derived 갱신) (task_id 기준)
+    async function triggerBuildOnServer(){
+        const API_BASE = getAPIBase();
+        const url = `${API_BASE}/api/build?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}`;
+        const r = await fetch(url, { method: 'POST' });
+        if (!r.ok) throw new Error(`HTTP ${r.status} while POST ${url}`);
+        return await r.json();
+    }
+
+    /* online 여부로 category 정규화 & link 스타일 정규화 */
+    function normalizeDiagram(diagram){
+        const patched = JSON.parse(JSON.stringify(diagram||{}));
+        if (!patched.nodeDataArray) patched.nodeDataArray = [];
+        if (!patched.linkDataArray) patched.linkDataArray = [];
+
+        patched.nodeDataArray = patched.nodeDataArray.map(nd => {
+            if (nd.category === "system"){
+                if (nd.online === false){ nd.category = "system_offline"; }
+            } else if (nd.category === "database"){
+                if (nd.online === false){ nd.category = "database_offline"; }
+            } else if (nd.category === "discard"){
+                if (nd.online === false){ nd.category = "discard_offline"; }
+            }
+            return nd;
+        });
+
+        patched.linkDataArray = patched.linkDataArray.map(ld => {
+            // 최초 로드 시 노드 관통 방지: 저장돼 온 좌표는 버려 재계산 유도
+            delete ld.points;
+
+            if (typeof ld.online === "boolean"){
+                ld.category = ld.online ? "solid" : "dashed";
+            }
+            return ld;
+        });
+        return patched;
+    }
+
+    /* 같은 노드쌍(from,to)에서 색(검정/빨강)별로 링크 합치기
+       - JSON의 text를 그대로 사용
+       - 같은 색상 그룹에서 text를 모아 중복 제거 후 "A, B, C"로 결합
+       - 결과: 그룹별 최대 1개(검정 1개, 빨강 1개) → 전체 최대 2개 */
+    function mergeLinksByColor(diagram){
+        if (!diagram) return;
+        const model = diagram.model;
+        const groups = new Map(); // key = `${from}|${to}|${stroke}`
+
+        diagram.links.each(l => {
+            const d = l.data || {};
+            const from = d.from, to = d.to;
+            if (from == null || to == null) return;
+            const color = (d.stroke && String(d.stroke)) || "black"; // 온라인여부=색
+            const key = `${from}|${to}|${color}`;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(l);
+        });
+
+        model.commit(m => {
+            groups.forEach(list => {
+                if (list.length <= 1) return;
+
+                // 1) 라벨 수집(있는 그대로), 중복 제거(순서 보존)
+                const labels = [];
+                list.forEach(l => {
+                    const t = (l.data && l.data.text != null) ? String(l.data.text).trim() : "";
+                    if (t) labels.push(t);
+                });
+                const uniq = Array.from(new Set(labels));      // ["5","6","7"] 또는 ["PII-5","PII-7"]
+
+                // 2) 첫 링크만 남기고 나머지는 제거
+                const base = list[0];
+                for (let i=1; i<list.length; i++) {
+                    m.removeLinkData(list[i].data);
+                }
+
+                // 3) 결합 라벨 적용 ("5, 6, 7" 또는 "abc, def")
+                const label = uniq.join(", ");
+                m.setDataProperty(base.data, "text", label);
+
+                // 4) 포인트 초기화해 재라우팅 유도
+                m.setDataProperty(base.data, "points", undefined);
+            });
+        }, "merge-links-by-color");
+
+        // 겹침 완화: 포트 재배치 + 재라우팅
+        rerouteAllLinks(myDiagram);
+        diagram.links.each(l => l.invalidateRoute());
+    }
+
+    function rerouteAllLinks(diagram){
+        diagram.model.commit(m => {
+            diagram.links.each(l => {
+                m.setDataProperty(l.data, "points", undefined);  // 다음 틱에 경로 재계산
+                l.invalidateRoute();
+            });
+        }, "reroute-all");
+    }
+
+    // combined 객체를 화면에 반영(제목/다이어그램/PII/설명)하는 공통 함수
+    async function applyCombinedToScreen(combined){
+        const diagram  = combined?.diagram;
+        const pii      = combined?.pii;
+        const desc     = combined?.description;
+
+        // 파란 타이틀바: 모델에 없으면 DB에서 taskName 조회
+        let flowTitle = (diagram && diagram.modelData && diagram.modelData.flowTitle) || "";
+        if (!flowTitle) {
+            try { flowTitle = await fetchTaskNameFromDB(); } catch {}
+        }
+        const bar = document.getElementById('flowTitleBar');
+        if (bar) bar.textContent = `업무명 : ${flowTitle || "미정"}`;
+
+        // 다이어그램
+        if (diagram){
+            const normalized = normalizeDiagram(diagram);
+            myDiagram.model = go.Model.fromJson(normalized);
+
+            // 로드 직후 1회: 재라우팅 + 링크병합
+            (function kickRerouteAndMergeOnce(diagram){
+                diagram.links.each(l => l.invalidateRoute());
+                const once = () => {
+                    diagram.removeDiagramListener("ViewportBoundsChanged", once);
+                    diagram.links.each(l => l.invalidateRoute());
+                    diagram.layoutDiagram(true);
+                    rerouteAllLinks(diagram);
+                    mergeLinksByColor(diagram);
+                    diagram.updateAllTargetBindings();
+                };
+                diagram.addDiagramListener("ViewportBoundsChanged", once);
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        diagram.links.each(l => l.invalidateRoute());
+                        diagram.layoutDiagram(true);
+                        rerouteAllLinks(diagram);
+                        mergeLinksByColor(diagram);
+                        diagram.updateAllTargetBindings();
+                    });
+                });
+            })(myDiagram);
+        }
+
+        // PII
+        if (Array.isArray(pii)) {
+            renderPIIFromJSON(pii);
+        }
+
+        // 설명
+        fillDescriptions(desc || {});
+    }
+
+    /* ========= 버튼/IO ========= */
+    function hookIO(){
+        const box = document.getElementById('modelBox');
+        // === 공통: 로드 직후 1회 강제 라우팅 & 병합 ===
+        function kickRerouteAndMergeOnce(diagram){
+            // 1) 즉시 한 번 가볍게 깨우기
+            diagram.links.each(l => l.invalidateRoute());
+
+            // 2) 실제 뷰포트 배치가 끝난 시점에 1회 실행
+            const once = () => {
+                diagram.removeDiagramListener("ViewportBoundsChanged", once);
+                diagram.links.each(l => l.invalidateRoute());
+                diagram.layoutDiagram(true);                  // ★ bounds 보장
+                rerouteAllLinks(diagram);
+                mergeLinksByColor(diagram);
+                diagram.updateAllTargetBindings();
+            };
+            diagram.addDiagramListener("ViewportBoundsChanged", once);
+
+            // 3) 혹시 이벤트가 환경 따라 안 뜨는 경우 백업: rAF × 2
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    diagram.links.each(l => l.invalidateRoute());
+                    diagram.layoutDiagram(true);
+                    rerouteAllLinks(diagram);
+                    mergeLinksByColor(diagram);
+                    diagram.updateAllTargetBindings();
+                });
+            });
+        }
+
+        // 1) '흐름도에서 불러오기' = 서버에서 build 실행 후 최신 derived 로드
+        document.getElementById('fetchBtn').onclick = async () => {
+            try{
+                await triggerBuildOnServer();                      // ★ build
+                const combined = await fetchCombinedFromDB();      // ★ 최신 derived
+                await applyCombinedToScreen(combined);
+            }catch(e){
+                console.error('흐름표에서 불러오기 실패:', e);
+                alert('흐름표에서 불러오기 실패 (DB 확인 필요)');
+            }
+        };
+
+        // 2) '저장' = 현재 화면 상태를 DB derived로 저장
+        document.getElementById('saveBtn').onclick = async () => {
+            try{
+                rerouteAllLinks(myDiagram);
+                const diagramJSON = JSON.parse(myDiagram.model.toJson());
+                const piiArray    = getPIIArrayFromPanel();
+                const descOut = {
+                    "수집": document.querySelector(".desc-collect")?.value || "",
+                    "보유": document.querySelector(".desc-retain")?.value || "",
+                    "이용": document.querySelector(".desc-use")?.value || "",
+                    "제공": document.querySelector(".desc-provide")?.value || "",
+                    "파기": document.querySelector(".desc-discard")?.value || ""
+                };
+                const combined = { diagram: diagramJSON, pii: piiArray, description: descOut };
+
+                // 텍스트박스에도 넣고(기존 로직 유지)
+                box.value = JSON.stringify(combined, null, 2);
+                myDiagram.isModified = false;
+
+                // ★ 서버 저장
+                await saveCombinedToDB(combined);
+                alert('저장되었습니다.');
+            }catch(e){
+                console.error('저장 실패:', e);
+                alert('저장 실패 (서버 /api/derived 확인)');
+            }
+        };
+
+        // 3) '불러오기' = DB에 저장된 derived 그대로 화면에 출력
+        document.getElementById('loadBtn').onclick = async () => {
+            try{
+                const combined = await fetchCombinedFromDB();  // ★ 빌드 없이 가져옴
+                await applyCombinedToScreen(combined);
+            }catch(e){
+                console.error('불러오기 실패:', e);
+                alert('불러오기 실패 (서버 /api/combined 확인)');
+            }
+        };
+
+        // 흐름도 비우기
+        const clearDiagramBtn = document.getElementById('clearDiagramBtn');
+        if (clearDiagramBtn) {
+            clearDiagramBtn.onclick = () => {
+                if (!confirm('흐름도를 모두 비울까요?')) return;
+                clearDiagram();
+            };
+        }
+
+        // 처리 개인정보 행 조작
+        document.getElementById('addRowBtn').onclick = () => {
+            addPIIRow("");
+        };
+        document.getElementById('delRowBtn').onclick = () => {
+            delLastPIIRow();
+        };
+        const clearPIIBtn = document.getElementById('clearPIIBtn');
+        if (clearPIIBtn){
+            clearPIIBtn.onclick = () => {
+                if (!confirm('처리 개인정보를 모두 비울까요?')) return;
+                clearAllPIIRows();
+                renumberPIIRows();
+            };
+        }
+
+        // 링크 스타일/색상 토글
+        const styleBtn = document.getElementById('linkStyleToggleBtn');
+        const colorBtn = document.getElementById('linkColorToggleBtn');
+        let currentLinkStyle = 'solid';
+        let currentLinkColor = 'black';
+
+        function applyLinkArchetype(){
+            myDiagram.toolManager.linkingTool.archetypeLinkData = {
+                category: currentLinkStyle,
+                stroke: currentLinkColor,
+            };
+        }
+        function refreshLinkButtonsUI(){
+            if (styleBtn){
+                styleBtn.textContent = `링크 스타일: ${currentLinkStyle === 'solid' ? '실선' : '점선'}`;
+            }
+            if (colorBtn){
+                const isRed = currentLinkColor === 'red';
+                colorBtn.textContent = `링크 색상: ${isRed ? '빨강' : '검정'}`;
+                colorBtn.style.color = isRed ? 'red' : '';
+                colorBtn.style.borderColor = isRed ? 'red' : '';
+                colorBtn.style.fontWeight = isRed ? '700' : '400';
+                colorBtn.style.textDecoration = isRed ? 'underline' : 'none';
+            }
+        }
+        if (styleBtn) styleBtn.onclick = () => {
+            currentLinkStyle = (currentLinkStyle === 'solid') ? 'dashed' : 'solid';
+            applyLinkArchetype();
+            refreshLinkButtonsUI();
+        };
+        if (colorBtn) colorBtn.onclick = () => {
+            currentLinkColor = (currentLinkColor === 'black') ? 'red' : 'black';
+            applyLinkArchetype();
+            refreshLinkButtonsUI();
+        };
+        applyLinkArchetype();
+        refreshLinkButtonsUI();
+
+        // 편집/입력 모드 토글 (diagramOverlay 클릭 가능/불가만 전환)
+        const editBtn = document.getElementById('editModeToggleBtn');
+        function setEditMode(isDiagramEdit){
+            const overlay = document.getElementById('diagramOverlay');
+            const icon  = editBtn?.querySelector('.icon');
+            const label = editBtn?.querySelector('.label');
+            if (!overlay || !icon || !label) return;
+
+            if (isDiagramEdit){
+                overlay.style.pointerEvents = 'auto';
+                icon.textContent = '🖱️';
+                label.textContent = '흐름도 편집 모드';
+                editBtn.setAttribute('aria-pressed','true');
+            }else{
+                overlay.style.pointerEvents = 'none';
+                icon.textContent = '⌨️';
+                label.textContent = '텍스트 편집 모드';
+                editBtn.setAttribute('aria-pressed','false');
+            }
+        }
+        editBtn && (editBtn.onclick = () => {
+            const overlay = document.getElementById('diagramOverlay');
+            const nowInputMode = overlay && (overlay.style.pointerEvents === 'none' || !overlay.style.pointerEvents);
+            setEditMode(nowInputMode);
+        });
+        setEditMode(true);
+    }
+
+    /* ========= 기타 유틸 ========= */
+    function clearDiagram(){
+        const empty = new go.GraphLinksModel();
+        myDiagram.model = empty;
+        myDiagram.clearSelection();
+        myDiagram.isModified = true;
+    }
+
+    // 나중에 필요하면 top-left 정렬 로직 넣을 자리
+    function alignTopLeftAfterLoad(){}
+
+    // 부모(React) → 자식(iframe:flow1.html) 메시지 처리
+    window.addEventListener("message", async (ev) => {
+        const data = ev.data || {};
+        if (!data || typeof data !== "object") return;
+
+        // 다이어그램 먼저 초기화되었는지 가드
+        if (!window.myDiagram) {
+            // 초기화가 아직이면 약간만 늦춰서 재시도
+            setTimeout(() => window.dispatchEvent(new MessageEvent("message", { data })), 60);
+            return;
+        }
+
+        if (data.type === "trigger-build-and-load") {
+            try {
+                await fetch(`${getAPIBase()}/api/build?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}`, { method: "POST" });
+                const combined = await fetchCombinedFromDB();
+                await applyCombinedToScreen(combined);
+            } catch (e) {
+                console.error(e);
+                alert("백엔드 빌드/로드 중 오류가 발생했습니다.");
+            }
+        }
+        else if (data.type === "request-combined-json") {
+            // 현재 화면 상태를 부모로 전달
+            const diagramJSON = JSON.parse(myDiagram.model.toJson());
+            const piiArray    = getPIIArrayFromPanel();
+            const descOut = {
+                "수집": document.querySelector(".desc-collect")?.value || "",
+                "보유": document.querySelector(".desc-retain")?.value || "",
+                "이용": document.querySelector(".desc-use")?.value || "",
+                "제공": document.querySelector(".desc-provide")?.value || "",
+                "파기": document.querySelector(".desc-discard")?.value || ""
+            };
+            const combined = { diagram: diagramJSON, pii: piiArray, description: descOut };
+            window.parent?.postMessage({ type: "combined-json", payload: combined }, "*");
+        }
+    });
+
+    // 흐름도만 이미지로 저장하는 경로 생성
+    window.getFlowPngDataUrl = () => myDiagram.makeImageData({ background: "white", scale: 2 });
+
+    // 표+다이어그램+PII 전체를 PNG로 캡처
+    window.captureWholePanelPng = async function (zoom = 1.0) {
+        const root = document.querySelector(".frame");
+        if (!root) throw new Error("캡쳐 루트(.frame)를 찾을 수 없습니다.");
+
+        // 해상도(선명도) 설정
+        const dpr = window.devicePixelRatio || 1;
+        const TARGET_EXPORT_SCALE = 1;                 // 1.5~2 권장
+        const canvasScale = TARGET_EXPORT_SCALE / dpr; // 브라우저 줌과 무관하게 선명도 고정
+
+        // 원복용 상태 저장
+        const html = document.documentElement;
+        const body = document.body;
+        const prevHtmlOverflow = html.style.overflow;
+        const prevBodyOverflow = body.style.overflow;
+        const prevScrollX = window.scrollX;
+        const prevScrollY = window.scrollY;
+
+        // 캡처 전에 textarea 자동 높이 보정
+        if (typeof autosizeAllTextareas === "function") autosizeAllTextareas();
+        // 레이아웃 반영 대기(rAF 2회가 안정적)
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        // 캡처 모드 진입(팔레트/모델박스 숨김, 한 줄 고정 등)
+        html.classList.add("capture-mode");
+
+        // 스케일 적용 전의 '자연 크기'
+        const naturalWidth  = root.scrollWidth;
+        const naturalHeight = root.scrollHeight;
+
+        // 브라우저 렌더 스케일(줌 효과) 적용
+        const prevTransform = root.style.transform;
+        const prevTransformOrigin = root.style.transformOrigin;
+        root.style.transformOrigin = "top left";
+        root.style.transform = `scale(${zoom})`;
+
+        // 스크롤/오버플로우 고정
+        html.style.overflow = "hidden";
+        body.style.overflow = "hidden";
+        window.scrollTo(0, 0);
+
+        try {
+            const width  = Math.ceil(naturalWidth  * zoom);
+            const height = Math.ceil(naturalHeight * zoom);
+
+            const canvas = await html2canvas(root, {
+                backgroundColor: "#ffffff",
+                scale: canvasScale,     // 해상도(선명도)
+                width,
+                height,
+                windowWidth:  width,    // 뷰포트를 컨텐츠 크기에 맞춤
+                windowHeight: height,
+                scrollX: 0,
+                scrollY: 0,
+                useCORS: true,
+                removeContainer: true,
+
+                // ✅ 복제 DOM에서 textarea → div로 교체(잘림 방지)
+                onclone: (doc) => {
+                    const frameClone = doc.querySelector(".frame");
+                    if (!frameClone) return;
+
+                    frameClone.querySelectorAll("textarea").forEach((ta) => {
+                        const cs = doc.defaultView.getComputedStyle(ta);
+                        const div = doc.createElement("div");
+
+                        // 내용
+                        div.textContent = ta.value;
+
+                        // 크기/레이아웃: textarea가 보이던 그대로
+                        const w = ta.clientWidth || parseFloat(cs.width) || 0;
+                        const h = ta.scrollHeight || ta.clientHeight || 0;
+                        div.style.width = w + "px";
+                        div.style.minHeight = h + "px";
+                        div.style.height = h + "px";
+
+                        // 텍스트 렌더링 유사화
+                        div.style.whiteSpace = "pre-wrap";
+                        div.style.wordBreak = "break-word";
+                        div.style.overflow = "visible";
+
+                        // 주요 스타일 복제
+                        div.style.font = cs.font || "";
+                        div.style.lineHeight = cs.lineHeight || "";
+                        div.style.padding = cs.padding || "";
+                        div.style.border = cs.border || "none";
+                        div.style.borderRadius = cs.borderRadius || "";
+                        div.style.background = cs.backgroundColor || "transparent";
+                        div.style.color = cs.color || "";
+
+                        ta.parentNode.replaceChild(div, ta);
+                    });
+                },
+
+                // (상황에 따라 도움이 될 수 있음)
+                // foreignObjectRendering: true,
+            });
+
+            return canvas.toDataURL("image/png");
+        } finally {
+            // 원복
+            root.style.transform = prevTransform;
+            root.style.transformOrigin = prevTransformOrigin;
+            html.classList.remove("capture-mode");
+            html.style.overflow = prevHtmlOverflow;
+            body.style.overflow = prevBodyOverflow;
+            window.scrollTo(prevScrollX, prevScrollY);
+        }
+    };
+
+    /* ========= 시작 ========= */
+    window.addEventListener('DOMContentLoaded', () => {
+        initDiagram();
+        hookIO();
+
+        const overlay  = document.getElementById('diagramOverlay');
+        if (overlay) overlay.style.pointerEvents = 'auto';
+
+        resizeOverlay();
+        adjustFlowRowHeight();
+        wireAutosizeAll();
+        autosizeAllTextareas();
+        window.addEventListener('resize', resizeOverlay);
+
+        // PII 패널 초기행 하나 생성
+        clearAllPIIRows();
+    });
+</script>
+</body>
+</html>
