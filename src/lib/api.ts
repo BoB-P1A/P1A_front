@@ -277,11 +277,27 @@ export const api = {
             },
         },
         flowCharts: {
+            // S3에서 개인정보 흐름도 이미지 목록 가져오기
             getAll: async (companyId: string) => {
-                const response = await apiClient.get("/lifecycle/flowcharts", {
+                const response = await apiClient.get("/lifecycle/flowcharts/images", {
                     params: { companyId },
                 });
                 return response.data;
+            },
+            // 이미지 pre-signed URL 가져오기
+            getImageUrl: async (companyId: string, taskId: string, fileName: string) => {
+                const response = await apiClient.get("/lifecycle/flowcharts/image-url", {
+                    params: { companyId, taskId, fileName },
+                });
+                return response.data;
+            },
+            // 이미지 바이너리 다운로드 (Word 생성용)
+            getImageBytes: async (companyId: string, taskId: string, fileName: string) => {
+                const response = await apiClient.get("/lifecycle/flowcharts/image-bytes", {
+                    params: { companyId, taskId, fileName },
+                    responseType: 'arraybuffer', // 바이너리 데이터로 받기
+                });
+                return response.data; // ArrayBuffer 반환
             },
             save: async (
                 companyId: string,

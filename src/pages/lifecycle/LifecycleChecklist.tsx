@@ -92,7 +92,7 @@ export default function LifecycleChecklist() {
                 // 평가영역이 "1"로 시작하는 항목만 필터링
                 const filtered = evaluationItems.filter((item: any) => item.area?.startsWith("1."));
 
-                // 기존 체크리스트 조회 (
+                // 기존 체크리스트 조회
                 const checklistResponse = await api.lifecycle.checklists.getAll({
                     companyId: user.companyId,
                     taskId: activeTab,
@@ -126,23 +126,25 @@ export default function LifecycleChecklist() {
         loadChecklist();
     }, [activeTab, user?.companyId]);
 
-    const handleStatusChange = (id: number, status: "이행" | "부분이행" | "미이행" | "해당없음") => {
-        setItems((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
+    // no를 기준으로 항목 구분
+    const handleStatusChange = (no: string, status: "이행" | "부분이행" | "미이행" | "해당없음") => {
+        setItems((prev) => prev.map((item) => (item.no === no ? { ...item, status } : item)));
         setHasChanges(true);
     };
 
-    const handleEvidenceChange = (id: number, evidence: string) => {
-        setItems((prev) => prev.map((item) => (item.id === id ? { ...item, evidence } : item)));
+    // no를 기준으로 항목 구분
+    const handleEvidenceChange = (no: string, evidence: string) => {
+        setItems((prev) => prev.map((item) => (item.no === no ? { ...item, evidence } : item)));
         setHasChanges(true);
     };
 
-    // 파일 업로드 (전용 API + 즉시 DB 저장)
-    const handleFileUpload = async (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    // no를 기준으로 항목 구분 - 파일 업로드 (전용 API + 즉시 DB 저장)
+    const handleFileUpload = async (no: string, event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file || !user?.companyId) return;
 
         // 해당 항목 찾기
-        const currentItem = items.find(item => item.id === id);
+        const currentItem = items.find(item => item.no === no);
         if (!currentItem) return;
 
         try {
@@ -162,7 +164,7 @@ export default function LifecycleChecklist() {
 
             // 2. 로컬 상태 업데이트
             const updatedItems = items.map((item) =>
-                item.id === id
+                item.no === no
                     ? { ...item, files: [...item.files, fileData] }
                     : item
             );
@@ -181,15 +183,15 @@ export default function LifecycleChecklist() {
         }
     };
 
-    // 파일 삭제 (즉시 DB 저장)
-    const handleFileDelete = async (itemId: number, fileUrl: string) => {
+    // no를 기준으로 항목 구분 - 파일 삭제 (즉시 DB 저장)
+    const handleFileDelete = async (no: string, fileUrl: string) => {
         try {
             // 1. S3에서 파일 삭제
             await api.files.delete(fileUrl);
 
             // 2. 로컬 상태 업데이트
             const updatedItems = items.map((item) =>
-                item.id === itemId
+                item.no === no
                     ? { ...item, files: item.files.filter((f) => f.url !== fileUrl) }
                     : item
             );
@@ -308,7 +310,7 @@ export default function LifecycleChecklist() {
                                 const showFieldHeader = !prevItem || prevItem.field !== item.field;
 
                                 return (
-                                    <div key={item.id}>
+                                    <div key={`${task.id}-${item.no}`}>
                                         {showFieldHeader && (
                                             <div className="mb-4 mt-6 first:mt-0">
                                                 <h2 className="text-xl font-semibold text-primary border-b pb-2">{item.field}</h2>
@@ -331,38 +333,38 @@ export default function LifecycleChecklist() {
                                                     <RadioGroup
                                                         value={item.status || ""}
                                                         onValueChange={(value) =>
-                                                            handleStatusChange(item.id, value as "이행" | "부분이행" | "미이행" | "해당없음")
+                                                            handleStatusChange(item.no, value as "이행" | "부분이행" | "미이행" | "해당없음")
                                                         }
                                                     >
                                                         <div className="flex gap-6">
                                                             <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="이행" id={`${item.id}-이행`} />
-                                                                <Label htmlFor={`${item.id}-이행`}>이행</Label>
+                                                                <RadioGroupItem value="이행" id={`${task.id}-${item.no}-이행`} />
+                                                                <Label htmlFor={`${task.id}-${item.no}-이행`}>이행</Label>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="부분이행" id={`${item.id}-부분이행`} />
-                                                                <Label htmlFor={`${item.id}-부분이행`}>부분이행</Label>
+                                                                <RadioGroupItem value="부분이행" id={`${task.id}-${item.no}-부분이행`} />
+                                                                <Label htmlFor={`${task.id}-${item.no}-부분이행`}>부분이행</Label>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="미이행" id={`${item.id}-미이행`} />
-                                                                <Label htmlFor={`${item.id}-미이행`}>미이행</Label>
+                                                                <RadioGroupItem value="미이행" id={`${task.id}-${item.no}-미이행`} />
+                                                                <Label htmlFor={`${task.id}-${item.no}-미이행`}>미이행</Label>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="해당없음" id={`${item.id}-해당없음`} />
-                                                                <Label htmlFor={`${item.id}-해당없음`}>해당없음</Label>
+                                                                <RadioGroupItem value="해당없음" id={`${task.id}-${item.no}-해당없음`} />
+                                                                <Label htmlFor={`${task.id}-${item.no}-해당없음`}>해당없음</Label>
                                                             </div>
                                                         </div>
                                                     </RadioGroup>
                                                 </div>
 
                                                 <div>
-                                                    <Label htmlFor={`evidence-${item.id}`} className="font-semibold">
+                                                    <Label htmlFor={`evidence-${task.id}-${item.no}`} className="font-semibold">
                                                         평가 근거 및 의견
                                                     </Label>
                                                     <Textarea
-                                                        id={`evidence-${item.id}`}
+                                                        id={`evidence-${task.id}-${item.no}`}
                                                         value={item.evidence}
-                                                        onChange={(e) => handleEvidenceChange(item.id, e.target.value)}
+                                                        onChange={(e) => handleEvidenceChange(item.no, e.target.value)}
                                                         placeholder="평가 근거 및 의견을 입력하세요"
                                                         className="mt-1"
                                                         rows={3}
@@ -379,7 +381,7 @@ export default function LifecycleChecklist() {
                                                                     <Button size="sm" variant="ghost" onClick={() => handleFileDownload(file)}>
                                                                         <Download className="h-4 w-4" />
                                                                     </Button>
-                                                                    <Button size="sm" variant="ghost" onClick={() => handleFileDelete(item.id, file.url)}>
+                                                                    <Button size="sm" variant="ghost" onClick={() => handleFileDelete(item.no, file.url)}>
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
                                                                 </div>
@@ -388,14 +390,14 @@ export default function LifecycleChecklist() {
                                                         <div>
                                                             <input
                                                                 type="file"
-                                                                id={`file-${item.id}`}
+                                                                id={`file-${task.id}-${item.no}`}
                                                                 className="hidden"
-                                                                onChange={(e) => handleFileUpload(item.id, e)}
+                                                                onChange={(e) => handleFileUpload(item.no, e)}
                                                             />
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                onClick={() => document.getElementById(`file-${item.id}`)?.click()}
+                                                                onClick={() => document.getElementById(`file-${task.id}-${item.no}`)?.click()}
                                                             >
                                                                 <Upload className="mr-2 h-4 w-4" />
                                                                 파일 업로드
