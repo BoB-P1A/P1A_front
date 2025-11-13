@@ -22,7 +22,7 @@ export default function LifecycleReport() {
     const [flowTableData, setFlowTableData] = useState<any>({});
     const [lifecycleData, setLifecycleData] = useState<any[]>([]);
     const [improvements, setImprovements] = useState<any>({});
-    const [flowChartImages, setFlowChartImages] = useState<any>({});
+    const [flowChartImages, setFlowChartImages] = useState<Record<string, string>>({});
 
     // Hook을 컴포넌트 최상위로 이동
     const [actionPlansData, setActionPlansData] = useState<any>({});
@@ -33,28 +33,135 @@ export default function LifecycleReport() {
             if (!user?.companyId) return;
 
             try {
-                const [tasksResponse, flowTables, lifecycle, improvementsData, flowCharts] = await Promise.all([
-                    api.lifecycle.tasks.getAll(user.companyId),
-                    api.lifecycle.flowTables.getAll(user.companyId),
-                    api.lifecycle.checklists.getAll({ companyId: user.companyId }),
-                    api.lifecycle.improvements.getAll(user.companyId),
-                    api.lifecycle.flowCharts.getAll(user.companyId),
+                const [tasksResponse, flowTables, lifecycle, improvementsData] = await Promise.all([
+                    // 기존: api.lifecycle.tasks.getAll(user.companyId)
+                    // 수정: 처리업무표 전용 API 사용
+                    api.tasks.getAll(user.companyId),  // TaskTable.tsx와 동일한 API 사용
+                    api.lifecycle.flowTables.getAll(user.companyId).catch(err => {
+                        console.warn('flowTables API failed:', err);
+                        return {};
+                    }),
+                    api.lifecycle.checklists.getAll({ companyId: user.companyId }).catch(err => {
+                        console.warn('checklists API failed:', err);
+                        return [];
+                    }),
+                    api.lifecycle.improvements.getAll(user.companyId).catch(err => {
+                        console.warn('improvements API failed:', err);
+                        return {};
+                    }),
                 ]);
 
                 // tasks 매핑 (ObjectId 기반)
                 const mappedTasks = Array.isArray(tasksResponse)
                     ? tasksResponse.map((t: any) => ({
-                        id: t.id,        // ObjectId
+                        id: t.id || t._id,        // ObjectId (_id도 지원)
                         name: t.taskName // 표시용
                     }))
                     : [];
 
                 setTasks(mappedTasks);
-                setTaskTableData(Array.isArray(tasksResponse) ? tasksResponse : []);
-                setFlowTableData(flowTables || {});
+
+                // taskTableData 정규화: DB 필드명을 올바르게 매핑
+                const normalizedTaskTable = Array.isArray(tasksResponse)
+                    ? tasksResponse.map((task: any) => ({
+                        id: task.id || task._id,
+                        taskName: task.taskName || '',
+                        purpose: task.purpose || '',
+                        infomation: task.infomation || '',  // DB 필드명 그대로
+                        department: task.department || '',
+                        companyId: task.companyId || user.companyId
+                    }))
+                    : [];
+
+                setTaskTableData(normalizedTaskTable);
+
+                // flowTableData 구조 확인 및 정규화
+                console.log('flowTables response:', flowTables);
+
+                // flowTableData를 프론트엔드 필드명으로 변환
+                const normalizedFlowTables: any = {};
+                Object.keys(flowTables).forEach(taskId => {
+                    const taskData = flowTables[taskId];
+                    const sheets = taskData?.sheets || taskData;
+
+                    if (sheets) {
+                        normalizedFlowTables[taskId] = {
+                            sheets: {
+                                // DB 필드명 -> 프론트엔드 필드명 변환
+                                collection: (sheets.collect || []).map((item: any) => ({
+                                    detailTask: item.collect_task || '',
+                                    collectionTarget: item.collect_target || '',
+                                    collectionPath: item.collect_route || '',
+                                    collectionSystem: item.collect_system || '',
+                                    collectionItem: item.collect_items || '',
+                                    collectionItemName: item.collect_bundle || '',
+                                    collectionPurpose: item.collect_purpose || '',
+                                    collectionDepartment: item.collect_dept || '',
+                                    isOnline: item.collect_online === true ? 'True' : item.collect_online === false ? 'False' : '',
+                                    isEncrypted: item.collect_encrypt === true ? 'True' : item.collect_encrypt === false ? 'False' : item.collect_encrypt === null ? 'Unknown' : ''
+                                })),
+                                storage: (sheets.retain || []).map((item: any) => ({
+                                    detailTask: item.retain_task || '',
+                                    storageSpace: item.retain_space || '',
+                                    collectionSystem: item.retain_input_system || '',
+                                    storageItem: item.retain_items || '',
+                                    storageItemName: item.retain_bundle || '',
+                                    storagePurpose: item.retain_purpose || '',
+                                    storageFormat: item.retain_form || '',
+                                    encryptionItem: item.retain_enc_items || '',
+                                    isOnline: item.retain_online === true ? 'True' : item.retain_online === false ? 'False' : '',
+                                    isEncrypted: item.retain_encrypt === true ? 'True' : item.retain_encrypt === false ? 'False' : item.retain_encrypt === null ? 'Unknown' : ''
+                                })),
+                                usage: (sheets.use || []).map((item: any) => ({
+                                    detailTask: item.use_task || '',
+                                    storageSpace: item.use_space || '',
+                                    usageSystem: item.use_system || '',
+                                    usageItem: item.use_items || '',
+                                    usageItemName: item.use_bundle || '',
+                                    usagePurpose: item.use_purpose || '',
+                                    usageMethod: item.use_method || '',
+                                    usageDepartment: item.use_dept || '',
+                                    isOnline: item.use_online === true ? 'True' : item.use_online === false ? 'False' : '',
+                                    isEncrypted: item.use_encrypt === true ? 'True' : item.use_encrypt === false ? 'False' : item.use_encrypt === null ? 'Unknown' : ''
+                                })),
+                                provision: (sheets.provide || []).map((item: any) => ({
+                                    detailTask: item.provide_task || '',
+                                    storageSpace: item.provide_space || '',
+                                    linkageSystem: item.provide_system || '',
+                                    provisionDepartment: item.provide_dept || '',
+                                    recipient: item.receiver || '',
+                                    provisionItem: item.provide_items || '',
+                                    provisionItemName: item.provide_bundle || '',
+                                    provisionPurpose: item.provide_purpose || '',
+                                    provisionMethod: item.provide_method || '',
+                                    linkageSystemOnline: item.provide_sys_online === true ? 'True' : item.provide_sys_online === false ? 'False' : '',
+                                    linkageSystemEncrypted: item.provide_sys_encrypt === true ? 'True' : item.provide_sys_encrypt === false ? 'False' : item.provide_sys_encrypt === null ? 'Unknown' : '',
+                                    recipientOnline: item.receiver_online === true ? 'True' : item.receiver_online === false ? 'False' : '',
+                                    recipientEncrypted: item.receiver_encrypt === true ? 'True' : item.receiver_encrypt === false ? 'False' : item.receiver_encrypt === null ? 'Unknown' : ''
+                                })),
+                                disposal: (sheets.discard || []).map((item: any) => ({
+                                    detailTask: item.discard_task || '',
+                                    storageSpace: item.discard_space || '',
+                                    disposalSystem: item.discard_system || '',
+                                    disposalItem: item.discard_items || '',
+                                    disposalItemName: item.discard_bundle || '',
+                                    retentionPeriod: item.discard_period || '',
+                                    disposalDepartment: item.discard_dept || '',
+                                    disposalProcedure: item.discard_proc || '',
+                                    disposalOnline: item.discard_online === true ? 'True' : item.discard_online === false ? 'False' : ''
+                                }))
+                            }
+                        };
+                    }
+                });
+
+                setFlowTableData(normalizedFlowTables);
+
                 setLifecycleData(Array.isArray(lifecycle) ? lifecycle : []);
                 setImprovements(improvementsData || {});
-                setFlowChartImages(flowCharts || {});
+
+                // S3에서 각 task의 흐름도 이미지 로드
+                await loadFlowChartImages(user.companyId, mappedTasks);
             } catch (error) {
                 console.error('Failed to load data:', error);
                 setTasks([]);
@@ -68,6 +175,38 @@ export default function LifecycleReport() {
 
         loadData();
     }, [user?.companyId]);
+
+    // S3에서 흐름도 이미지 로드
+    const loadFlowChartImages = async (companyId: string, tasksList: { id: string; name: string }[]) => {
+        try {
+            console.log('🔍 Loading flowchart images for company:', companyId);
+
+            // API 호출로 S3 이미지 목록 가져오기
+            const flowChartData = await api.lifecycle.flowCharts.getAll(companyId);
+            console.log('📦 FlowChart data received:', flowChartData);
+
+            // flowChartData 구조: { taskId: { fileName: string, imageUrl: string } }
+            const imageMap: Record<string, string> = {};
+
+            for (const task of tasksList) {
+                const taskFlowData = flowChartData[task.id];
+
+                if (taskFlowData?.imageUrl) {
+                    // ✅ S3에서 가져온 Pre-signed URL 사용
+                    imageMap[task.id] = taskFlowData.imageUrl;
+                    console.log(`✅ Image found for ${task.name}: ${taskFlowData.fileName}`);
+                } else {
+                    console.warn(`⚠️ No image found for task ${task.name} (${task.id})`);
+                }
+            }
+
+            setFlowChartImages(imageMap);
+            console.log('✅ Total loaded images:', Object.keys(imageMap).length);
+        } catch (error) {
+            console.error('❌ Failed to load flowchart images:', error);
+            setFlowChartImages({});
+        }
+    };
 
     // actionPlans 로딩을 별도 useEffect로 분리
     useEffect(() => {
@@ -129,7 +268,7 @@ export default function LifecycleReport() {
                         children: [
                             new TableCell({ children: [new Paragraph(task.taskName || '')] }),
                             new TableCell({ children: [new Paragraph(task.purpose || '')] }),
-                            new TableCell({ children: [new Paragraph(task.personalInfo || '')] }),
+                            new TableCell({ children: [new Paragraph(task.infomation || task.personalInfo || '')] }),
                             new TableCell({ children: [new Paragraph(task.department || '')] }),
                         ]
                     }))
@@ -165,13 +304,19 @@ export default function LifecycleReport() {
                 );
 
                 const phaseData: any[] = [];
-                // taskId로 매핑
-                Object.keys(flowTableData).forEach(taskKey => {
-                    const task = taskTableData.find(t => t.taskName === taskKey || t.id === taskKey);
-                    const taskName = task?.taskName || taskKey;
-                    const taskData = flowTableData[taskKey];
+
+                // tasks 순서대로 데이터 수집 (좌측 탭 순서 유지)
+                tasks.forEach(task => {
+                    const taskId = task.id;
+                    const taskName = task.name;
+                    const taskData = flowTableData[taskId];
+
+                    // sheets 구조 확인 (정규화된 데이터 사용)
+                    const sheets = taskData?.sheets || taskData;
+                    if (!sheets) return;
+
                     const key = phaseKeyMap[phase];
-                    const rows = taskData?.[key] || [];
+                    const rows = sheets[key] || [];
                     rows.forEach((row: any) => phaseData.push({ taskName, ...row }));
                 });
 
@@ -279,49 +424,122 @@ export default function LifecycleReport() {
                 })
             );
 
-            const flowChartKeys = Object.keys(flowChartImages);
-            if (flowChartKeys.length > 0) {
-                for (const key of flowChartKeys) {
-                    // taskName 표시
-                    const task = taskTableData.find(t => t.id === key || t.taskName === key);
-                    const displayName = task?.taskName || key;
+            // tasks 순서대로 이미지 삽입
+            for (const task of tasks) {
+                const imageUrl = flowChartImages[task.id];
 
-                    sections.push(
-                        new Paragraph({
-                            text: `${displayName} 흐름도`,
-                            heading: HeadingLevel.HEADING_4,
-                            spacing: { before: 200, after: 100 }
-                        })
-                    );
+                sections.push(
+                    new Paragraph({
+                        text: `${task.name} 흐름도`,
+                        heading: HeadingLevel.HEADING_4,
+                        spacing: { before: 200, after: 100 }
+                    })
+                );
 
-                    const imageData = flowChartImages[key];
-                    if (imageData) {
-                        try {
-                            const base64Data = imageData.split(',')[1];
-                            const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-                            sections.push(
-                                new Paragraph({
-                                    children: [
-                                        new ImageRun({
-                                            data: imageBuffer,
-                                            transformation: {
-                                                width: 600,
-                                                height: 385,
-                                            },
-                                            type: 'png',
-                                        } as any)
-                                    ],
-                                    spacing: { after: 200 }
-                                })
-                            );
-                        } catch (error) {
-                            console.error('Error adding image to document:', error);
-                            sections.push(new Paragraph({ text: '(이미지 삽입 오류)' }));
+                if (imageUrl) {
+                    try {
+                        console.log(`📥 Downloading image for task: ${task.name} (${task.id})`);
+                        console.log(`📎 Image URL: ${imageUrl}`);
+
+                        // imageUrl에서 fileName 추출
+                        const urlParts = imageUrl.split('/');
+                        const fileNameWithQuery = urlParts[urlParts.length - 1];
+                        const encodedFileName = fileNameWithQuery.split('?')[0]; // 쿼리 파라미터 제거
+
+                        // URL 디코딩 추가
+                        const fileName = decodeURIComponent(encodedFileName);
+
+                        console.log(`Encoded fileName: ${encodedFileName}`);
+                        console.log(`Decoded fileName: ${fileName}`);
+
+                        // 백엔드 API로 이미지 바이너리 다운로드
+                        const arrayBuffer = await api.lifecycle.flowCharts.getImageBytes(
+                            user!.companyId,
+                            task.id,
+                            fileName  // 디코딩된 파일명: "민원처리.png"
+                        );
+
+                        const imageBuffer = new Uint8Array(arrayBuffer);
+                        console.log(`Image downloaded: ${imageBuffer.length} bytes`);
+
+                        // 이미지 실제 크기 확인을 위해 Image 객체 생성
+                        const blob = new Blob([imageBuffer]);
+                        const imageObjectUrl = URL.createObjectURL(blob);
+
+                        // Promise로 이미지 로드 완료 대기
+                        const imgDimensions = await new Promise<{ width: number; height: number }>((resolve) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                resolve({ width: img.width, height: img.height });
+                                URL.revokeObjectURL(imageObjectUrl);
+                            };
+                            img.onerror = () => {
+                                resolve({ width: 800, height: 600 }); // 기본값
+                                URL.revokeObjectURL(imageObjectUrl);
+                            };
+                            img.src = imageObjectUrl;
+                        });
+
+                        console.log(`Original image size: ${imgDimensions.width}x${imgDimensions.height}`);
+
+                        // Word 문서 페이지 크기 제약 (A4 기준, 단위: 픽셀)
+                        // A4 크기: 210mm x 297mm
+                        // 여백을 고려한 실제 사용 가능 영역
+                        const MAX_WIDTH = 600;   // 가로 최대 너비
+                        const MAX_HEIGHT = 900;  // 세로 최대 높이 (약 1페이지)
+
+                        // 원본 비율 유지하면서 최대 크기 계산
+                        const widthRatio = MAX_WIDTH / imgDimensions.width;
+                        const heightRatio = MAX_HEIGHT / imgDimensions.height;
+
+                        // 두 비율 중 작은 값을 선택 (페이지를 벗어나지 않도록)
+                        const scale = Math.min(widthRatio, heightRatio, 1); // 1보다 크지 않도록 제한
+
+                        const finalWidth = Math.round(imgDimensions.width * scale);
+                        const finalHeight = Math.round(imgDimensions.height * scale);
+
+                        console.log(`Scaled image size: ${finalWidth}x${finalHeight} (scale: ${scale.toFixed(2)})`);
+
+                        // 파일 확장자 확인
+                        const fileExtension = fileName.toLowerCase().split('.').pop() || 'png';
+                        const imageType = fileExtension === 'jpg' || fileExtension === 'jpeg' ? 'jpg' : 'png';
+
+                        sections.push(
+                            new Paragraph({
+                                children: [
+                                    new ImageRun({
+                                        data: imageBuffer,
+                                        transformation: {
+                                            width: finalWidth,
+                                            height: finalHeight,
+                                        },
+                                        type: imageType,
+                                    } as any)
+                                ],
+                                spacing: { after: 200 }
+                            })
+                        );
+                    } catch (error) {
+                        console.error(`Error adding image for task ${task.name}:`, error);
+
+                        if (error instanceof Error) {
+                            console.error(`Error details: ${error.message}`);
                         }
+
+                        sections.push(
+                            new Paragraph({
+                                text: `흐름도 이미지를 불러올 수 없습니다.`,
+                                spacing: { after: 200 }
+                            })
+                        );
                     }
+                } else {
+                    console.warn(`No image URL for task ${task.name}`);
+                    sections.push(new Paragraph({
+                        text: '흐름도 이미지가 없습니다.',
+                        spacing: { after: 200 }
+                    }));
                 }
-            } else {
-                sections.push(new Paragraph({ text: '저장된 흐름도 이미지가 없습니다.' }));
             }
 
             // 2. 영향평가 기준
@@ -632,16 +850,25 @@ export default function LifecycleReport() {
     }
 
     const flowByPhase: Record<string, any[]> = { 수집: [], 보유: [], 이용: [], 제공: [], 파기: [] };
-    Object.keys(flowTableData).forEach((key) => {
-        const task = taskTableData.find(t => t.taskName === key || t.id === key);
-        const taskName = task?.taskName || key;
-        const taskData = flowTableData[key];
+
+    // tasks 순서대로 데이터 수집 (좌측 탭 순서 유지)
+    tasks.forEach((task) => {
+        const taskId = task.id;
+        const taskName = task.name;
+
+        const taskData = flowTableData[taskId];
         if (!taskData) return;
-        (taskData.collection || []).forEach((row: any) => flowByPhase['수집'].push({ taskName, ...row }));
-        (taskData.storage || []).forEach((row: any) => flowByPhase['보유'].push({ taskName, ...row }));
-        (taskData.usage || []).forEach((row: any) => flowByPhase['이용'].push({ taskName, ...row }));
-        (taskData.provision || []).forEach((row: any) => flowByPhase['제공'].push({ taskName, ...row }));
-        (taskData.disposal || []).forEach((row: any) => flowByPhase['파기'].push({ taskName, ...row }));
+
+        // sheets 구조 확인 (정규화된 데이터 사용)
+        const sheets = taskData.sheets || taskData;
+        if (!sheets) return;
+
+        // 각 단계별로 데이터 추가 (프론트엔드 필드명 사용)
+        (sheets.collection || []).forEach((row: any) => flowByPhase['수집'].push({ taskName, ...row }));
+        (sheets.storage || []).forEach((row: any) => flowByPhase['보유'].push({ taskName, ...row }));
+        (sheets.usage || []).forEach((row: any) => flowByPhase['이용'].push({ taskName, ...row }));
+        (sheets.provision || []).forEach((row: any) => flowByPhase['제공'].push({ taskName, ...row }));
+        (sheets.disposal || []).forEach((row: any) => flowByPhase['파기'].push({ taskName, ...row }));
     });
 
     // actionPlansByTask를 컴포넌트 최상위에서 계산
@@ -722,7 +949,7 @@ export default function LifecycleReport() {
                                         <UITableRow key={idx}>
                                             <UITableCell>{t.taskName}</UITableCell>
                                             <UITableCell>{t.purpose}</UITableCell>
-                                            <UITableCell>{t.personalInfo}</UITableCell>
+                                            <UITableCell>{t.infomation || t.personalInfo || ''}</UITableCell>
                                             <UITableCell>{t.department}</UITableCell>
                                         </UITableRow>
                                     ))}
@@ -882,22 +1109,32 @@ export default function LifecycleReport() {
                     {/* 1.3 흐름도 */}
                     <div className="space-y-2">
                         <h3 className="text-lg font-semibold">1.3 개인정보 흐름도</h3>
-                        {Object.keys(flowChartImages).map((key) => {
-                            const task = taskTableData.find(t => t.id === key || t.taskName === key);
-                            const displayName = task?.taskName || key;
-                            const imageData = flowChartImages[key];
+                        {tasks.length > 0 ? (
+                            tasks.map((task) => {
+                                const imageUrl = flowChartImages[task.id];
 
-                            return (
-                                <div key={key} className="space-y-2">
-                                    <h4 className="font-medium">{displayName} 흐름도</h4>
-                                    {imageData ? (
-                                        <img src={imageData} alt={`${displayName} 흐름도`} className="w-full border" />
-                                    ) : (
-                                        <p className="text-muted-foreground">이미지 없음</p>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                return (
+                                    <div key={task.id} className="space-y-2">
+                                        <h4 className="font-medium">{task.name} 흐름도</h4>
+                                        {imageUrl ? (
+                                            <img
+                                                src={imageUrl}
+                                                alt={`${task.name} 흐름도`}
+                                                className="w-full border rounded"
+                                                onError={(e) => {
+                                                    console.error(`Failed to load image for ${task.name}`);
+                                                    e.currentTarget.style.display = 'none';
+                                                }}
+                                            />
+                                        ) : (
+                                            <p className="text-muted-foreground">흐름도 이미지가 없습니다.</p>
+                                        )}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <p className="text-muted-foreground">평가업무가 없습니다.</p>
+                        )}
                     </div>
                 </CardContent>
             </Card>
