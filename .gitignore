@@ -26,3 +26,5 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.env.docker
+.env.production
