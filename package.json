@@ -8,7 +8,21 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:build": "docker build -t epia-frontend .",
+    "docker:build:no-cache": "docker build --no-cache -t epia-frontend .",
+    "docker:up": "docker-compose --env-file .env.docker up -d",
+    "docker:up:build": "docker-compose --env-file .env.docker up --build -d",
+    "docker:up:fresh": "docker-compose --env-file .env.docker build --no-cache && docker-compose --env-file .env.docker up -d",
+    "docker:down": "docker-compose down",
+    "docker:dev": "docker-compose --profile dev up -d frontend-dev",
+    "docker:dev:down": "docker-compose --profile dev down",
+    "docker:logs": "docker-compose logs -f frontend",
+    "docker:logs:dev": "docker-compose --profile dev logs -f frontend-dev",
+    "docker:restart": "docker-compose restart frontend",
+    "docker:clean": "docker-compose down --rmi all -v",
+    "docker:shell": "docker exec -it epia-frontend sh",
+    "docker:shell:dev": "docker exec -it epia-frontend-dev sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

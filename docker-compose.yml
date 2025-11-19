@@ -1,0 +1,56 @@
+
+# version: '3.8'
+
+services:
+  # Production build
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        # .env.docker가 없을 때 기본값 사용
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://host.docker.internal:8081}
+        - VITE_FLOW_API_BASE_URL=${VITE_FLOW_API_BASE_URL:-http://host.docker.internal:8000}
+        - VITE_SUPABASE_PROJECT_ID=${VITE_SUPABASE_PROJECT_ID}
+        - VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_GOJS_LICENSE=${VITE_GOJS_LICENSE}
+    container_name: epia-frontend
+    ports:
+      - "8080:80"  # 8080 포트 사용
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - epia-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Development mode with hot reload
+  frontend-dev:
+    image: node:20-alpine
+    container_name: epia-frontend-dev
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"  # Vite 기본 개발 서버 포트
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env
+    profiles:
+      - dev
+    networks:
+      - epia-network
+
+networks:
+  epia-network:
+    driver: bridge
