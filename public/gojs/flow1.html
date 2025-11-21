@@ -988,9 +988,7 @@
     // ===== Backend API base URL helper =====
     // Override by setting: window.__API_BASE__ = 'http://localhost:8000' from parent page if needed.
     function getAPIBase() {
-        return (window.__API_BASE__ && typeof window.__API_BASE__ === 'string')
-            ? window.__API_BASE__
-            : 'http://localhost:8000';
+        return '/flow';
     }
 
     async function fetchJSONSafe(url){
@@ -1012,7 +1010,7 @@
     // 서버에서 derived 받기 (task_id 우선)
     async function fetchCombinedFromDB(){
         const API_BASE = getAPIBase();
-        const url = `${API_BASE}/api/combined/?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}&ts=${Date.now()}`;
+        const url = `${API_BASE}/api/combined?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}&ts=${Date.now()}`;
         const r = await fetch(url, { cache: 'no-store' });
         if (!r.ok) throw new Error(`HTTP ${r.status} while GET ${url}`);
         return await r.json();
@@ -1021,7 +1019,7 @@
     // 서버에 현재 combined 저장하기 (task_id 기준)
     async function saveCombinedToDB(combined){
         const API_BASE = getAPIBase();
-        const url = `${API_BASE}/api/derived/?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}`;
+        const url = `${API_BASE}/api/derived?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(taskId)}`;
         const r = await fetch(url, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

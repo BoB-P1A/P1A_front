@@ -25,11 +25,15 @@ export default function ProtectionFlowChart() {
     const [tasks, setTasks] = useState<TaskRow[]>([]);
     const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(undefined);
 
+    // 컴포넌트 시작하자마자 window.__API_BASE__ 세팅
+    useEffect(() => {
+        (window as any).__API_BASE__ = "/flow";
+    }, []);
+
     // 최초: 처리업무 목록 로드
     useEffect(() => {
         if (!companyId) return;
         (async () => {
-            // 1순위: FastAPI (8000)
             try {
                 const r = await fetch(`${FLOW_API_BASE}/api/tasks?company_id=${encodeURIComponent(companyId)}`, {
                     // FastAPI는 인증없이 열어두었으면 헤더 불필요. 필요하면 Authorization 추가.
@@ -43,22 +47,9 @@ export default function ProtectionFlowChart() {
                 }));
                 setTasks(normalized);
                 if (normalized.length && !selectedTaskId) setSelectedTaskId(normalized[0].id);
-                return; // 성공이면 여기서 종료
+
             } catch (e) {
                 console.warn("FastAPI /api/tasks failed, fallback to team api:", e);
-            }
-
-            // 2순위(폴백): 팀 공용 API (8081) - 필요할 때만
-            try {
-                const rows = await api.tasks.getAll(companyId);
-                const normalized = (rows ?? []).map((t: any) => ({
-                    id: String(t.id),
-                    taskName: t.taskName || "(무제)",
-                }));
-                setTasks(normalized);
-                if (normalized.length && !selectedTaskId) setSelectedTaskId(normalized[0].id);
-            } catch (ee) {
-                console.error("Both task sources failed:", ee);
                 toast({ title: "업무 목록 로드 실패", variant: "destructive" });
             }
         })();
@@ -92,7 +83,7 @@ export default function ProtectionFlowChart() {
                 }
                 try {
                     const res = await fetch(
-                        `/api/derived?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(selectedTaskId)}`,
+                        `${FLOW_API_BASE}/api/derived?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(selectedTaskId)}`,
                         {
                             method: "PUT",
                             headers: { "Content-Type": "application/json" },
@@ -126,7 +117,7 @@ export default function ProtectionFlowChart() {
         if (!companyId || !selectedTaskId) return;
         try {
             const res = await fetch(
-                `/api/build?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(selectedTaskId)}`,
+                `${FLOW_API_BASE}/api/build?company_id=${encodeURIComponent(companyId)}&task_id=${encodeURIComponent(selectedTaskId)}`,
                 { method: "POST" }
             );
             if (!res.ok) throw new Error(await res.text());
