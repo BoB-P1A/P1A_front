@@ -59,24 +59,29 @@ export const api = {
 
     // 계정 관리
     accounts: {
+        // 모든 기업의 모든 계정 조회 (관리자용)
         getAll: async () => {
             const response = await apiClient.get("/accounts");
             return response.data;
         },
-        getById: async (id: string) => {
-            const response = await apiClient.get(`/accounts/${id}`);
+        // 특정 기업의 계정 조회 (필요시)
+        getByCompany: async (companyId: string) => {
+            const response = await apiClient.get(`/companies/${companyId}/accounts`);
             return response.data;
         },
-        create: async (account: any) => {
-            const response = await apiClient.post("/accounts", account);
+        // 계정 생성
+        create: async (companyId: string, account: any) => {
+            const response = await apiClient.post(`/companies/${companyId}/accounts`, account);
             return response.data;
         },
-        update: async (id: string, account: any) => {
-            const response = await apiClient.put(`/accounts/${id}`, account);
+        // 계정 수정
+        update: async (companyId: string, accountId: string, account: any) => {
+            const response = await apiClient.put(`/companies/${companyId}/accounts/${accountId}`, account);
             return response.data;
         },
-        delete: async (id: string) => {
-            const response = await apiClient.delete(`/accounts/${id}`);
+        // 계정 삭제
+        delete: async (companyId: string, accountId: string) => {
+            const response = await apiClient.delete(`/companies/${companyId}/accounts/${accountId}`);
             return response.data;
         },
     },
