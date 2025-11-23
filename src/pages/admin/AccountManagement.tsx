@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -256,9 +255,10 @@ export default function AccountManagement() {
         }
     };
 
+    // 날짜 포맷 함수 수정: 백엔드에서 이미 포맷된 문자열을 그대로 반환
     const formatDate = (dateString?: string) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('ko-KR');
+        return dateString;  // 백엔드에서 "2025-11-07 18:32:54" 형식으로 이미 포맷됨
     };
 
     return (
@@ -390,7 +390,8 @@ export default function AccountManagement() {
                                     <TableHead>아이디</TableHead>
                                     <TableHead>기업</TableHead>
                                     <TableHead>역할</TableHead>
-                                    <TableHead>생성일</TableHead>
+                                    <TableHead>생성일시</TableHead>
+                                    <TableHead>수정일시</TableHead>
                                     <TableHead className="text-right">작업</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -406,6 +407,7 @@ export default function AccountManagement() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell>{formatDate(account.createdAt)}</TableCell>
+                                        <TableCell>{formatDate(account.updatedAt)}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
                                                 <Button

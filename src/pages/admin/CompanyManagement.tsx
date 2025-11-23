@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ interface Company {
 
 export default function CompanyManagement() {
     const [companies, setCompanies] = useState<Company[]>([]);
-    // const [accounts, setAccounts] = useState<any[]>([]);
+    const [accounts, setAccounts] = useState<any[]>([]);
     const [editingCompany, setEditingCompany] = useState<Company | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -44,20 +45,17 @@ export default function CompanyManagement() {
 
     const loadData = async () => {
         try {
-            // const [companiesData, accountsData] = await Promise.all([
-            //     api.companies.getAll(),
-            //     api.accounts.getAll()
-            // ]);
+            const [companiesData, accountsData] = await Promise.all([
+                api.companies.getAll(),
+                api.accounts.getAll()
+            ]);
 
-            const companiesData = await api.companies.getAll();
             setCompanies(Array.isArray(companiesData) ? companiesData : []);
-
-
-            // setAccounts(Array.isArray(accountsData) ? accountsData : []);
+            setAccounts(Array.isArray(accountsData) ? accountsData : []);
         } catch (error) {
             console.error("Failed to load data:", error);
             setCompanies([]);
-            // setAccounts([]);
+            setAccounts([]);
             toast({
                 title: "데이터 로딩 실패",
                 description: "기업 정보를 불러오는데 실패했습니다.",
@@ -66,25 +64,14 @@ export default function CompanyManagement() {
         }
     };
 
-    // const getAccountCount = (companyName: string) => {
-    //     return accounts.filter((account) => account.company === companyName).length;
-    // };
-    //
-    // const getTotalAccountCount = () => {
-    //     return accounts.length;
-    // };
-
-    // Company 내부의 accounts 배열 길이를 반환
-    const getAccountCount = (companyName: string) => {
-        const company = companies.find((c) => c.name === companyName);
-        return company?.accounts?.length || 0;
+    // Company ID로 계정 수 조회
+    const getAccountCount = (companyId: string) => {
+        return accounts.filter((account) => account.companyId === companyId).length;
     };
 
     // 전체 계정 수 계산
     const getTotalAccountCount = () => {
-        return companies.reduce((total, company) => {
-            return total + (company.accounts?.length || 0);
-        }, 0);
+        return accounts.length;
     };
 
     const handleOpenDialog = (company?: Company) => {
@@ -156,7 +143,7 @@ export default function CompanyManagement() {
         const company = companies.find((c) => c.id === id);
         if (!company) return;
 
-        const accountCount = getAccountCount(company.name);
+        const accountCount = getAccountCount(company.id);
 
         let confirmMessage = `정말 "${company.name}" 기업을 삭제하시겠습니까?`;
         if (accountCount > 0) {
@@ -291,7 +278,7 @@ export default function CompanyManagement() {
                                     <TableHead>담당자 이름</TableHead>
                                     <TableHead>담당자 연락처</TableHead>
                                     <TableHead>계정 개수</TableHead>
-                                    <TableHead>등록일</TableHead>
+                                    <TableHead>등록일시</TableHead>
                                     <TableHead className="text-right">작업</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -301,7 +288,7 @@ export default function CompanyManagement() {
                                         <TableCell className="font-medium">{company.name}</TableCell>
                                         <TableCell>{company.contactName}</TableCell>
                                         <TableCell>{company.contactPhone}</TableCell>
-                                        <TableCell>{getAccountCount(company.name)}개</TableCell>
+                                        <TableCell>{getAccountCount(company.id)}개</TableCell>
                                         <TableCell>{company.createdAt}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
