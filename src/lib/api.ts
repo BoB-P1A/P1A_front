@@ -160,6 +160,12 @@ export const api = {
             const response = await apiClient.delete(`/evaluations/${id}`);
             return response.data;
         },
+        updateDefaultItems: async (companyId: string) => {
+            const response = await apiClient.post(`/evaluations/update-defaults`, {
+                companyId,
+            });
+            return response.data;
+        },
     },
 
     // 파일 업로드 (AWS S3)
