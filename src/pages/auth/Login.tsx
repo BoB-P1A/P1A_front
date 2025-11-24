@@ -81,16 +81,6 @@ export default function Login() {
               {isLoading ? '로그인 중...' : '로그인'}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-xs text-muted-foreground mb-2">테스트 계정:</p>
-            <div className="text-xs space-y-1">
-              <p>관리자: admin / admin123</p>
-              <p>개발팀: developer / dev123</p>
-              <p>개인정보팀: privacy / privacy123</p>
-              <p>사업주관팀: plan / plan123</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
