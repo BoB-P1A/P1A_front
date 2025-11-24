@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -650,16 +651,16 @@ export default function ProtectionFlowTable() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="min-w-[120px]">평가업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">세부업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">수집대상</TableHead>
+                                                <TableHead className="min-w-[120px]">세부업무명 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">수집대상 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="min-w-[120px]">수집경로</TableHead>
-                                                <TableHead className="min-w-[120px]">수집시스템</TableHead>
-                                                <TableHead className="min-w-[200px]">수집항목</TableHead>
-                                                <TableHead className="min-w-[120px]">수집항목명칭</TableHead>
+                                                <TableHead className="min-w-[120px]">수집시스템 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[200px]">수집항목 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">수집항목명칭 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="min-w-[150px]">수집목적</TableHead>
                                                 <TableHead className="min-w-[120px]">수집부서</TableHead>
-                                                <TableHead className="min-w-[100px]">온라인</TableHead>
-                                                <TableHead className="min-w-[100px]">암호화</TableHead>
+                                                <TableHead className="min-w-[100px]">온라인 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[100px]">암호화 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="w-[80px]">작업</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -722,16 +723,16 @@ export default function ProtectionFlowTable() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="min-w-[120px]">평가업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">세부업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">보유공간</TableHead>
-                                                <TableHead className="min-w-[120px]">수집시스템</TableHead>
-                                                <TableHead className="min-w-[200px]">보유항목</TableHead>
-                                                <TableHead className="min-w-[120px]">보유항목명칭</TableHead>
+                                                <TableHead className="min-w-[120px]">세부업무명 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">보유공간 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">수집시스템 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[200px]">보유항목 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">보유항목명칭 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="min-w-[150px]">보유목적</TableHead>
                                                 <TableHead className="min-w-[120px]">보유형태</TableHead>
                                                 <TableHead className="min-w-[200px]">암호화항목</TableHead>
-                                                <TableHead className="min-w-[100px]">온라인</TableHead>
-                                                <TableHead className="min-w-[100px]">암호화</TableHead>
+                                                <TableHead className="min-w-[100px]">온라인 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[100px]">암호화 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="w-[80px]">작업</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -794,16 +795,16 @@ export default function ProtectionFlowTable() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="min-w-[120px]">평가업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">세부업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">보유공간</TableHead>
-                                                <TableHead className="min-w-[120px]">이용시스템</TableHead>
-                                                <TableHead className="min-w-[200px]">이용항목</TableHead>
-                                                <TableHead className="min-w-[120px]">이용항목명칭</TableHead>
+                                                <TableHead className="min-w-[120px]">세부업무명 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">보유공간 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">이용시스템 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[200px]">이용항목 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">이용항목명칭 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="min-w-[150px]">이용목적</TableHead>
                                                 <TableHead className="min-w-[200px]">이용방법</TableHead>
                                                 <TableHead className="min-w-[120px]">이용자</TableHead>
-                                                <TableHead className="min-w-[100px]">온라인</TableHead>
-                                                <TableHead className="min-w-[100px]">암호화</TableHead>
+                                                <TableHead className="min-w-[100px]">온라인 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[100px]">암호화 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="w-[80px]">작업</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -866,19 +867,19 @@ export default function ProtectionFlowTable() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="min-w-[120px]">평가업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">세부업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">보유공간</TableHead>
-                                                <TableHead className="min-w-[120px]">연계시스템</TableHead>
+                                                <TableHead className="min-w-[120px]">세부업무명 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">보유공간 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">연계시스템 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="min-w-[100px]">제공부서</TableHead>
-                                                <TableHead className="min-w-[100px]">수신자</TableHead>
-                                                <TableHead className="min-w-[200px]">제공항목</TableHead>
-                                                <TableHead className="min-w-[150px]">제공항목명칭</TableHead>
+                                                <TableHead className="min-w-[100px]">수신자 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[200px]">제공항목 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[150px]">제공항목명칭 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="min-w-[150px]">제공목적</TableHead>
                                                 <TableHead className="min-w-[200px]">제공방법</TableHead>
-                                                <TableHead className="min-w-[130px]">연계시스템온라인</TableHead>
-                                                <TableHead className="min-w-[130px]">연계시스템암호화</TableHead>
-                                                <TableHead className="min-w-[130px]">수신자온라인</TableHead>
-                                                <TableHead className="min-w-[130px]">수신자암호화</TableHead>
+                                                <TableHead className="min-w-[130px]">연계시스템온라인 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[130px]">연계시스템암호화 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[130px]">수신자온라인 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[130px]">수신자암호화 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="w-[80px]">작업</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -961,15 +962,15 @@ export default function ProtectionFlowTable() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="min-w-[120px]">평가업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">세부업무명</TableHead>
-                                                <TableHead className="min-w-[120px]">보유공간</TableHead>
-                                                <TableHead className="min-w-[120px]">파기시스템</TableHead>
-                                                <TableHead className="min-w-[200px]">파기항목</TableHead>
-                                                <TableHead className="min-w-[120px]">파기항목명칭</TableHead>
+                                                <TableHead className="min-w-[120px]">세부업무명 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">보유공간 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">파기시스템 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[200px]">파기항목 <span className="text-red-500">*</span></TableHead>
+                                                <TableHead className="min-w-[120px]">파기항목명칭 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="min-w-[100px]">보관기간</TableHead>
                                                 <TableHead className="min-w-[120px]">파기부서</TableHead>
                                                 <TableHead className="min-w-[200px]">파기절차</TableHead>
-                                                <TableHead className="min-w-[100px]">온라인</TableHead>
+                                                <TableHead className="min-w-[100px]">온라인 <span className="text-red-500">*</span></TableHead>
                                                 <TableHead className="w-[80px]">작업</TableHead>
                                             </TableRow>
                                         </TableHeader>
