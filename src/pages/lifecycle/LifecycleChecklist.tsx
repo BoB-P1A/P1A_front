@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Upload, Download, Trash2, RotateCcw, Save } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -49,6 +60,8 @@ export default function LifecycleChecklist() {
     const [hasChanges, setHasChanges] = useState(false);
     const [activeTab, setActiveTab] = useState<string>("");
     const [loading, setLoading] = useState(false);
+    const [pendingTab, setPendingTab] = useState<string | null>(null);
+    const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
 
     // 처리업무 목록 로딩
     useEffect(() => {
@@ -125,6 +138,29 @@ export default function LifecycleChecklist() {
 
         loadChecklist();
     }, [activeTab, user?.companyId]);
+
+    const handleTabChange = (newTab: string) => {
+        if (hasChanges && newTab !== activeTab) {
+            setPendingTab(newTab);
+            setShowUnsavedAlert(true);
+        } else {
+            setActiveTab(newTab);
+        }
+    };
+
+    const handleConfirmTabChange = () => {
+        if (pendingTab) {
+            setActiveTab(pendingTab);
+            setHasChanges(false);
+            setPendingTab(null);
+        }
+        setShowUnsavedAlert(false);
+    };
+
+    const handleCancelTabChange = () => {
+        setPendingTab(null);
+        setShowUnsavedAlert(false);
+    };
 
     // no를 기준으로 항목 구분
     const handleStatusChange = (no: string, status: "이행" | "부분이행" | "미이행" | "해당없음") => {
@@ -279,21 +315,7 @@ export default function LifecycleChecklist() {
                 </div>
             </div>
 
-            <Tabs
-                value={activeTab}
-                onValueChange={(newTab) => {
-                    if (hasChanges && newTab !== activeTab) {
-                        if (
-                            confirm("저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?\n(저장하지 않은 내용은 사라집니다)")
-                        ) {
-                            setActiveTab(newTab);
-                            setHasChanges(false);
-                        }
-                    } else {
-                        setActiveTab(newTab);
-                    }
-                }}
-            >
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList>
                     {Array.isArray(tasks) && tasks.map((task) => (
                         <TabsTrigger key={task.id} value={task.id}>
@@ -424,6 +446,23 @@ export default function LifecycleChecklist() {
                     </TabsContent>
                 ))}
             </Tabs>
+
+            <AlertDialog open={showUnsavedAlert} onOpenChange={setShowUnsavedAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>localhost:8080의 메시지</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?
+                            <br />
+                            (저장하지 않은 내용은 사라집니다)
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={handleCancelTabChange}>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmTabChange}>확인</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

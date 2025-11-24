@@ -56,7 +56,7 @@ const App = () => (
               
               {/* 영향평가 관리 페이지 */}
               <Route path="evaluation-management" element={
-                <ProtectedRoute allowedRoles={['admin', 'privacy-team']}>
+                <ProtectedRoute allowedRoles={['admin', 'developer', 'privacy-team', 'planning-team']}>
                   <EvaluationManagement />
                 </ProtectedRoute>
               } />
