@@ -61,16 +61,16 @@ export interface UpdateAccountRequest extends Partial<CreateAccountRequest> {}
 export interface Company {
     id: string;
     name: string;
-    managerName: string;
-    managerPhone: string;
+    contactName: string;
+    contactPhone: string;
     createdAt: string;
     updatedAt?: string;
 }
 
 export interface CreateCompanyRequest {
     name: string;
-    managerName: string;
-    managerPhone: string;
+    contactName: string;
+    contactPhone: string;
 }
 
 // 처리업무 관련 타입

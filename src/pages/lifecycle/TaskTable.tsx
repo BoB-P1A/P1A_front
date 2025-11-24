@@ -95,12 +95,22 @@ export default function TaskTable() {
 
         // 임시 ID인 경우 (새로 추가된 행)
         if (id.startsWith('temp_')) {
+            if (!confirm('이 행을 삭제하시겠습니까?')) {
+                return;
+            }
             setTasks(tasks.filter(task => task.id !== id));
             toast({ title: "행이 제거되었습니다." });
             return;
         }
 
-        // DB에 저장된 행 삭제
+        // DB에 저장된 행 삭제 - 확인 메시지 추가
+        const taskToDelete = tasks.find(task => task.id === id);
+        const taskName = taskToDelete?.taskName || '이 항목';
+
+        if (!confirm(`정말 "${taskName}"을(를) 삭제하시겠습니까?`)) {
+            return;
+        }
+
         try {
             await execute(() => api.tasks.delete(id));
             setTasks(tasks.filter(task => task.id !== id));

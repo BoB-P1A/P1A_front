@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, Edit, Trash2, Upload, Download, RotateCcw, Save } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -60,6 +71,8 @@ export default function SecurityChecklist() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingSystem, setEditingSystem] = useState<SystemInfo | null>(null);
     const [systemName, setSystemName] = useState("");
+    const [pendingTab, setPendingTab] = useState<string | null>(null);
+    const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -125,6 +138,29 @@ export default function SecurityChecklist() {
 
         loadChecklist();
     }, [activeTab, user?.companyId]);
+
+    const handleTabChange = (newTab: string) => {
+        if (hasChanges && newTab !== activeTab) {
+            setPendingTab(newTab);
+            setShowUnsavedAlert(true);
+        } else {
+            setActiveTab(newTab);
+        }
+    };
+
+    const handleConfirmTabChange = () => {
+        if (pendingTab) {
+            setActiveTab(pendingTab);
+            setHasChanges(false);
+            setPendingTab(null);
+        }
+        setShowUnsavedAlert(false);
+    };
+
+    const handleCancelTabChange = () => {
+        setPendingTab(null);
+        setShowUnsavedAlert(false);
+    };
 
     // no를 기준으로 항목 구분
     const handleStatusChange = (no: string, status: "이행" | "부분이행" | "미이행" | "해당없음") => {
@@ -333,7 +369,6 @@ export default function SecurityChecklist() {
                                         placeholder="예: 회원관리시스템"
                                     />
                                 </div>
-                                {/* 변경: handleSaveTarget → handleSaveSystem */}
                                 <Button onClick={handleSaveSystem} className="w-full">
                                     저장
                                 </Button>
@@ -358,21 +393,7 @@ export default function SecurityChecklist() {
                     </CardContent>
                 </Card>
             ) : (
-                <Tabs
-                    value={activeTab}
-                    onValueChange={(newTab) => {
-                        if (hasChanges && newTab !== activeTab) {
-                            if (
-                                confirm("저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?\n(저장하지 않은 내용은 사라집니다)")
-                            ) {
-                                setActiveTab(newTab);
-                                setHasChanges(false);
-                            }
-                        } else {
-                            setActiveTab(newTab);
-                        }
-                    }}
-                >
+                <Tabs value={activeTab} onValueChange={handleTabChange}>
                     <div className="flex items-center justify-between mb-4">
                         <TabsList>
                             {Array.isArray(securitySystems) && securitySystems.map((system) => (
@@ -525,6 +546,23 @@ export default function SecurityChecklist() {
                     ))}
                 </Tabs>
             )}
+
+            <AlertDialog open={showUnsavedAlert} onOpenChange={setShowUnsavedAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>localhost:8080의 메시지</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?
+                            <br />
+                            (저장하지 않은 내용은 사라집니다)
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={handleCancelTabChange}>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmTabChange}>확인</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

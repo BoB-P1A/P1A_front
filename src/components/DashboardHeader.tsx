@@ -22,8 +22,23 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 
+const getRoleLabel = (role: string) => {
+    switch (role) {
+        case 'admin':
+            return '관리자';
+        case 'developer':
+            return '개발팀';
+        case 'privacy-team':
+            return '개인정보팀';
+        case 'planning-team':
+            return '사업주관팀';
+        default:
+            return role;
+    }
+};
+
 export function DashboardHeader() {
-    const { user, logout } = useAuth();
+    const { user, logout, refreshUser } = useAuth();
     const navigate = useNavigate();
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
@@ -33,6 +48,13 @@ export function DashboardHeader() {
         { id: 2, title: '체크리스트 수행 요청', time: '1시간 전', type: 'reception' },
         { id: 3, title: '체크리스트 미완료 항목 있음', time: '3시간 전', type: 'warning' },
     ];
+
+    // 프로필 드롭다운이 열릴 때 사용자 정보 새로고침
+    const handleProfileOpen = async (open: boolean) => {
+        if (open) {
+            await refreshUser();
+        }
+    };
 
     return (
         <header className="flex h-16 items-center justify-between border-b border-border bg-background px-6">
@@ -82,7 +104,7 @@ export function DashboardHeader() {
                 </Dialog>
 
                 {/* 마이페이지 드롭다운 */}
-                <DropdownMenu>
+                <DropdownMenu onOpenChange={handleProfileOpen}>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="hover:text-accent">
                             <User className="h-5 w-5" />
@@ -94,8 +116,7 @@ export function DashboardHeader() {
                                 <p className="font-medium">{user?.name}</p>
                                 <p className="text-xs text-muted-foreground">{user?.username}</p>
                                 <Badge variant="outline" className="mt-1">
-                                    {user?.role === 'admin' ? '관리자' :
-                                        user?.role === 'developer' ? '개발팀' : '개인정보팀'}
+                                    {getRoleLabel(user?.role || '')}
                                 </Badge>
                             </div>
                         </DropdownMenuLabel>
@@ -122,8 +143,7 @@ export function DashboardHeader() {
                                             <div>
                                                 <label className="text-sm font-medium">역할</label>
                                                 <Badge variant="outline">
-                                                    {user?.role === 'admin' ? '관리자' :
-                                                        user?.role === 'developer' ? '개발팀' : '개인정보팀'}
+                                                    {getRoleLabel(user?.role || '')}
                                                 </Badge>
                                             </div>
                                             <div>
