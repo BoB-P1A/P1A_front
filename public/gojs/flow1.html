@@ -988,7 +988,9 @@
     // ===== Backend API base URL helper =====
     // Override by setting: window.__API_BASE__ = 'http://localhost:8000' from parent page if needed.
     function getAPIBase() {
-        return '/flow';
+        return (window.__API_BASE__ && typeof window.__API_BASE__ === 'string')
+            ? window.__API_BASE__
+            : 'http://localhost:8000';
     }
 
     async function fetchJSONSafe(url){

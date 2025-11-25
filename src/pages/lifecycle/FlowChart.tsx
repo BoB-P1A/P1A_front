@@ -25,20 +25,19 @@ export default function ProtectionFlowChart() {
     const [tasks, setTasks] = useState<TaskRow[]>([]);
     const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(undefined);
 
-    // 컴포넌트 시작하자마자 window.__API_BASE__ 세팅
+    // 컴포넌트 시작 시 JS 쪽(iframe 내부)에서 읽을 값 세팅
     useEffect(() => {
-        (window as any).__API_BASE__ = "/flow";
-    }, []);
+        (window as any).__API_BASE__ = FLOW_API_BASE;
+    }, [FLOW_API_BASE]);
 
     // 최초: 처리업무 목록 로드
     useEffect(() => {
         if (!companyId) return;
         (async () => {
             try {
-                const r = await fetch(`${FLOW_API_BASE}/api/tasks?company_id=${encodeURIComponent(companyId)}`, {
-                    // FastAPI는 인증없이 열어두었으면 헤더 불필요. 필요하면 Authorization 추가.
-                    // headers: { Authorization: `Bearer ${token}` }
-                });
+                const r = await fetch(
+                    `${FLOW_API_BASE}/api/tasks?company_id=${encodeURIComponent(companyId)}`
+                );
                 if (!r.ok) throw new Error(String(r.status));
                 const rows = await r.json();
                 const normalized = (rows ?? []).map((t: any) => ({
