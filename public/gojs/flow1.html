@@ -986,11 +986,26 @@
     /* ========= fetch/save/load ========= */
 
     // ===== Backend API base URL helper =====
-    // Override by setting: window.__API_BASE__ = 'http://localhost:8000' from parent page if needed.
     function getAPIBase() {
-        return (window.__API_BASE__ && typeof window.__API_BASE__ === 'string')
-            ? window.__API_BASE__
-            : 'http://localhost:8000';
+        // 1) 부모(React) window에 설정된 값 우선 사용
+        try {
+            if (window.parent && window.parent !== window) {
+                const v = window.parent.__API_BASE__;
+                if (typeof v === 'string' && v.length > 0) {
+                    return v;         // 예: "/flow"
+                }
+            }
+        } catch (e) {
+            // cross-origin이면 여기서 에러
+        }
+
+        // 2) 혹시라도 iframe 자기 window에 값이 있으면 사용
+        if (typeof window.__API_BASE__ === 'string' && window.__API_BASE__.length > 0) {
+            return window.__API_BASE__;
+        }
+
+        // 3) 그래도 없으면 로컬 개발용 기본값
+        return 'http://localhost:8000';
     }
 
     async function fetchJSONSafe(url){
