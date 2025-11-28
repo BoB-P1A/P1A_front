@@ -194,6 +194,18 @@ interface ApiFlowTableResponse {
     };
 }
 
+interface AiGenerateSheetsResponse {
+  company_id: string;
+  task_id: string;
+  sheets: {
+    collect?: DbCollectionItem[];
+    retain?: DbRetainItem[];
+    use?: DbUseItem[];
+    provide?: DbProvideItem[];
+    discard?: DbDiscardItem[];
+  };
+}
+
 // DB 필드 <-> 프론트엔드 필드 매핑 함수
 const mapDbToFrontend = {
     collection: (dbItem: DbCollectionItem): CollectionData => ({
@@ -336,6 +348,8 @@ export default function ProtectionFlowTable() {
     const [selectedTaskId, setSelectedTaskId] = useState('');
     const [flowDataByTaskId, setFlowDataByTaskId] = useState<Record<string, TaskFlowData>>({});
     const [loading, setLoading] = useState(false);
+    const [aiSourceTextByTaskId, setAiSourceTextByTaskId] = useState<Record<string, string>>({});
+    const [aiLoadingTaskId, setAiLoadingTaskId] = useState<string | null>(null);
 
     const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -548,6 +562,10 @@ export default function ProtectionFlowTable() {
             setLoading(true);
 
             const sheets = flowDataByTaskId[selectedTaskId];
+            if (!sheets) {
+            toast({ title: '오류', description: '선택된 평가업무의 흐름표 데이터가 없습니다.', variant: 'destructive' });
+            return;
+            }
 
             const sheetsToSave = {
                 collect: sheets.collection.map(mapFrontendToDb.collection),
@@ -613,6 +631,110 @@ export default function ProtectionFlowTable() {
         XLSX.writeFile(workbook, '개인정보_흐름표.xlsx');
     };
 
+    // 파일 업로드 → 텍스트 읽어서 state에 저장
+    const handleAiFileChange = (taskId: string, file: File | null) => {
+        if (!file) return;
+
+        // 일단은 .txt, .csv 등 텍스트 파일 기준으로 구현
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = (e.target?.result || '') as string;
+            if (!text.trim()) {
+                toast({ title: '알림', description: '파일에서 텍스트를 읽지 못했습니다.', variant: 'destructive' });
+                return;
+            }
+            setAiSourceTextByTaskId((prev) => ({
+                ...prev,
+                [taskId]: text,
+            }));
+            toast({ title: '업로드 완료', description: 'AI 분석에 사용할 텍스트가 준비되었습니다.' });
+        };
+        reader.onerror = () => {
+            toast({ title: '오류', description: '파일을 읽는 중 오류가 발생했습니다.', variant: 'destructive' });
+        };
+        reader.readAsText(file, 'utf-8');
+    };
+
+    // Azure OpenAI 호출 → 제안된 흐름표 행들을 프론트에 "추가"만 하기
+    const handleRunAiForTask = async (taskId: string) => {
+        const plainText = aiSourceTextByTaskId[taskId];
+        if (!plainText || !plainText.trim()) {
+            toast({ title: '알림', description: '먼저 문서 파일을 업로드 해주세요.', variant: 'destructive' });
+            return;
+        }
+        if (!user?.companyId) {
+            toast({ title: '오류', description: '회사 정보가 없습니다.', variant: 'destructive' });
+            return;
+        }
+
+        try {
+            setAiLoadingTaskId(taskId);
+
+            // 백엔드 AI 엔드포인트 호출 (api 래퍼에 맞게 수정)
+            const res: AiGenerateSheetsResponse = await api.ai.generateSheets({
+                company_id: user.companyId,
+                task_id: taskId,
+                plain_text: plainText,
+            });
+
+            const sheets = res.sheets || {};
+
+            // DB → 프론트 매핑 재사용 + 새 id 부여
+            const newCollection = (sheets.collect || []).map(mapDbToFrontend.collection).map((row) => ({
+                ...row,
+                id: generateId(),
+            }));
+            const newStorage = (sheets.retain || []).map(mapDbToFrontend.storage).map((row) => ({
+                ...row,
+                id: generateId(),
+            }));
+            const newUsage = (sheets.use || []).map(mapDbToFrontend.usage).map((row) => ({
+                ...row,
+                id: generateId(),
+            }));
+            const newProvision = (sheets.provide || []).map(mapDbToFrontend.provision).map((row) => ({
+                ...row,
+                id: generateId(),
+            }));
+            const newDisposal = (sheets.discard || []).map(mapDbToFrontend.disposal).map((row) => ({
+                ...row,
+                id: generateId(),
+            }));
+
+            // 기존 사용자가 입력해둔 행은 그대로 두고, 뒤에 "추가"만 함
+            setFlowDataByTaskId((prev) => {
+                const currentTask = prev[taskId] || {
+                    collection: [],
+                    storage: [],
+                    usage: [],
+                    provision: [],
+                    disposal: [],
+                };
+
+                return {
+                    ...prev,
+                    [taskId]: {
+                        collection: [...currentTask.collection, ...newCollection],
+                        storage: [...currentTask.storage, ...newStorage],
+                        usage: [...currentTask.usage, ...newUsage],
+                        provision: [...currentTask.provision, ...newProvision],
+                        disposal: [...currentTask.disposal, ...newDisposal],
+                    },
+                };
+            });
+
+            toast({
+                title: 'AI 제안 완료',
+                description: '문서 내용을 기반으로 세부업무 행이 추가되었습니다. 내용을 확인하고 필요시 수정 후 저장하세요.',
+            });
+        } catch (error) {
+            console.error('AI 생성 실패:', error);
+            toast({ title: '오류', description: 'AI 분석 중 오류가 발생했습니다.', variant: 'destructive' });
+        } finally {
+            setAiLoadingTaskId(null);
+        }
+    };    
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -636,6 +758,42 @@ export default function ProtectionFlowTable() {
 
                 {tasks.map(task => (
                     <TabsContent key={task.taskId} value={task.taskId} className="space-y-6">
+                        {/* 이 평가업무에 대한 AI 보조 입력 영역 */}
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle>AI 보조 입력</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
+                                    <div className="flex-1">
+                                        <Input
+                                            type="file"
+                                            accept=".txt,text/plain"
+                                            onChange={(e) =>
+                                                handleAiFileChange(
+                                                    task.taskId,
+                                                    e.target.files?.[0] || null,
+                                                )
+                                            }
+                                        />
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            현재는 텍스트(.txt) 문서를 기준으로 지원합니다. 업로드 후 &ldquo;AI로 행 제안&rdquo; 버튼을 눌러주세요.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            onClick={() => handleRunAiForTask(task.taskId)}
+                                            disabled={aiLoadingTaskId === task.taskId || loading}
+                                        >
+                                            {aiLoadingTaskId === task.taskId ? '생성 중...' : 'AI로 행 제안'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         {/* 수집 단계 */}
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
