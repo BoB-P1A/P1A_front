@@ -12,6 +12,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 
+// FAST API로 연결되는 부분(AI)
+const FLOW_API_BASE = import.meta.env.VITE_FLOW_API_BASE_URL ?? "http://localhost:8000";
+
 // DB에서 받아오는 원본 데이터 타입
 interface DbCollectionItem {
     _id?: string;
@@ -350,7 +353,8 @@ export default function ProtectionFlowTable() {
     const [loading, setLoading] = useState(false);
     const [aiSourceTextByTaskId, setAiSourceTextByTaskId] = useState<Record<string, string>>({});
     const [aiLoadingTaskId, setAiLoadingTaskId] = useState<string | null>(null);
-
+    const [aiSourceFileByTaskId, setAiSourceFileByTaskId] = useState<Record<string, File | null>>({});
+    
     const generateId = () => Math.random().toString(36).substr(2, 9);
 
     useEffect(() => {
@@ -631,34 +635,71 @@ export default function ProtectionFlowTable() {
         XLSX.writeFile(workbook, '개인정보_흐름표.xlsx');
     };
 
-    // 파일 업로드 → 텍스트 읽어서 state에 저장
+    // 파일 업로드 → 텍스트 또는 파일 저장
     const handleAiFileChange = (taskId: string, file: File | null) => {
         if (!file) return;
 
-        // 일단은 .txt, .csv 등 텍스트 파일 기준으로 구현
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const text = (e.target?.result || '') as string;
-            if (!text.trim()) {
-                toast({ title: '알림', description: '파일에서 텍스트를 읽지 못했습니다.', variant: 'destructive' });
-                return;
-            }
+        const lower = file.name.toLowerCase();
+        const isTextLike =
+            lower.endsWith(".txt") || file.type.startsWith("text/");
+
+        if (isTextLike) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = (e.target?.result || "") as string;
+                if (!text.trim()) {
+                    toast({
+                        title: "알림",
+                        description: "파일에서 텍스트를 읽지 못했습니다.",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+                setAiSourceTextByTaskId((prev) => ({
+                    ...prev,
+                    [taskId]: text,
+                }));
+                // 텍스트를 쓸 거니까, 파일 레퍼런스는 굳이 안 들고 있어도 됨
+                setAiSourceFileByTaskId((prev) => ({
+                    ...prev,
+                    [taskId]: null,
+                }));
+                toast({
+                    title: "업로드 완료",
+                    description: "AI 분석에 사용할 텍스트가 준비되었습니다.",
+                });
+            };
+            reader.onerror = () => {
+                toast({
+                    title: "오류",
+                    description: "파일을 읽는 중 오류가 발생했습니다.",
+                    variant: "destructive",
+                });
+            };
+            reader.readAsText(file, "utf-8");
+        } else {
+            // txt가 아니면, 서버에서 텍스트 추출
+            setAiSourceFileByTaskId((prev) => ({
+                ...prev,
+                [taskId]: file,
+            }));
             setAiSourceTextByTaskId((prev) => ({
                 ...prev,
-                [taskId]: text,
+                [taskId]: "",
             }));
-            toast({ title: '업로드 완료', description: 'AI 분석에 사용할 텍스트가 준비되었습니다.' });
-        };
-        reader.onerror = () => {
-            toast({ title: '오류', description: '파일을 읽는 중 오류가 발생했습니다.', variant: 'destructive' });
-        };
-        reader.readAsText(file, 'utf-8');
+            toast({
+                title: "업로드 완료",
+                description: "서버에서 텍스트를 추출해서 AI 분석에 사용합니다.",
+            });
+        }
     };
 
     // Azure OpenAI 호출 → 제안된 흐름표 행들을 프론트에 "추가"만 하기
     const handleRunAiForTask = async (taskId: string) => {
         const plainText = aiSourceTextByTaskId[taskId];
-        if (!plainText || !plainText.trim()) {
+        const file = aiSourceFileByTaskId[taskId];
+
+        if ((!plainText || !plainText.trim()) && !file) {
             toast({ title: '알림', description: '먼저 문서 파일을 업로드 해주세요.', variant: 'destructive' });
             return;
         }
@@ -670,12 +711,34 @@ export default function ProtectionFlowTable() {
         try {
             setAiLoadingTaskId(taskId);
 
-            // 백엔드 AI 엔드포인트 호출 (api 래퍼에 맞게 수정)
-            const res: AiGenerateSheetsResponse = await api.ai.generateSheets({
-                company_id: user.companyId,
-                task_id: taskId,
-                plain_text: plainText,
-            });
+            let res: AiGenerateSheetsResponse;
+
+            if (plainText && plainText.trim()) {
+                // 1) 기존 txt 기반 호출 그대로
+                res = await api.ai.generateSheets({
+                    company_id: user.companyId,
+                    task_id: taskId,
+                    plain_text: plainText,
+                });
+            } else if (file) {
+                // 2) pdf / word / xlsx 등은 파일 업로드 엔드포인트로
+                const formData = new FormData();
+                formData.append("company_id", user.companyId);
+                formData.append("task_id", taskId);
+                formData.append("file", file);
+
+                // api 래퍼에 맞게 조정 가능. 일단 fetch 예시:
+                const response = await fetch(`${FLOW_API_BASE}/api/ai/generate-sheets-from-file`, {
+                    method: "POST",
+                    body: formData,
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                res = (await response.json()) as AiGenerateSheetsResponse;
+            } else {
+                throw new Error("AI 분석에 사용할 데이터가 없습니다.");
+            }
 
             const sheets = res.sheets || {};
 
@@ -768,7 +831,14 @@ export default function ProtectionFlowTable() {
                                     <div className="flex-1">
                                         <Input
                                             type="file"
-                                            accept=".txt,text/plain"
+                                            accept="
+                                                .txt,
+                                                text/plain,
+                                                application/pdf,
+                                                application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                                                application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+                                                application/vnd.ms-excel
+                                            "
                                             onChange={(e) =>
                                                 handleAiFileChange(
                                                     task.taskId,
@@ -777,7 +847,7 @@ export default function ProtectionFlowTable() {
                                             }
                                         />
                                         <p className="mt-1 text-xs text-muted-foreground">
-                                            현재는 텍스트(.txt) 문서를 기준으로 지원합니다. 업로드 후 &ldquo;AI로 행 제안&rdquo; 버튼을 눌러주세요.
+                                            txt, pdf, word, excel 문서를 지원합니다. 업로드 후 &ldquo;AI로 행 제안&rdquo; 버튼을 눌러주세요.
                                         </p>
                                     </div>
                                     <div>
