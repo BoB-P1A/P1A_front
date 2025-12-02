@@ -3,6 +3,10 @@ import axios from "axios";
 // API 베이스 URL - 환경변수로 설정 (추후 실제 백엔드 URL로 변경)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
 
+const flowAxios = axios.create({
+  baseURL: import.meta.env.VITE_FLOW_API_BASE_URL, // FastAPI (flow, ai)
+});
+
 // Axios 인스턴스 생성
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -541,5 +545,10 @@ export const api = {
             });
             return response.data;
         },
+    },
+    // AI 기능 (FastAPI)
+    ai: {
+        generateSheets: (body: { company_id: string; task_id: string; plain_text: string }) =>
+        flowAxios.post('/api/ai/generate-sheets', body).then(res => res.data),
     },
 };
