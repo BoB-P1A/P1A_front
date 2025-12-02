@@ -526,6 +526,9 @@
 
     /* ========= 노드 템플릿 ========= */
     function commonNodePanel(shapeName, fill, stroke, opts = {}){
+        const shapeOpts = opts.shape || {};
+        const textOpts  = opts.text  || {};
+
         return $(go.Panel, "Auto",
             $(go.Shape, shapeName,
                 Object.assign({
@@ -534,17 +537,53 @@
                     fromLinkable: true, toLinkable: true,
                     fromLinkableDuplicates: true, toLinkableDuplicates: true,
                     fromSpot: go.Spot.AllSides, toSpot: go.Spot.AllSides // 면 전체
-                }, opts.shape || {})),
+                }, shapeOpts)
+            ),
             $(go.Panel, "Vertical",
-                { margin: new go.Margin(8, 8, 10, 10), defaultAlignment: go.Spot.Center },
+                { margin: new go.Margin(8, 8, 8, 8), defaultAlignment: go.Spot.Center },
                 $(go.TextBlock,
-                    { editable: true, wrap: go.Wrap.Fit, width: 160, font: "16px sans-serif",
-                        textAlign: "center", margin: new go.Margin(0, 0, 1, 0), overflow: go.TextOverflow.Ellipsis },
+                    Object.assign({
+                        editable: true,
+                        wrap: go.Wrap.Fit,
+                        width: 160,
+                        font: "16px sans-serif",
+                        textAlign: "center",
+                        margin: new go.Margin(0, 0, 0, 0),
+                        overflow: go.TextOverflow.Ellipsis
+                    }, textOpts),
                     new go.Binding("text").makeTwoWay()
                 )
             )
         );
     }
+    // ★ 5각 별 커스텀 도형 등록
+    go.Shape.defineFigureGenerator("Star5", function(shape, w, h) {
+    const geo = new go.Geometry();
+    const fig = new go.PathFigure(w * 0.5, 0, true);
+    // 5각 별 좌표 (정규화된 0~1 범위)
+    const points = [
+        0.5, 0,
+        0.618, 0.382,
+        1, 0.382,
+        0.691, 0.618,
+        0.809, 1,
+        0.5, 0.76,
+        0.191, 1,
+        0.309, 0.618,
+        0, 0.382,
+        0.382, 0.382
+    ];
+    // PathFigure에 점 추가
+    for (let i = 0; i < points.length; i += 2) {
+        fig.add(new go.PathSegment(go.PathSegment.Line,
+        points[i] * w,
+        points[i + 1] * h
+        ));
+    }
+    geo.add(fig);
+    geo.normalize();
+    return geo;
+    });
 
     let myDiagram, myPalette;
 
@@ -574,7 +613,6 @@
         // (선택) 줌 자체를 전면 금지하고 싶다면 같이 켜기
         // d.allowZoom = false;
 
-        myDiagram.toolManager.linkingTool.portGravity = 20;
         myDiagram.toolManager.linkingTool.temporaryLink.routing  = go.Routing.AvoidsNodes;
         myDiagram.toolManager.linkingTool.temporaryLink.fromSpot = go.Spot.AllSides;
         myDiagram.toolManager.linkingTool.temporaryLink.toSpot   = go.Spot.AllSides;
@@ -604,14 +642,14 @@
             $(go.Node,"Spot",
                 Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
                 new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
-                commonNodePanel("Rectangle","#E8F0FE","#4682B4"),
+                commonNodePanel("Rectangle","#fff","#6B7280"),
             )
         );
         myDiagram.nodeTemplateMap.add("system_offline",
             $(go.Node,"Spot",
                 Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
                 new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
-                commonNodePanel("Rectangle","#ECECEC","#6B7280",{shape:{strokeDashArray:[6,3]}}),
+                commonNodePanel("Rectangle","#fff","#6B7280",{shape:{strokeDashArray:[6,3]}}),
             )
         );
 
@@ -620,14 +658,14 @@
             $(go.Node,"Spot",
                 Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
                 new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
-                commonNodePanel("Cylinder1","#FFF0F5","#B22222"),
+                commonNodePanel("Cylinder1","#FFFFCC","#AEB4B8"),
             )
         );
         myDiagram.nodeTemplateMap.add("database_offline",
             $(go.Node,"Spot",
                 Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
                 new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
-                commonNodePanel("Cylinder1","#F3F4F6","#6B7280",{shape:{strokeDashArray:[6,3]}}),
+                commonNodePanel("Cylinder1","#FFFFCC","#AEB4B8",{shape:{strokeDashArray:[6,3]}}),
             )
         );
 
@@ -643,8 +681,117 @@
             $(go.Node,"Spot",
                 Object.assign({}, baseNode,{avoidable:true,portSpreading:go.Node.SpreadingEvenly}),
                 new go.Binding("location","loc",go.Point.parse).makeTwoWay(go.Point.stringify),
-                commonNodePanel("Document","#F5F5F5","#6B7280",{shape:{strokeDashArray:[6,3]}}),
+                commonNodePanel("Document","#FDEDEC","#CD5C5C",{shape:{strokeDashArray:[6,3]}}),
             )
+        );
+
+        // memobox (텍스트는 편집 가능, 링크 생성 X)
+        myDiagram.nodeTemplateMap.add("memobox",
+        $(go.Node, "Spot",
+                Object.assign({}, baseNode, {
+                avoidable: true,
+                portSpreading: go.Node.SpreadingEvenly
+            }),
+            new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+
+            $(go.Panel, "Auto",
+            $(go.Shape, "Rectangle",
+                {
+                    fill: "#B0DDFF",
+                    stroke: null,
+                    portId: "",
+                    fromLinkable: false,
+                    toLinkable: false,
+                    fromLinkableDuplicates: false,
+                    toLinkableDuplicates: false,
+                    cursor: "move"
+                }
+            ),
+            $(go.TextBlock,
+                {
+                    editable: true,
+                    margin: new go.Margin(3,4,3,4),            // 내부 여백 완전 제거
+                    font: "16px sans-serif",
+                    stroke: "red",
+                    textAlign: "center",
+                    wrap: go.Wrap.Fit,
+                    width: NaN,           // Panel Auto 임으로 자동 크기
+                },
+                new go.Binding("text").makeTwoWay()
+            )
+            )
+        )
+        );
+        
+        // star
+        myDiagram.nodeTemplateMap.add("star",
+        $(go.Node, "Spot",
+            Object.assign({}, baseNode, {
+                avoidable: true,
+                portSpreading: go.Node.SpreadingEvenly
+            }),
+            new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+
+            commonNodePanel("Star5", "red", null, {
+                shape: {
+                    // 이 Shape는 더 이상 포트가 아님
+                    portId: null,                    // "" → null로 덮어서 포트 해제
+                    fromLinkable: false,
+                    toLinkable: false,
+                    fromLinkableDuplicates: false,
+                    toLinkableDuplicates: false,
+                    width: 30,
+                    height: 30,
+                    cursor: "move"                   // 마우스 커서 이동 느낌으로
+                }
+            })
+        )
+        );
+
+        // 원형 기호
+        myDiagram.nodeTemplateMap.add("circleNumber",
+        $(go.Node, "Spot",
+            Object.assign({}, baseNode, {
+                avoidable: true,
+                portSpreading: go.Node.SpreadingEvenly
+            }),
+            new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+
+            // 여기부터 노드의 실제 모양
+            $(go.Panel, "Auto",
+            // 배경 원 (링크 기능 OFF)
+            $(go.Shape, "Circle",
+                {
+                    fill: "#fee2e2",
+                    stroke: "#b91c1c",
+                    strokeWidth: 2,
+
+                    // 링크 기능 끔
+                    portId: "",
+                    fromLinkable: false,
+                    toLinkable: false,
+                    fromLinkableDuplicates: false,
+                    toLinkableDuplicates: false,
+                    width: 24,
+                    height: 24
+                }
+            ),
+            // 앞에 오는 텍스트(숫자) – editable 유지
+            $(go.TextBlock,
+                {
+                    editable: true,
+                    font: "bold 16px sans-serif",
+                    textAlign: "center",
+                    width: 20,
+                    height: 16,
+                    margin: 0,
+                    stroke: "#b91c1c", // 글자 색 빨강
+                    overflow: go.TextOverflow.Ellipsis
+                },
+                new go.Binding("text").makeTwoWay()
+            )
+            )
+        )
         );
 
         // 링크 템플릿
@@ -747,7 +894,10 @@
                 { text:"DB(온라인)", category:"database" },
                 { text:"DB(오프라인)", category:"database_offline" },
                 { text:"파기(온라인)", category:"discard" },
-                { text:"파기(오프라인)", category:"discard_offline" }
+                { text:"파기(오프라인)", category:"discard_offline" },
+                { text:"메모", category:"memobox" },
+                { text:"", category:"star" },
+                { text:"", category:"circleNumber" }
             ])
         });
 
@@ -780,7 +930,8 @@
         myDiagram.allowLink = true;
         myDiagram.toolManager.linkingTool.isEnabled = true;
         myDiagram.toolManager.relinkingTool.isEnabled = true;
-        myDiagram.toolManager.linkingTool.portGravity = 20;
+        myDiagram.toolManager.linkingTool.portGravity = 0;
+        myDiagram.toolManager.relinkingTool.portGravity = 0;
     }
 
     /* ====== 노드 높이 기반으로 처리흐름 행 높이 자동 조정 ====== */
