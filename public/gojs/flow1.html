@@ -23,7 +23,7 @@
             --left-w:90px;    /* 행 라벨 열 */
             --col-w:210px;     /* 수집/보유/... 각 단계 열 넓이 */
 
-            --cell-min-h:100px;
+            --cell-min-h:50px;
 
             --palette-w:160px;
             --layout-gap:10px;
@@ -200,6 +200,46 @@
             overflow: visible !important;
         }
 
+        /* 우려사항 공통 클래스 */
+        .concern-row {
+            display: none;   /* 초기에는 숨김 상태 */
+        }
+        /* 좌측 라벨 스타일 */
+        .concern-label {
+            background: var(--leftcol);
+            font-weight: 700;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+        }
+        /* 우려사항 셀: 설명 행 높이의 절반 기본값 + 5열 전체 span */
+        .concern-cell {
+            min-height: 28px;
+            height: auto;
+            padding: 0;
+            border-right: 1px solid var(--grid);
+            border-bottom: 1px solid var(--grid);
+            grid-column: span 5;  /* 라벨 오른쪽 5개 열을 한꺼번에 차지 */
+        }
+        /* 텍스트박스는 여백 없이 꽉 차게 */
+        .concern-cell textarea {
+            width: 100%;
+            height: auto;
+            border: none;
+            background: transparent;
+            resize: none;
+            overflow: hidden;
+            padding: 2px 4px;
+            font-size: 16px;
+            line-height: 1.35;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .concern-cell textarea:focus {
+            outline: 1px solid #60a5fa;
+        }
+
         /* ===== GoJS 다이어그램 오버레이 (표 위에 겹침) ===== */
         #diagramOverlay{
             position:absolute;
@@ -339,18 +379,18 @@
 <body>
 <div class="page">
     <div class="toolbar">
-        <button id="fetchBtn">흐름표에서 불러오기</button>
-        <button id="saveBtn">저장</button>
-        <button id="loadBtn">불러오기</button>
+        <button id="fetchBtn" title="저장된 흐름표에서 흐름도를 제작하여 불러옵니다">흐름표에서 불러오기</button>
+        <button id="saveBtn" title="현재 화면의 정보를 DB에 저장합니다">저장</button>
+        <button id="loadBtn" title="저장된 정보를 불러옵니다">불러오기</button>
+        <button id="clearDiagramBtn" title="화면의 흐름도를 비웁니다">흐름도 비우기</button>
+        <button id="addRowBtn" title="처리 개인정보가 하나 추가됩니다">처리 개인정보 추가</button>
+        <button id="delRowBtn" title="마지막 처리 개인정보가 하나 삭제됩니다">처리 개인정보 삭제</button>
 
-        <button id="clearDiagramBtn" title="흐름도를 모두 비웁니다">흐름도 비우기</button>
-
-        <button id="clearPIIBtn">처리 개인정보 비우기</button>
-        <button id="addRowBtn">처리 개인정보 행 추가</button>
-        <button id="delRowBtn">처리 개인정보 행 삭제(마지막)</button>
-
-        <button id="linkStyleToggleBtn" title="실선/점선 전환">링크 스타일: 실선</button>
-        <button id="linkColorToggleBtn" title="검정/빨강 전환">링크 색상: 검정</button>
+        <button id="CocernToggleBtn">
+            <span class="label">우려사항: 보이기</span>
+        </button>
+        <button id="linkStyleToggleBtn" title="실선/점선 전환">링크: 실선</button>
+        <button id="linkColorToggleBtn" title="검정/빨강 전환">링크: 검정</button>
 
         <button id="editModeToggleBtn">
             <span class="icon" aria-hidden="true">🖱️</span>
@@ -395,6 +435,10 @@
                         <div class="cell desc-row autosize-target" data-phase="use"><textarea class="desc-use"></textarea></div>
                         <div class="cell desc-row autosize-target" data-phase="provide"><textarea class="desc-provide"></textarea></div>
                         <div class="cell desc-row autosize-target" data-phase="discard"><textarea class="desc-discard"></textarea></div>
+
+                        <!-- === Row 3: 우려사항 === -->
+                        <div class="cell rowlabel concern-label concern-row">우려사항</div>
+                        <div class="cell concern-cell concern-row" data-col="concern"><textarea class="concern-text"></textarea></div>
                     </div>
 
                     <!-- 다이어그램은 표 위에 겹친다 -->
@@ -895,7 +939,7 @@
                 { text:"DB(오프라인)", category:"database_offline" },
                 { text:"파기(온라인)", category:"discard" },
                 { text:"파기(오프라인)", category:"discard_offline" },
-                { text:"메모", category:"memobox" },
+                { text:"우려사항/암호화 메모", category:"memobox" },
                 { text:"", category:"star" },
                 { text:"", category:"circleNumber" }
             ])
@@ -1429,7 +1473,7 @@
             }
         };
 
-        // 흐름도 비우기
+        // 흐름도 비우기 기능
         const clearDiagramBtn = document.getElementById('clearDiagramBtn');
         if (clearDiagramBtn) {
             clearDiagramBtn.onclick = () => {
@@ -1445,6 +1489,7 @@
         document.getElementById('delRowBtn').onclick = () => {
             delLastPIIRow();
         };
+        /* 처리 개인정보 모두 비우기 기능
         const clearPIIBtn = document.getElementById('clearPIIBtn');
         if (clearPIIBtn){
             clearPIIBtn.onclick = () => {
@@ -1452,7 +1497,32 @@
                 clearAllPIIRows();
                 renumberPIIRows();
             };
+        } */
+
+        // 우려사항 보이기/숨기기 토글
+        function setConcernVisible(visible) {
+            const rows = document.querySelectorAll(".concern-row");
+            rows.forEach(r => {
+                r.style.display = visible ? "block" : "none";
+            });
+
+            const btn = document.getElementById("CocernToggleBtn");
+            if (btn) {
+                const label = btn.querySelector(".label");
+                if (label) label.textContent = visible ? "우려사항: 숨기기" : "우려사항: 보이기";
+            }
+
+            autosizeAllTextareas();
+            resizeOverlay();
         }
+        // 초기 상태 → 숨김 유지
+        setConcernVisible(false);
+        // 버튼 연결
+        document.getElementById("CocernToggleBtn").onclick = () => {
+            const row = document.querySelector(".concern-row");
+            const isVisible = row && row.style.display !== "none";
+            setConcernVisible(!isVisible);
+        };
 
         // 링크 스타일/색상 토글
         const styleBtn = document.getElementById('linkStyleToggleBtn');
@@ -1468,11 +1538,11 @@
         }
         function refreshLinkButtonsUI(){
             if (styleBtn){
-                styleBtn.textContent = `링크 스타일: ${currentLinkStyle === 'solid' ? '실선' : '점선'}`;
+                styleBtn.textContent = `링크: ${currentLinkStyle === 'solid' ? '실선' : '점선'}`;
             }
             if (colorBtn){
                 const isRed = currentLinkColor === 'red';
-                colorBtn.textContent = `링크 색상: ${isRed ? '빨강' : '검정'}`;
+                colorBtn.textContent = `링크: ${isRed ? '빨강' : '검정'}`;
                 colorBtn.style.color = isRed ? 'red' : '';
                 colorBtn.style.borderColor = isRed ? 'red' : '';
                 colorBtn.style.fontWeight = isRed ? '700' : '400';
