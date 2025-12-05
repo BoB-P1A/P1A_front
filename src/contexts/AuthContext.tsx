@@ -23,7 +23,7 @@ interface AuthContextType {
 }
 
 interface LoginCredentials {
-    username: string; // 입력받는 아이디
+    username: string;
     password: string;
 }
 
@@ -33,7 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 사용자 정보를 다시 불러오는 함수 (재사용 가능하도록 분리)
     const refreshUser = async () => {
         const token = localStorage.getItem('auth-token');
         if (token) {
@@ -84,42 +83,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
 
         try {
-            // 백엔드가 기대하는 loginId 로 보내도록 변환
+            console.log('API 로그인 시도');
             const response = await api.auth.login({
                 loginId: credentials.username,
                 password: credentials.password,
             });
 
             localStorage.setItem('auth-token', response.token);
-
             setUser({
                 id: response.user.id,
                 username: response.user.username,
                 name: response.user.name,
                 role: response.user.role as UserRole,
-				companyId: response.user.companyId,
+                companyId: response.user.companyId,
                 company: response.user.company,
             });
 
-            toast({ title: '로그인 성공' });
+            console.log('API 로그인 성공');
             setIsLoading(false);
             return true;
         } catch (error) {
-            console.error('Login failed:', error);
-
-            // Mock fallback (프론트 개발 편의를 위해 유지)
-            try {
-                const response = await mockBackend.login(credentials);
-                localStorage.setItem('auth-token', response.token);
-                setUser(response.user);
-                toast({ title: '로그인 성공 (Mock)' });
-                setIsLoading(false);
-                return true;
-            } catch {
-                toast({ title: '로그인 실패', description: '아이디와 비밀번호를 확인해주세요.', variant: 'destructive' });
-                setIsLoading(false);
-                return false;
-            }
+            console.error('API Login failed:', error);
+            setIsLoading(false);
+            console.log('false 반환');
+            return false;
         }
     };
 

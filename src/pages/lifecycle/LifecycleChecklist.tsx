@@ -299,170 +299,259 @@ export default function LifecycleChecklist() {
         );
     }
 
-    return (
-        <div className="container mx-auto py-6 space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-primary">Lifecycle Checklist</h1>
-                <div className="space-x-2">
-                    <Button variant="outline" onClick={handleReset}>
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        초기화
-                    </Button>
-                    <Button onClick={handleSave} disabled={!hasChanges}>
-                        <Save className="mr-2 h-4 w-4" />
-                        저장
-                    </Button>
-                </div>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList>
-                    {Array.isArray(tasks) && tasks.map((task) => (
-                        <TabsTrigger key={task.id} value={task.id}>
-                            {task.taskName}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-
-                {Array.isArray(tasks) && tasks.map((task) => (
-                    <TabsContent key={task.id} value={task.id} className="mt-6">
-                        <div className="space-y-6">
-                            {getItemsForTask(task.id).map((item, index, array) => {
-                                const prevItem = index > 0 ? array[index - 1] : null;
-                                const showFieldHeader = !prevItem || prevItem.field !== item.field;
-
-                                return (
-                                    <div key={`${task.id}-${item.no}`}>
-                                        {showFieldHeader && (
-                                            <div className="mb-4 mt-6 first:mt-0">
-                                                <h2 className="text-xl font-semibold text-primary border-b pb-2">{item.field}</h2>
-                                            </div>
-                                        )}
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg">
-                                                    {item.no} - {item.subField}
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <div>
-                                                    <Label className="font-semibold">평가항목</Label>
-                                                    <p className="mt-1 text-sm">{item.item}</p>
-                                                </div>
-
-                                                <div>
-                                                    <Label className="font-semibold mb-2 block">평가 결과</Label>
-                                                    <RadioGroup
-                                                        value={item.status || ""}
-                                                        onValueChange={(value) =>
-                                                            handleStatusChange(item.no, value as "이행" | "부분이행" | "미이행" | "해당없음")
-                                                        }
-                                                    >
-                                                        <div className="flex gap-6">
-                                                            <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="이행" id={`${task.id}-${item.no}-이행`} />
-                                                                <Label htmlFor={`${task.id}-${item.no}-이행`}>이행</Label>
-                                                            </div>
-                                                            <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="부분이행" id={`${task.id}-${item.no}-부분이행`} />
-                                                                <Label htmlFor={`${task.id}-${item.no}-부분이행`}>부분이행</Label>
-                                                            </div>
-                                                            <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="미이행" id={`${task.id}-${item.no}-미이행`} />
-                                                                <Label htmlFor={`${task.id}-${item.no}-미이행`}>미이행</Label>
-                                                            </div>
-                                                            <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="해당없음" id={`${task.id}-${item.no}-해당없음`} />
-                                                                <Label htmlFor={`${task.id}-${item.no}-해당없음`}>해당없음</Label>
-                                                            </div>
-                                                        </div>
-                                                    </RadioGroup>
-                                                </div>
-
-                                                <div>
-                                                    <Label htmlFor={`evidence-${task.id}-${item.no}`} className="font-semibold">
-                                                        평가 근거 및 의견
-                                                    </Label>
-                                                    <Textarea
-                                                        id={`evidence-${task.id}-${item.no}`}
-                                                        value={item.evidence}
-                                                        onChange={(e) => handleEvidenceChange(item.no, e.target.value)}
-                                                        placeholder="평가 근거 및 의견을 입력하세요"
-                                                        className="mt-1"
-                                                        rows={3}
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <Label className="font-semibold">증적 자료</Label>
-                                                    <div className="mt-2 space-y-2">
-                                                        {item.files.map((file, idx) => (
-                                                            <div key={idx} className="flex items-center justify-between p-2 border rounded">
-                                                                <span className="text-sm truncate flex-1">{file.name}</span>
-                                                                <div className="flex gap-2">
-                                                                    <Button size="sm" variant="ghost" onClick={() => handleFileDownload(file)}>
-                                                                        <Download className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button size="sm" variant="ghost" onClick={() => handleFileDelete(item.no, file.url)}>
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        <div>
-                                                            <input
-                                                                type="file"
-                                                                id={`file-${task.id}-${item.no}`}
-                                                                className="hidden"
-                                                                onChange={(e) => handleFileUpload(item.no, e)}
-                                                            />
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => document.getElementById(`file-${task.id}-${item.no}`)?.click()}
-                                                            >
-                                                                <Upload className="mr-2 h-4 w-4" />
-                                                                파일 업로드
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                );
-                            })}
-
-                            {getItemsForTask(task.id).length === 0 && (
-                                <Card>
-                                    <CardContent className="py-8">
-                                        <p className="text-center text-muted-foreground">
-                                            영향평가 관리 페이지에서 평가항목을 추가해주세요.
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            )}
-                        </div>
-                    </TabsContent>
-                ))}
-            </Tabs>
-
-            <AlertDialog open={showUnsavedAlert} onOpenChange={setShowUnsavedAlert}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>localhost:8080의 메시지</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?
-                            <br />
-                            (저장하지 않은 내용은 사라집니다)
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel onClick={handleCancelTabChange}>취소</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmTabChange}>확인</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+return (
+  <Tabs value={activeTab} onValueChange={handleTabChange}>
+    <div className="flex flex-col h-full">
+      {/* 상단 고정 헤더 (타이틀 + 버튼 + 탭) */}
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b">
+        {/* 타이틀 + 버튼 줄 */}
+        <div className="container mx-auto py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">
+              Lifecycle Checklist
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              처리단계별 평가항목을 체크하고 증적을 업로드합니다.
+            </p>
+          </div>
+          <div className="space-x-2">
+            <Button variant="outline" onClick={handleReset}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              초기화
+            </Button>
+            <Button onClick={handleSave} disabled={!hasChanges || loading}>
+              <Save className="mr-2 h-4 w-4" />
+              저장
+            </Button>
+          </div>
         </div>
-    );
+
+        {/* 탭 리스트 줄 (같이 sticky) */}
+        <div className="container mx-auto pb-3">
+          <TabsList>
+            {Array.isArray(tasks) &&
+              tasks.map((task) => (
+                <TabsTrigger key={task.id} value={task.id}>
+                  {task.taskName}
+                </TabsTrigger>
+              ))}
+          </TabsList>
+        </div>
+      </div>
+
+      {/* 실제 컨텐츠 영역 */}
+      <div className="container mx-auto py-6 space-y-6 pb-10">
+        {Array.isArray(tasks) &&
+          tasks.map((task) => (
+            <TabsContent key={task.id} value={task.id} className="mt-6">
+              <div className="space-y-6">
+                {getItemsForTask(task.id).map((item, index, array) => {
+                  const prevItem = index > 0 ? array[index - 1] : null;
+                  const showFieldHeader =
+                    !prevItem || prevItem.field !== item.field;
+
+                  return (
+                    <div key={`${task.id}-${item.no}`}>
+                      {showFieldHeader && (
+                        <div className="mb-4 mt-6 first:mt-0">
+                          <h2 className="text-xl font-semibold text-primary border-b pb-2">
+                            {item.field}
+                          </h2>
+                        </div>
+                      )}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            {item.no} - {item.subField}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <Label className="font-semibold">평가항목</Label>
+                            <p className="mt-1 text-sm">{item.item}</p>
+                          </div>
+
+                          <div>
+                            <Label className="font-semibold mb-2 block">
+                              평가 결과
+                            </Label>
+                            <RadioGroup
+                              value={item.status || ""}
+                              onValueChange={(value) =>
+                                handleStatusChange(
+                                  item.no,
+                                  value as
+                                    | "이행"
+                                    | "부분이행"
+                                    | "미이행"
+                                    | "해당없음"
+                                )
+                              }
+                            >
+                              <div className="flex flex-wrap gap-6">
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem
+                                    value="이행"
+                                    id={`${task.id}-${item.no}-이행`}
+                                  />
+                                  <Label
+                                    htmlFor={`${task.id}-${item.no}-이행`}
+                                  >
+                                    이행
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem
+                                    value="부분이행"
+                                    id={`${task.id}-${item.no}-부분이행`}
+                                  />
+                                  <Label
+                                    htmlFor={`${task.id}-${item.no}-부분이행`}
+                                  >
+                                    부분이행
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem
+                                    value="미이행"
+                                    id={`${task.id}-${item.no}-미이행`}
+                                  />
+                                  <Label
+                                    htmlFor={`${task.id}-${item.no}-미이행`}
+                                  >
+                                    미이행
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem
+                                    value="해당없음"
+                                    id={`${task.id}-${item.no}-해당없음`}
+                                  />
+                                  <Label
+                                    htmlFor={`${task.id}-${item.no}-해당없음`}
+                                  >
+                                    해당없음
+                                  </Label>
+                                </div>
+                              </div>
+                            </RadioGroup>
+                          </div>
+
+                          <div>
+                            <Label
+                              htmlFor={`evidence-${task.id}-${item.no}`}
+                              className="font-semibold"
+                            >
+                              평가 근거 및 의견
+                            </Label>
+                            <Textarea
+                              id={`evidence-${task.id}-${item.no}`}
+                              value={item.evidence}
+                              onChange={(e) =>
+                                handleEvidenceChange(item.no, e.target.value)
+                              }
+                              placeholder="평가 근거 및 의견을 입력하세요"
+                              className="mt-1"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="font-semibold">증적 자료</Label>
+                            <div className="mt-2 space-y-2">
+                              {item.files.map((file, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between p-2 border rounded"
+                                >
+                                  <span className="text-sm truncate flex-1">
+                                    {file.name}
+                                  </span>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleFileDownload(file)}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() =>
+                                        handleFileDelete(item.no, file.url)
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              <div>
+                                <input
+                                  type="file"
+                                  id={`file-${task.id}-${item.no}`}
+                                  className="hidden"
+                                  onChange={(e) => handleFileUpload(item.no, e)}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    document
+                                      .getElementById(
+                                        `file-${task.id}-${item.no}`
+                                      )
+                                      ?.click()
+                                  }
+                                >
+                                  <Upload className="mr-2 h-4 w-4" />
+                                  파일 업로드
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  );
+                })}
+
+                {getItemsForTask(task.id).length === 0 && (
+                  <Card>
+                    <CardContent className="py-8">
+                      <p className="text-center text-muted-foreground">
+                        영향평가 관리 페이지에서 평가항목을 추가해주세요.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          ))}
+      </div>
+
+      <AlertDialog open={showUnsavedAlert} onOpenChange={setShowUnsavedAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>localhost:8080의 메시지</AlertDialogTitle>
+            <AlertDialogDescription>
+              저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?
+              <br />
+              (저장하지 않은 내용은 사라집니다)
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelTabChange}>
+              취소
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmTabChange}>
+              확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  </Tabs>
+);
 }

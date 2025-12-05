@@ -1235,7 +1235,7 @@
                 await applyCombinedToScreen(combined);
             }catch(e){
                 console.error('흐름표에서 불러오기 실패:', e);
-                alert('흐름표에서 불러오기 실패 (DB 확인 필요)');
+                alert('저장된 흐름표가 없습니다');
             }
         };
 
@@ -1263,7 +1263,7 @@
                 alert('저장되었습니다.');
             }catch(e){
                 console.error('저장 실패:', e);
-                alert('저장 실패 (서버 /api/derived 확인)');
+                alert('저장에 실패했습니다');
             }
         };
 
@@ -1274,7 +1274,7 @@
                 await applyCombinedToScreen(combined);
             }catch(e){
                 console.error('불러오기 실패:', e);
-                alert('불러오기 실패 (서버 /api/combined 확인)');
+                alert('저장된 흐름도가 없습니다');
             }
         };
 

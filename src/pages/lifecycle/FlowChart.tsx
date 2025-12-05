@@ -92,7 +92,7 @@ export default function ProtectionFlowChart() {
                     if (!res.ok) throw new Error(await res.text());
                     toast({ title: "흐름도 저장 완료" });
                 } catch (e: any) {
-                    toast({ title: "저장 실패", description: String(e?.message || e), variant: "destructive" });
+                    toast({ title: "저장 실패", description: "저장에 실패하였습니다", variant: "destructive" });
                 }
             } else if (data.type === "toast") {
                 const lvl = data.payload?.level ?? "info";
@@ -220,7 +220,7 @@ export default function ProtectionFlowChart() {
 
             toast({ title: "흐름도 사진 다운로드 완료" });
         } catch (e: any) {
-            toast({ title: "사진 다운로드 실패", description: String(e?.message || e), variant: "destructive" });
+            toast({ title: "사진 다운로드 실패", description: "저장된 이미지가 없습니다", variant: "destructive" });
         }
     }
     // "결과보고서에 넣기" 버튼
@@ -233,9 +233,9 @@ export default function ProtectionFlowChart() {
             const dataUrl = await captureDiagramPngDataUrl();
             const blob = dataUrlToBlob(dataUrl);
             await uploadSnapshotToS3(blob, companyId, selectedTaskId);
-            toast({ title: "보고서용 이미지 저장 완료", description: "S3에 최신본으로 업로드했습니다" });
+            toast({ title: "보고서용 이미지 저장 완료", description: "흐름도 이미지를 업로드했습니다" });
         } catch (e: any) {
-            toast({ title: "보고서용 저장 실패", description: String(e?.message || e), variant: "destructive" });
+            toast({ title: "보고서용 저장 실패", description: "저장된 이미지가 없습니다", variant: "destructive" });
         }
     }
 
@@ -247,9 +247,9 @@ export default function ProtectionFlowChart() {
         }
         try {
             await deleteSnapshotFromS3(companyId, selectedTaskId);
-            toast({ title: "보고서 이미지 삭제 완료", description: "S3에서 제거되었습니다." });
+            toast({ title: "보고서 이미지 삭제 완료", description: "흐름도 이미지가 제거되었습니다." });
         } catch (e: any) {
-            toast({ title: "삭제 실패", description: String(e?.message || e), variant: "destructive" });
+            toast({ title: "삭제 실패", description: "저장된 이미지가 없습니다", variant: "destructive" });
         }
     }
 
