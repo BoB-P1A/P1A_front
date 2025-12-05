@@ -35,9 +35,14 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // 인증 실패 시 로그인 페이지로 리다이렉트
-            localStorage.removeItem("auth-token");
-            window.location.href = "/login";
+            // 로그인 API 요청인 경우는 리다이렉트하지 않음
+            const isLoginRequest = error.config?.url?.includes('/auth/login');
+
+            if (!isLoginRequest) {
+                // 인증 실패 시 로그인 페이지로 리다이렉트
+                localStorage.removeItem("auth-token");
+                window.location.href = "/login";
+            }
         }
         return Promise.reject(error);
     },

@@ -21,17 +21,21 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log('로그인 시도:', credentials);
     const success = await login(credentials);
-    
+    console.log('로그인 결과:', success);
+
     if (success) {
+      console.log('성공 toast 호출');
       toast({
         title: "로그인 성공",
         description: "환영합니다!",
       });
     } else {
+      console.log('실패 toast 호출');
       toast({
         title: "로그인 실패",
-        description: "아이디 또는 비밀번호를 확인해주세요.",
+        description: "ID/PW를 다시 확인해주세요",
         variant: "destructive",
       });
     }

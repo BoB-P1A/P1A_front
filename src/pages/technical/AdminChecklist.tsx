@@ -343,227 +343,378 @@ export default function TechnicalAdminChecklist() {
         return systemId === activeTab ? items : [];
     };
 
-    return (
-        <div className="container mx-auto py-6 space-y-6">
+    return systems.length === 0 ? (
+      // ▶ 시스템이 아직 없을 때: 헤더는 고정, 본문은 안내 카드
+      <div className="flex flex-col h-full">
+        {/* 상단 고정 헤더 */}
+        <div className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b">
+          <div className="container mx-auto py-6 space-y-6">
             <div className="flex justify-between items-start">
+              <h1 className="text-3xl font-bold text-primary">Admin Checklist</h1>
+              <div className="space-x-2 flex items-center">
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" onClick={() => handleOpenDialog()}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      시스템 추가
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{editingSystem ? "시스템 수정" : "새 시스템 추가"}</DialogTitle>
+                      <DialogDescription>시스템명을 입력해주세요</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <Label htmlFor="systemName">시스템명</Label>
+                        <Input
+                          id="systemName"
+                          value={systemName}
+                          onChange={(e) => setSystemName(e.target.value)}
+                          placeholder="예: 회원관리시스템"
+                        />
+                      </div>
+                      <Button onClick={handleSaveSystem} className="w-full">
+                        저장
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button variant="outline" onClick={handleReset}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  초기화
+                </Button>
+                <Button onClick={handleSave} disabled={!hasChanges}>
+                  <Save className="mr-2 h-4 w-4" />
+                  저장
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 본문 */}
+        <div className="container mx-auto py-6 space-y-6">
+          <Card>
+            <CardContent className="py-8">
+              <p className="text-center text-muted-foreground">시스템을 추가해주세요.</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <AlertDialog open={showUnsavedAlert} onOpenChange={setShowUnsavedAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>localhost:8080의 메시지</AlertDialogTitle>
+              <AlertDialogDescription>
+                저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?
+                <br />
+                (저장하지 않은 내용은 사라집니다)
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleCancelTabChange}>취소</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmTabChange}>확인</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    ) : (
+      // ▶ 시스템이 있을 때: 헤더 + 탭 + 수정/삭제 버튼까지 전부 sticky
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <div className="flex flex-col h-full">
+          {/* 상단 고정 헤더 (타이틀 + 버튼 + 탭 + 수정/삭제) */}
+          <div className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b">
+            {/* 타이틀 + 시스템 추가/초기화/저장 */}
+            <div className="container mx-auto py-6 space-y-4">
+              <div className="flex justify-between items-start">
                 <h1 className="text-3xl font-bold text-primary">Admin Checklist</h1>
                 <div className="space-x-2 flex items-center">
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" onClick={() => handleOpenDialog()}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                시스템 추가
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>{editingSystem ? "시스템 수정" : "새 시스템 추가"}</DialogTitle>
-                                <DialogDescription>시스템명을 입력해주세요</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <Label htmlFor="systemName">시스템명</Label>
-                                    <Input
-                                        id="systemName"
-                                        value={systemName}
-                                        onChange={(e) => setSystemName(e.target.value)}
-                                        placeholder="예: 회원관리시스템"
-                                    />
-                                </div>
-                                <Button onClick={handleSaveSystem} className="w-full">
-                                    저장
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                    <Button variant="outline" onClick={handleReset}>
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        초기화
-                    </Button>
-                    <Button onClick={handleSave} disabled={!hasChanges}>
-                        <Save className="mr-2 h-4 w-4" />
-                        저장
-                    </Button>
-                </div>
-            </div>
-
-            {systems.length === 0 ? (
-                <Card>
-                    <CardContent className="py-8">
-                        <p className="text-center text-muted-foreground">시스템을 추가해주세요.</p>
-                    </CardContent>
-                </Card>
-            ) : (
-                <Tabs value={activeTab} onValueChange={handleTabChange}>
-                    <div className="flex items-center justify-between mb-4">
-                        <TabsList>
-                            {Array.isArray(systems) && systems.map((system) => (
-                                <TabsTrigger key={system.id} value={system.id}>
-                                    {system.name}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                        <div className="flex gap-2">
-                            {Array.isArray(systems) && systems.map(
-                                (system) =>
-                                    activeTab === system.id && (
-                                        <div key={system.id} className="flex gap-2">
-                                            <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(system)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteSystem(system.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    ),
-                            )}
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" onClick={() => handleOpenDialog()}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        시스템 추가
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{editingSystem ? "시스템 수정" : "새 시스템 추가"}</DialogTitle>
+                        <DialogDescription>시스템명을 입력해주세요</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                          <Label htmlFor="systemName">시스템명</Label>
+                          <Input
+                            id="systemName"
+                            value={systemName}
+                            onChange={(e) => setSystemName(e.target.value)}
+                            placeholder="예: 회원관리시스템"
+                          />
                         </div>
-                    </div>
+                        <Button onClick={handleSaveSystem} className="w-full">
+                          저장
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button variant="outline" onClick={handleReset}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    초기화
+                  </Button>
+                  <Button onClick={handleSave} disabled={!hasChanges}>
+                    <Save className="mr-2 h-4 w-4" />
+                    저장
+                  </Button>
+                </div>
+              </div>
 
-                    {Array.isArray(systems) && systems.map((system) => (
-                        <TabsContent key={system.id} value={system.id}>
-                            <div className="space-y-6">
-                                {getItemsForSystem(system.id).map((item, index, array) => {
-                                    const prevItem = index > 0 ? array[index - 1] : null;
-                                    const showFieldHeader = !prevItem || prevItem.field !== item.field;
-
-                                    return (
-                                        <div key={`${system.id}-${item.no}`}>
-                                            {showFieldHeader && (
-                                                <div className="mb-4 mt-6 first:mt-0">
-                                                    <h2 className="text-xl font-semibold text-primary border-b pb-2">{item.field}</h2>
-                                                </div>
-                                            )}
-                                            <Card>
-                                                <CardHeader>
-                                                    <CardTitle className="text-lg">
-                                                        {item.no} - {item.subField}
-                                                    </CardTitle>
-                                                </CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    <div>
-                                                        <Label className="font-semibold">평가항목</Label>
-                                                        <p className="mt-1 text-sm">{item.item}</p>
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="font-semibold mb-2 block">평가 결과</Label>
-                                                        <RadioGroup
-                                                            value={item.status || ""}
-                                                            onValueChange={(value) =>
-                                                                handleStatusChange(item.no, value as "이행" | "부분이행" | "미이행" | "해당없음")
-                                                            }
-                                                        >
-                                                            <div className="flex gap-6">
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="이행" id={`${system.id}-${item.no}-이행`} />
-                                                                    <Label htmlFor={`${system.id}-${item.no}-이행`}>이행</Label>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="부분이행" id={`${system.id}-${item.no}-부분이행`} />
-                                                                    <Label htmlFor={`${system.id}-${item.no}-부분이행`}>부분이행</Label>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="미이행" id={`${system.id}-${item.no}-미이행`} />
-                                                                    <Label htmlFor={`${system.id}-${item.no}-미이행`}>미이행</Label>
-                                                                </div>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <RadioGroupItem value="해당없음" id={`${system.id}-${item.no}-해당없음`} />
-                                                                    <Label htmlFor={`${system.id}-${item.no}-해당없음`}>해당없음</Label>
-                                                                </div>
-                                                            </div>
-                                                        </RadioGroup>
-                                                    </div>
-
-                                                    <div>
-                                                        <Label htmlFor={`evidence-${system.id}-${item.no}`} className="font-semibold">
-                                                            평가 근거 및 의견
-                                                        </Label>
-                                                        <Textarea
-                                                            id={`evidence-${system.id}-${item.no}`}
-                                                            value={item.evidence}
-                                                            onChange={(e) => handleEvidenceChange(item.no, e.target.value)}
-                                                            placeholder="평가 근거 및 의견을 입력하세요"
-                                                            className="mt-1"
-                                                            rows={3}
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="font-semibold">증적 자료</Label>
-                                                        <div className="mt-2 space-y-2">
-                                                            {item.files.map((file, idx) => (
-                                                                <div key={idx} className="flex items-center justify-between p-2 border rounded">
-                                                                    <span className="text-sm truncate flex-1">{file.name}</span>
-                                                                    <div className="flex gap-2">
-                                                                        <Button size="sm" variant="ghost" onClick={() => handleFileDownload(file)}>
-                                                                            <Download className="h-4 w-4" />
-                                                                        </Button>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            onClick={() => handleFileDelete(item.no, file.url)}
-                                                                        >
-                                                                            <Trash2 className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                            <div>
-                                                                <input
-                                                                    type="file"
-                                                                    id={`file-${system.id}-${item.no}`}
-                                                                    className="hidden"
-                                                                    onChange={(e) => handleFileUpload(item.no, e)}
-                                                                />
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => document.getElementById(`file-${system.id}-${item.no}`)?.click()}
-                                                                >
-                                                                    <Upload className="mr-2 h-4 w-4" />
-                                                                    파일 업로드
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        </div>
-                                    );
-                                })}
-
-                                {getItemsForSystem(system.id).length === 0 && (
-                                    <Card>
-                                        <CardContent className="py-8">
-                                            <p className="text-center text-muted-foreground">
-                                                영향평가 관리 페이지에서 평가항목을 추가해주세요.
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                            </div>
-                        </TabsContent>
+              {/* 탭 + 현재 시스템 수정/삭제 버튼 */}
+              <div className="flex items-center justify-between">
+                <TabsList>
+                  {Array.isArray(systems) &&
+                    systems.map((system) => (
+                      <TabsTrigger key={system.id} value={system.id}>
+                        {system.name}
+                      </TabsTrigger>
                     ))}
-                </Tabs>
-            )}
+                </TabsList>
+                <div className="flex gap-2">
+                  {Array.isArray(systems) &&
+                    systems.map(
+                      (system) =>
+                        activeTab === system.id && (
+                          <div key={system.id} className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenDialog(system)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteSystem(system.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ),
+                    )}
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <AlertDialog open={showUnsavedAlert} onOpenChange={setShowUnsavedAlert}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>localhost:8080의 메시지</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?
-                            <br />
-                            (저장하지 않은 내용은 사라집니다)
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel onClick={handleCancelTabChange}>취소</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmTabChange}>확인</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+          {/* 본문 체크리스트 */}
+          <div className="container mx-auto py-6 space-y-6">
+            {Array.isArray(systems) &&
+              systems.map((system) => (
+                <TabsContent key={system.id} value={system.id}>
+                  <div className="space-y-6">
+                    {getItemsForSystem(system.id).map((item, index, array) => {
+                      const prevItem = index > 0 ? array[index - 1] : null;
+                      const showFieldHeader = !prevItem || prevItem.field !== item.field;
+
+                      return (
+                        <div key={`${system.id}-${item.no}`}>
+                          {showFieldHeader && (
+                            <div className="mb-4 mt-6 first:mt-0">
+                              <h2 className="text-xl font-semibold text-primary border-b pb-2">
+                                {item.field}
+                              </h2>
+                            </div>
+                          )}
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg">
+                                {item.no} - {item.subField}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div>
+                                <Label className="font-semibold">평가항목</Label>
+                                <p className="mt-1 text-sm">{item.item}</p>
+                              </div>
+
+                              <div>
+                                <Label className="font-semibold mb-2 block">
+                                  평가 결과
+                                </Label>
+                                <RadioGroup
+                                  value={item.status || ""}
+                                  onValueChange={(value) =>
+                                    handleStatusChange(
+                                      item.no,
+                                      value as
+                                        | "이행"
+                                        | "부분이행"
+                                        | "미이행"
+                                        | "해당없음",
+                                    )
+                                  }
+                                >
+                                  <div className="flex gap-6 flex-wrap">
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem
+                                        value="이행"
+                                        id={`${system.id}-${item.no}-이행`}
+                                      />
+                                      <Label htmlFor={`${system.id}-${item.no}-이행`}>
+                                        이행
+                                      </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem
+                                        value="부분이행"
+                                        id={`${system.id}-${item.no}-부분이행`}
+                                      />
+                                      <Label
+                                        htmlFor={`${system.id}-${item.no}-부분이행`}
+                                      >
+                                        부분이행
+                                      </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem
+                                        value="미이행"
+                                        id={`${system.id}-${item.no}-미이행`}
+                                      />
+                                      <Label htmlFor={`${system.id}-${item.no}-미이행`}>
+                                        미이행
+                                      </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem
+                                        value="해당없음"
+                                        id={`${system.id}-${item.no}-해당없음`}
+                                      />
+                                      <Label
+                                        htmlFor={`${system.id}-${item.no}-해당없음`}
+                                      >
+                                        해당없음
+                                      </Label>
+                                    </div>
+                                  </div>
+                                </RadioGroup>
+                              </div>
+
+                              <div>
+                                <Label
+                                  htmlFor={`evidence-${system.id}-${item.no}`}
+                                  className="font-semibold"
+                                >
+                                  평가 근거 및 의견
+                                </Label>
+                                <Textarea
+                                  id={`evidence-${system.id}-${item.no}`}
+                                  value={item.evidence}
+                                  onChange={(e) =>
+                                    handleEvidenceChange(item.no, e.target.value)
+                                  }
+                                  placeholder="평가 근거 및 의견을 입력하세요"
+                                  className="mt-1"
+                                  rows={3}
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="font-semibold">증적 자료</Label>
+                                <div className="mt-2 space-y-2">
+                                  {item.files.map((file, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex items-center justify-between p-2 border rounded"
+                                    >
+                                      <span className="text-sm truncate flex-1">
+                                        {file.name}
+                                      </span>
+                                      <div className="flex gap-2">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => handleFileDownload(file)}
+                                        >
+                                          <Download className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() =>
+                                            handleFileDelete(item.no, file.url)
+                                          }
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  <div>
+                                    <input
+                                      type="file"
+                                      id={`file-${system.id}-${item.no}`}
+                                      className="hidden"
+                                      onChange={(e) => handleFileUpload(item.no, e)}
+                                    />
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        document
+                                          .getElementById(
+                                            `file-${system.id}-${item.no}`,
+                                          )
+                                          ?.click()
+                                      }
+                                    >
+                                      <Upload className="mr-2 h-4 w-4" />
+                                      파일 업로드
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      );
+                    })}
+
+                    {getItemsForSystem(system.id).length === 0 && (
+                      <Card>
+                        <CardContent className="py-8">
+                          <p className="text-center text-muted-foreground">
+                            영향평가 관리 페이지에서 평가항목을 추가해주세요.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </TabsContent>
+              ))}
+          </div>
+
+          <AlertDialog open={showUnsavedAlert} onOpenChange={setShowUnsavedAlert}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>localhost:8080의 메시지</AlertDialogTitle>
+                <AlertDialogDescription>
+                  저장하지 않은 변경사항이 있습니다. 탭을 전환하시겠습니까?
+                  <br />
+                  (저장하지 않은 내용은 사라집니다)
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={handleCancelTabChange}>
+                  취소
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmTabChange}>
+                  확인
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
+      </Tabs>
     );
 }
