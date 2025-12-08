@@ -29,6 +29,7 @@ import { Plus, Edit, Trash2, Upload, Download, RotateCcw, Save } from "lucide-re
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 
 interface EvaluationItem {
     id: number;
@@ -73,6 +74,12 @@ export default function TechnicalAdminChecklist() {
     const [systemName, setSystemName] = useState("");
     const [pendingTab, setPendingTab] = useState<string | null>(null);
     const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
+
+    // 페이지 이탈 경고
+    const { WarningDialog } = useUnsavedChangesWarning({
+        hasUnsavedChanges: hasChanges,
+        onSave: handleSave
+    });
 
     useEffect(() => {
         const loadData = async () => {
@@ -263,7 +270,7 @@ export default function TechnicalAdminChecklist() {
         }
     };
 
-    const handleSave = async () => {
+    async function handleSave() {
         if (!user?.companyId) return;
 
         try {
@@ -272,6 +279,7 @@ export default function TechnicalAdminChecklist() {
             toast({ title: "저장되었습니다" });
         } catch (error) {
             toast({ title: "오류", description: "저장 실패", variant: "destructive" });
+            throw error;
         }
     };
 
@@ -714,6 +722,7 @@ export default function TechnicalAdminChecklist() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          <WarningDialog />
         </div>
       </Tabs>
     );

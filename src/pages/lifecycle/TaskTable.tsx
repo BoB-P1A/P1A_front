@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,14 +19,14 @@ import { api } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 
 interface TaskRow {
-    id?: string; // MongoDB ObjectId를 string으로 처리
+    id?: string;
     taskName: string;
     purpose: string;
-    infomation: string; // DB 필드명에 맞춤 (오타 그대로)
+    infomation: string;
     department: string;
     companyId?: string;
-    isNew?: boolean; // 새로 추가된 행 표시
-    isModified?: boolean; // 수정된 행 표시
+    isNew?: boolean;
+    isModified?: boolean;
 }
 
 export default function TaskTable() {
@@ -34,6 +35,15 @@ export default function TaskTable() {
     const [tasks, setTasks] = useState<TaskRow[]>([]);
     const { execute } = useApi();
 
+    // 변경사항 확인
+    const hasUnsavedChanges = tasks.some(task => task.isNew || task.isModified);
+
+    // 페이지 이탈 경고
+    const { WarningDialog } = useUnsavedChangesWarning({
+        hasUnsavedChanges,
+        onSave: handleSave // 저장 함수 전달
+    });
+
     // 초기 데이터 로드
     useEffect(() => {
         const loadTasks = async () => {
@@ -41,12 +51,11 @@ export default function TaskTable() {
                 const data = await api.tasks.getAll(user?.companyId);
 
                 if (Array.isArray(data)) {
-                    // DB 응답 데이터를 컴포넌트 형식으로 변환
                     const formattedTasks = data.map((task: any) => ({
                         id: task._id || task.id,
                         taskName: task.taskName || '',
                         purpose: task.purpose || '',
-                        infomation: task.infomation || '', // DB 필드명
+                        infomation: task.infomation || '',
                         department: task.department || '',
                         companyId: task.companyId || user?.companyId,
                         isNew: false,
@@ -73,10 +82,10 @@ export default function TaskTable() {
         }
     }, [user?.companyId, toast]);
 
-    // 행 추가 (로컬 상태만 업데이트)
+    // 행 추가
     const handleAddRow = () => {
         const newTask: TaskRow = {
-            id: `temp_${Date.now()}`, // 임시 ID
+            id: `temp_${Date.now()}`,
             taskName: '',
             purpose: '',
             infomation: '',
@@ -93,7 +102,6 @@ export default function TaskTable() {
     const handleDeleteRow = async (id?: string) => {
         if (!id) return;
 
-        // 임시 ID인 경우 (새로 추가된 행)
         if (id.startsWith('temp_')) {
             if (!confirm('이 행을 삭제하시겠습니까?')) {
                 return;
@@ -103,7 +111,6 @@ export default function TaskTable() {
             return;
         }
 
-        // DB에 저장된 행 삭제 - 확인 메시지 추가
         const taskToDelete = tasks.find(task => task.id === id);
         const taskName = taskToDelete?.taskName || '이 항목';
 
@@ -125,10 +132,9 @@ export default function TaskTable() {
         }
     };
 
-    // 저장 (생성 + 수정) - Bulk Save로 변경
-    const handleSave = async () => {
+    // 저장
+    async function handleSave() {
         try {
-            // 저장할 모든 행 (새로운 행 + 수정된 행)
             const tasksToSave = tasks
                 .filter(task => task.isNew || task.isModified)
                 .map(task => {
@@ -144,10 +150,19 @@ export default function TaskTable() {
                 return;
             }
 
-            // Bulk Save API 호출
+            // 평가업무명 필수 입력 검증
+            const emptyTaskNames = tasksToSave.filter(task => !task.taskName || task.taskName.trim() === '');
+            if (emptyTaskNames.length > 0) {
+                toast({
+                    title: "입력 오류",
+                    description: "평가업무명은 필수 입력 항목입니다.",
+                    variant: "destructive"
+                });
+                return;
+            }
+
             await execute(() => api.tasks.bulkSave(tasksToSave));
 
-            // 저장 후 데이터 다시 로드
             const refreshedData = await api.tasks.getAll(user?.companyId);
             if (Array.isArray(refreshedData)) {
                 const formattedTasks = refreshedData.map((task: any) => ({
@@ -171,8 +186,9 @@ export default function TaskTable() {
                 description: "서버 오류가 발생했습니다.",
                 variant: "destructive"
             });
+            throw error; // 에러를 던져서 WarningDialog에서 처리
         }
-    };
+    }
 
     // 엑셀 다운로드
     const handleExcelDownload = () => {
@@ -183,7 +199,7 @@ export default function TaskTable() {
             ...tasks.map(task => [
                 task.taskName,
                 task.purpose,
-                task.infomation, // DB 필드명
+                task.infomation,
                 task.department
             ])
         ];
@@ -198,7 +214,6 @@ export default function TaskTable() {
 
         const updated = tasks.map(t => {
             if (t.id === id) {
-                // 새로 추가된 행이 아닌 경우 수정 표시
                 const isModified = !t.isNew;
                 return { ...t, [field]: value, isModified };
             }
@@ -306,6 +321,9 @@ export default function TaskTable() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* 페이지 이탈 경고 모달 */}
+            <WarningDialog />
         </div>
     );
 }

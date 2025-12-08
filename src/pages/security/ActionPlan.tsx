@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
+import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 
 interface SecurityItem {
     id: number | string;
@@ -45,6 +46,12 @@ export default function SecurityActionPlan() {
     const [activeTab, setActiveTab] = useState<string>('전체');
     const [securitySystems, setSecuritySystems] = useState<{ id: string; name: string }[]>([]);
     const [loading, setLoading] = useState(false);
+
+    // 페이지 이탈 경고
+    const { WarningDialog } = useUnsavedChangesWarning({
+        hasUnsavedChanges: hasChanges,
+        onSave: handleSave
+    });
 
     useEffect(() => {
         if (!user?.companyId) return;
@@ -117,7 +124,7 @@ export default function SecurityActionPlan() {
         setHasChanges(true);
     };
 
-    const handleSave = async () => {
+    async function handleSave() {
         try {
             setLoading(true);
             const actionPlans: { [key: string]: any } = {};
@@ -138,10 +145,11 @@ export default function SecurityActionPlan() {
             toast({ title: '저장되었습니다' });
         } catch (error) {
             toast({ title: '저장 실패', variant: 'destructive' });
+            throw error;
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const handleExportToExcel = () => {
         const exportData = filteredItems.map(item => ({
@@ -230,17 +238,17 @@ export default function SecurityActionPlan() {
 
                                             <div>
                                                 <Label className="font-semibold">질의문</Label>
-                                                <Textarea value={item.question} readOnly className="mt-1" rows={2} />
+                                                <Textarea value={item.question} readOnly className="mt-1 resize-none" rows={2} />
                                             </div>
 
                                             <div>
                                                 <Label className="font-semibold">취약점</Label>
-                                                <Textarea value={item.evidence} readOnly className="mt-1" rows={3} />
+                                                <Textarea value={item.evidence} readOnly className="mt-1 resize-none" rows={3} />
                                             </div>
 
                                             <div>
                                                 <Label className="font-semibold">개선 가이드</Label>
-                                                <Textarea value={item.improvementGuide} readOnly className="mt-1" rows={3} />
+                                                <Textarea value={item.improvementGuide} readOnly className="mt-1 resize-none" rows={3} />
                                             </div>
 
                                             <div>
@@ -250,7 +258,7 @@ export default function SecurityActionPlan() {
                                                     value={item.actionPlan}
                                                     onChange={(e) => handleFieldChange(item.id, 'actionPlan', e.target.value)}
                                                     placeholder="조치 방안을 입력하세요"
-                                                    className="mt-1"
+                                                    className="mt-1 resize-none"
                                                     rows={3}
                                                 />
                                             </div>
@@ -316,6 +324,9 @@ export default function SecurityActionPlan() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            {/* 페이지 이탈 경고 모달 */}
+            <WarningDialog />
         </div>
     );
 }

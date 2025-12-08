@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import { Upload, Download, Trash2, RotateCcw, Save } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 
 interface EvaluationItem {
     id: number;
@@ -62,6 +62,12 @@ export default function LifecycleChecklist() {
     const [loading, setLoading] = useState(false);
     const [pendingTab, setPendingTab] = useState<string | null>(null);
     const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
+
+    // 페이지 이탈 경고
+    const { WarningDialog } = useUnsavedChangesWarning({
+        hasUnsavedChanges: hasChanges,
+        onSave: handleSave
+    });
 
     // 처리업무 목록 로딩
     useEffect(() => {
@@ -262,7 +268,7 @@ export default function LifecycleChecklist() {
     };
 
     // 저장
-    const handleSave = async () => {
+    async function handleSave() {
         if (!user?.companyId) return;
 
         try {
@@ -272,10 +278,11 @@ export default function LifecycleChecklist() {
             toast({ title: "저장되었습니다" });
         } catch (error) {
             toast({ title: "저장 실패", variant: "destructive" });
+            throw error; // 에러를 던져서 WarningDialog가 인식하도록
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const handleReset = () => {
         setItems((prev) => prev.map((item) => ({ ...item, status: null, evidence: "", files: [] })));
@@ -451,7 +458,7 @@ return (
                                 handleEvidenceChange(item.no, e.target.value)
                               }
                               placeholder="평가 근거 및 의견을 입력하세요"
-                              className="mt-1"
+                              className="mt-1 resize-none"
                               rows={3}
                             />
                           </div>
@@ -551,6 +558,9 @@ return (
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 페이지 이탈 경고 모달 */}
+      <WarningDialog />
     </div>
   </Tabs>
 );

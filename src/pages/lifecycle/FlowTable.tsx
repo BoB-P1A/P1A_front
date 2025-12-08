@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
+import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 
 // FAST API로 연결되는 부분(AI)
 const FLOW_API_BASE = import.meta.env.VITE_FLOW_API_BASE_URL ?? "http://localhost:8000";
@@ -354,8 +355,15 @@ export default function ProtectionFlowTable() {
     const [aiSourceTextByTaskId, setAiSourceTextByTaskId] = useState<Record<string, string>>({});
     const [aiLoadingTaskId, setAiLoadingTaskId] = useState<string | null>(null);
     const [aiSourceFileByTaskId, setAiSourceFileByTaskId] = useState<Record<string, File | null>>({});
-    
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
     const generateId = () => Math.random().toString(36).substr(2, 9);
+
+    // 페이지 이탈 경고
+    const { WarningDialog } = useUnsavedChangesWarning({
+        hasUnsavedChanges,
+        onSave: handleSave
+    });
 
     useEffect(() => {
         const loadData = async () => {
@@ -513,6 +521,7 @@ export default function ProtectionFlowTable() {
                 },
             };
         });
+        setHasUnsavedChanges(true);
     };
 
     const handleDeleteRow = (stage: 'collection' | 'storage' | 'usage' | 'provision' | 'disposal', id: string) => {
@@ -534,6 +543,7 @@ export default function ProtectionFlowTable() {
                 },
             };
         });
+        setHasUnsavedChanges(true);
     };
 
     const handleEdit = (stage: 'collection' | 'storage' | 'usage' | 'provision' | 'disposal', id: string, field: string, value: string) => {
@@ -557,9 +567,10 @@ export default function ProtectionFlowTable() {
                 },
             };
         });
+    setHasUnsavedChanges(true);
     };
 
-    const handleSave = async () => {
+    async function handleSave() {
         if (!user?.companyId || !selectedTaskId) return;
 
         try {
@@ -580,10 +591,12 @@ export default function ProtectionFlowTable() {
             };
 
             await api.lifecycle.flowTables.save(user.companyId, selectedTaskId, sheetsToSave);
+            setHasUnsavedChanges(false);
             toast({ title: '저장되었습니다' });
         } catch (error) {
             console.error('저장 실패:', error);
             toast({ title: '오류', description: '저장 실패', variant: 'destructive' });
+            throw error;
         } finally {
             setLoading(false);
         }
@@ -1238,6 +1251,7 @@ export default function ProtectionFlowTable() {
                     </TabsContent>
                 ))}
             </Tabs>
+            <WarningDialog />
         </div>
     );
 }

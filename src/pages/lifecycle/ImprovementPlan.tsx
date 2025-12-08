@@ -242,12 +242,12 @@ export default function LifecycleImprovementPlan() {
 
                                             <div>
                                                 <Label className="font-semibold">질의문</Label>
-                                                <Textarea value={item.question} readOnly className="mt-1" rows={2} />
+                                                <Textarea value={item.question} readOnly className="mt-1 resize-none" rows={2} />
                                             </div>
 
                                             <div>
                                                 <Label className="font-semibold">취약점</Label>
-                                                <Textarea value={item.evidence} readOnly className="mt-1" rows={3} />
+                                                <Textarea value={item.evidence} readOnly className="mt-1 resize-none" rows={3} />
                                             </div>
 
                                             <div>
@@ -257,7 +257,7 @@ export default function LifecycleImprovementPlan() {
                                                     value={item.relatedLaw}
                                                     readOnly
                                                     onChange={(e) => handleRelatedLawChange(item.id, e.target.value)}
-                                                    className="mt-1"
+                                                    className="mt-1 resize-none"
                                                     rows={2}
                                                 />
                                             </div>
@@ -269,7 +269,7 @@ export default function LifecycleImprovementPlan() {
                                                     value={item.riskFactor}
                                                     readOnly
                                                     onChange={(e) => handleRiskFactorChange(item.id, e.target.value)}
-                                                    className="mt-1"
+                                                    className="mt-1 resize-none"
                                                     rows={3}
                                                 />
                                             </div>
@@ -281,7 +281,7 @@ export default function LifecycleImprovementPlan() {
                                                     value={item.improvementPlan}
                                                     readOnly
                                                     onChange={(e) => handleImprovementPlanChange(item.id, e.target.value)}
-                                                    className="mt-1"
+                                                    className="mt-1 resize-none"
                                                     rows={3}
                                                 />
                                             </div>

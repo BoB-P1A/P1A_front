@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
+import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 
 interface LifecycleItem {
     id: number;
@@ -45,6 +46,12 @@ export default function LifecycleActionPlan() {
     const [activeTab, setActiveTab] = useState<string>('전체');
     const [tasks, setTasks] = useState<{ id: string; name: string }[]>([]);
     const [loading, setLoading] = useState(false);
+
+    // 페이지 이탈 경고
+    const { WarningDialog } = useUnsavedChangesWarning({
+        hasUnsavedChanges: hasChanges,
+        onSave: handleSave
+    });
 
     // 처리업무 목록 로딩
     useEffect(() => {
@@ -127,7 +134,7 @@ export default function LifecycleActionPlan() {
         setHasChanges(true);
     };
 
-    const handleSave = async () => {
+    async function handleSave() {
         try {
             setLoading(true);
             const actionPlans: { [key: string]: any } = {};
@@ -148,10 +155,11 @@ export default function LifecycleActionPlan() {
             toast({ title: '저장되었습니다' });
         } catch (error) {
             toast({ title: '저장 실패', variant: 'destructive' });
+            throw error; // 에러를 던져서 WarningDialog가 인식하도록
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     const handleExportToExcel = () => {
         const exportData = filteredItems.map((item) => ({
@@ -239,17 +247,17 @@ export default function LifecycleActionPlan() {
 
                                             <div>
                                                 <Label className="font-semibold">질의문</Label>
-                                                <Textarea value={item.question} readOnly className="mt-1" rows={2} />
+                                                <Textarea value={item.question} readOnly className="mt-1 resize-none" rows={2} />
                                             </div>
 
                                             <div>
                                                 <Label className="font-semibold">취약점</Label>
-                                                <Textarea value={item.evidence} readOnly className="mt-1" rows={3} />
+                                                <Textarea value={item.evidence} readOnly className="mt-1 resize-none" rows={3} />
                                             </div>
 
                                             <div>
                                                 <Label className="font-semibold">개선 가이드</Label>
-                                                <Textarea value={item.improvementGuide} readOnly className="mt-1" rows={3} />
+                                                <Textarea value={item.improvementGuide} readOnly className="mt-1 resize-none" rows={3} />
                                             </div>
 
                                             <div>
@@ -261,7 +269,7 @@ export default function LifecycleActionPlan() {
                                                     value={item.actionPlan}
                                                     onChange={(e) => handleFieldChange(item.id, 'actionPlan', e.target.value)}
                                                     placeholder="조치 방안을 입력하세요"
-                                                    className="mt-1"
+                                                    className="mt-1 resize-none"
                                                     rows={3}
                                                 />
                                             </div>
@@ -335,6 +343,9 @@ export default function LifecycleActionPlan() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            {/* 페이지 이탈 경고 모달 */}
+            <WarningDialog />
         </div>
     );
 }
