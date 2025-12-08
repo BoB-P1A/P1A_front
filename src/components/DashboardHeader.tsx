@@ -40,14 +40,7 @@ const getRoleLabel = (role: string) => {
 export function DashboardHeader() {
     const { user, logout, refreshUser } = useAuth();
     const navigate = useNavigate();
-    const [notificationOpen, setNotificationOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
-
-    const mockNotifications = [
-        { id: 1, title: '새로운 영향평가 요청', time: '5분 전', type: 'info' },
-        { id: 2, title: '체크리스트 수행 요청', time: '1시간 전', type: 'reception' },
-        { id: 3, title: '체크리스트 미완료 항목 있음', time: '3시간 전', type: 'warning' },
-    ];
 
     // 프로필 드롭다운이 열릴 때 사용자 정보 새로고침
     const handleProfileOpen = async (open: boolean) => {
@@ -72,36 +65,6 @@ export function DashboardHeader() {
             </div>
 
             <div className="flex items-center gap-2">
-                {/* 알림 아이콘 */}
-                <Dialog open={notificationOpen} onOpenChange={setNotificationOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="relative hover:text-accent">
-                            <Bell className="h-5 w-5" />
-                            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-xs text-white flex items-center justify-center">
-                3
-              </span>
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>알림</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-3">
-                            {mockNotifications.map((notification) => (
-                                <div key={notification.id} className="flex items-start gap-3 p-3 rounded-lg border">
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium">{notification.title}</p>
-                                        <p className="text-xs text-muted-foreground">{notification.time}</p>
-                                    </div>
-                                    <Badge variant={notification.type === 'info' ? 'default' :
-                                        notification.type === 'reception' ? 'secondary' : 'destructive'}>
-                                        {notification.type}
-                                    </Badge>
-                                </div>
-                            ))}
-                        </div>
-                    </DialogContent>
-                </Dialog>
 
                 {/* 마이페이지 드롭다운 */}
                 <DropdownMenu onOpenChange={handleProfileOpen}>
