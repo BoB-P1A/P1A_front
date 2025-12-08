@@ -83,12 +83,12 @@ export default function SecurityImprovementPlan() {
                         id: itemId,
                         systemId: item.systemId,
                         systemName: item.systemName,
-                        code: item.no,                    // ← no를 code로 매핑
-                        question: item.item || '',         // ← item을 question으로 매핑
+                        code: item.no,
+                        question: item.item || '',
                         evidence: item.evidence || '',
-                        relatedLaw: item.law || '',        // ← law를 relatedLaw로 매핑
-                        riskFactor: item.riskFactors || '', // ← riskFactors를 riskFactor로 매핑
-                        improvementPlan: item.improvementGuides || '', // ← improvementGuides를 improvementPlan으로 매핑
+                        relatedLaw: item.law || '',
+                        riskFactor: item.riskFactors || '',
+                        improvementPlan: item.improvementGuides || '',
                     };
                 });
 
@@ -184,10 +184,6 @@ export default function SecurityImprovementPlan() {
                         <Download className="mr-2 h-4 w-4" />
                         엑셀 다운로드
                     </Button>
-                    {/*<Button onClick={handleSave} disabled={!hasChanges}>*/}
-                    {/*  <Save className="mr-2 h-4 w-4" />*/}
-                    {/*  저장*/}
-                    {/*</Button>*/}
                 </div>
             </div>
 
@@ -229,12 +225,20 @@ export default function SecurityImprovementPlan() {
 
                                             <div>
                                                 <Label className="font-semibold">질의문</Label>
-                                                <Textarea value={item.question} readOnly className="mt-1" rows={2} />
+                                                <Textarea
+                                                    value={item.question}
+                                                    readOnly
+                                                    className="mt-1 resize-none overflow-auto max-h-[80px]"
+                                                />
                                             </div>
 
                                             <div>
                                                 <Label className="font-semibold">취약점</Label>
-                                                <Textarea value={item.evidence} readOnly className="mt-1" rows={3} />
+                                                <Textarea
+                                                    value={item.evidence}
+                                                    readOnly
+                                                    className="mt-1 resize-none overflow-auto max-h-[120px]"
+                                                />
                                             </div>
 
                                             <div>
@@ -244,8 +248,7 @@ export default function SecurityImprovementPlan() {
                                                     value={item.relatedLaw}
                                                     readOnly
                                                     onChange={(e) => handleRelatedLawChange(item.id, e.target.value)}
-                                                    className="mt-1"
-                                                    rows={2}
+                                                    className="mt-1 resize-none overflow-auto max-h-[80px]"
                                                 />
                                             </div>
 
@@ -256,8 +259,7 @@ export default function SecurityImprovementPlan() {
                                                     value={item.riskFactor}
                                                     readOnly
                                                     onChange={(e) => handleRiskFactorChange(item.id, e.target.value)}
-                                                    className="mt-1"
-                                                    rows={3}
+                                                    className="mt-1 resize-none overflow-auto max-h-[120px]"
                                                 />
                                             </div>
 
@@ -268,8 +270,7 @@ export default function SecurityImprovementPlan() {
                                                     value={item.improvementPlan}
                                                     readOnly
                                                     onChange={(e) => handleImprovementPlanChange(item.id, e.target.value)}
-                                                    className="mt-1"
-                                                    rows={3}
+                                                    className="mt-1 resize-none overflow-auto max-h-[120px]"
                                                 />
                                             </div>
                                         </CardContent>
