@@ -13,11 +13,12 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2, Save, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2, Save, RefreshCw, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { useApi } from "@/hooks/useApi";
 import { toast } from "@/hooks/use-toast";
+import * as XLSX from "xlsx";
 
 interface EvaluationItem {
     id: number;
@@ -171,6 +172,45 @@ export default function EvaluationManagement() {
         }
     };
 
+    const handleExcelDownload = () => {
+        if (items.length === 0) {
+            toast({
+                title: "다운로드 실패",
+                description: "다운로드할 데이터가 없습니다.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const excelData = items.map((item) => ({
+            "평가영역": item.area,
+            "평가분야": item.field,
+            "세부분야": item.subField,
+            "No.": item.no,
+            "평가항목": item.item,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+        worksheet["!cols"] = [
+            { wch: 30 },
+            { wch: 20 },
+            { wch: 25 },
+            { wch: 10 },
+            { wch: 80 },
+        ];
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "평가항목");
+
+        XLSX.writeFile(workbook, "평가항목.xlsx");
+
+        toast({
+            title: "다운로드 완료",
+            description: "엑셀 파일이 다운로드되었습니다.",
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -178,10 +218,16 @@ export default function EvaluationManagement() {
                     <h1 className="text-3xl font-bold text-primary">평가항목 목록</h1>
                     <p className="text-muted-foreground mt-2">평가항목을 구성하고 관리합니다</p>
                 </div>
-                <Button onClick={handleUpdate} disabled={loading}>
-                    <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                    업데이트
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleExcelDownload} disabled={loading || items.length === 0}>
+                        <Download className="mr-2 h-4 w-4" />
+                        엑셀 다운로드
+                    </Button>
+                    <Button onClick={handleUpdate} disabled={loading}>
+                        <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                        업데이트
+                    </Button>
+                </div>
                 {/*<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>*/}
                 {/*  <DialogTrigger asChild>*/}
                 {/*    <Button onClick={() => handleOpenDialog()}>*/}
