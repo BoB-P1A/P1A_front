@@ -1296,7 +1296,7 @@ export default function LifecycleReport() {
             const COLORS = { 이행: '#029DC3', 부분이행: '#EFCE1C', 미이행: '#E02E27' };
 
             // 스택드 바 차트를 이미지로 생성
-            const createStackedBarImage = async (counts: StatusCounts, width = 500, height = 28): Promise<Uint8Array | null> => {
+            const createStackedBarImage = async (counts: StatusCounts, width = 400, height = 28): Promise<Uint8Array | null> => {
                 const total = counts.이행 + counts.부분이행 + counts.미이행;
                 if (total === 0) return null;
 
@@ -1429,7 +1429,7 @@ export default function LifecycleReport() {
                     const chartCell = chartImage
                         ? new TableCell({
                             children: [new Paragraph({
-                                children: [new ImageRun({ data: chartImage, transformation: { width: 350, height: 22 }, type: 'png' })],
+                                children: [new ImageRun({ data: chartImage, transformation: { width: 330, height: 22 }, type: 'png' })],
                                 alignment: AlignmentType.CENTER
                             })],
                             verticalAlign: 'center',
@@ -1481,7 +1481,7 @@ export default function LifecycleReport() {
                         totalChartImage
                             ? new TableCell({
                                 children: [new Paragraph({
-                                    children: [new ImageRun({ data: totalChartImage, transformation: { width: 350, height: 22 }, type: 'png' })],
+                                    children: [new ImageRun({ data: totalChartImage, transformation: { width: 330, height: 22 }, type: 'png' })],
                                     alignment: AlignmentType.CENTER
                                 })],
                                 shading: { fill: 'E8E8E8', type: ShadingType.CLEAR },
