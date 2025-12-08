@@ -28,6 +28,37 @@
             --palette-w:160px;
             --layout-gap:10px;
             --pii-panel-w:180px;
+
+            /* 버튼 공통 */
+            --btn-radius: 9999px;
+            --btn-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+            --btn-shadow-hover: 0 4px 10px rgba(15, 23, 42, 0.18);
+
+            /* 색상 팔레트 */
+            --btn-primary-bg: linear-gradient(135deg,#38bdf8,#22c55e); /* 희망찬 느낌 */
+            --btn-primary-border: rgba(56,189,248,0.3);
+
+            --btn-danger-bg: #fee2e2;
+            --btn-danger-border: #fecaca;
+            --btn-danger-text: #b91c1c;
+
+            --btn-positive-bg: #ecfdf5;
+            --btn-positive-border: #6ee7b7;
+            --btn-positive-text: #15803d;
+
+            --btn-neutral-bg: #eef2f7;
+            --btn-neutral-border: #cbd5e1;
+            --btn-neutral-strong-bg: #e5e7eb;
+            --btn-neutral-strong-text: #374151;
+
+            /* 우려사항 토글용 */
+            --btn-toggle-on-bg: #f5f3ff;   /* 있음: 보라 계열 */
+            --btn-toggle-on-border: #a855f7;
+            --btn-toggle-on-text: #6d28d9;
+
+            --btn-toggle-off-bg: #fffbeb;  /* 없음: 주황 계열 */
+            --btn-toggle-off-border: #f97316;
+            --btn-toggle-off-text: #9a3412;
         }
 
         *{box-sizing:border-box;}
@@ -49,10 +80,90 @@
             gap:8px;
         }
         .toolbar button{
-            padding:6px 10px;
-            font-size:16px;
+            position: relative;
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            padding:7px 14px;
+            font-size:14px;
             line-height:1.3;
             cursor:pointer;
+            border-radius:var(--btn-radius);
+            border:1px solid transparent;
+            background:#ffffff;
+            color:#111827;
+            box-shadow:var(--btn-shadow);
+            transition:
+                background-color 0.12s ease,
+                border-color 0.12s ease,
+                box-shadow 0.12s ease,
+                transform 0.06s ease,
+                color 0.12s ease;
+            white-space:nowrap;
+        }
+        .toolbar button:hover{
+            box-shadow:var(--btn-shadow-hover);
+            transform:translateY(-0.5px);
+        }
+        .toolbar button:active{
+            transform:translateY(0);
+            box-shadow:0 0 0 rgba(0,0,0,0.1);
+        }
+
+        /* 희망찬: 흐름표에서 불러오기 */
+        .btn.btn-primary{
+            background-image:var(--btn-primary-bg);
+            color:#f9fafb;
+            border-color:var(--btn-primary-border);
+            font-weight:600;
+        }
+        .btn.btn-primary:hover{
+            filter:brightness(1.02);
+        }
+
+        /* 경고: 삭제 계열 */
+        .btn.btn-danger{
+            background:var(--btn-danger-bg);
+            border-color:var(--btn-danger-border);
+            color:var(--btn-danger-text);
+            font-weight:600;
+        }
+        .btn.btn-danger:hover{
+            background:#fecaca;
+        }
+
+        /* 밝은 느낌: 항목 추가 */
+        .btn.btn-positive{
+            background:var(--btn-positive-bg);
+            border-color:var(--btn-positive-border);
+            color:var(--btn-positive-text);
+            font-weight:600;
+        }
+        .btn.btn-positive:hover{
+            background:#dcfce7;
+        }
+
+        /* 중립: 링크 스타일/색 토글 */
+        .btn.btn-neutral{
+            background:var(--btn-neutral-bg);
+            border-color:var(--btn-neutral-border);
+            color:#111827;
+        }
+
+        /* 사무적인 중립: 편집 모드 */
+        .btn.btn-neutral-strong{
+            background:var(--btn-neutral-strong-bg);
+            border-color:var(--btn-neutral-border);
+            color:var(--btn-neutral-strong-text);
+            font-weight:600;
+        }
+
+        /* 우려사항: 갈팡질팡 색 (JS에서 on/off 상태에 따라 색 바꿔줌) */
+        .btn.btn-toggle-amb{
+            background:var(--btn-toggle-on-bg);
+            border-color:var(--btn-toggle-on-border);
+            color:var(--btn-toggle-on-text);
+            font-weight:600;
         }
 
         .frame{
@@ -134,7 +245,6 @@
             border:1px solid var(--grid);
             border-top:none;
             background:#fff;
-            /* 스크롤 제거 */
             overflow:visible;
         }
 
@@ -145,12 +255,12 @@
             line-height:1.35;
         }
 
-        /* 공통 셀 */
+        /* 셀 공통사항 */
         .cell{
-            min-height:var(--cell-min-h);
+            min-height:0;
             border-right:1px solid var(--grid);
             border-bottom:1px solid var(--grid);
-            padding:4px;
+            padding:2px 4px;
             position:relative;
         }
         .cell:nth-child(6n){ border-right:none; } /* 6열마다 끊기 (라벨열+5단계=6칸) */
@@ -166,7 +276,7 @@
             font-size:16px;
         }
 
-        /* textarea 공통 */
+        /* textarea 공통사항 */
         .cell textarea{
             width: 100%;
             height: auto;           /* scrollHeight로 키움 */
@@ -177,7 +287,6 @@
             overflow: hidden;       /* 내부 스크롤 제거 */
             font-size: 16px;
             line-height: 1.35;
-            /*font-family: inherit;*/
             white-space: pre-wrap;
             word-break: break-word;
             padding: 4px 6px;
@@ -187,63 +296,38 @@
             outline:1px solid #60a5fa;
         }
 
-        /* 처리흐름 칸 */
-        .flowcell textarea{
-            font-weight:500;
-        }
-
-        /* 단계 설명 칸 행 자체도 텍스트 높이에 맞춰 늘어나게 */
-        .descRow {
+        /* 처리흐름 셀 */
+        .flow-row{
             align-items: stretch;
-            min-height: 0 !important;      /* flex/grid 부모의 overflow 방지 핵심 */
+            min-height: 0 !important;
             height: auto !important;
             overflow: visible !important;
+            padding: 0;
         }
 
-        /* 우려사항 공통 클래스 */
-        .concern-row {
-            display: none;   /* 초기에는 숨김 상태 */
-        }
-        /* 좌측 라벨 스타일 */
-        .concern-label {
-            background: var(--leftcol);
-            font-weight: 700;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            text-align:center;
-        }
-        /* 우려사항 셀: 설명 행 높이의 절반 기본값 + 5열 전체 span */
-        .concern-cell {
-            min-height: 28px;
-            height: auto;
+        /* 설명 셀이 텍스트 높이에 맞춰 늘어나게 */
+        .desc-row {
+            align-items: stretch;
+            min-height: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
             padding: 0;
-            border-right: 1px solid var(--grid);
-            border-bottom: 1px solid var(--grid);
-            grid-column: span 5;  /* 라벨 오른쪽 5개 열을 한꺼번에 차지 */
         }
-        /* 텍스트박스는 여백 없이 꽉 차게 */
-        .concern-cell textarea {
-            width: 100%;
-            height: auto;
-            border: none;
-            background: transparent;
-            resize: none;
-            overflow: hidden;
-            padding: 2px 4px;
-            font-size: 16px;
-            line-height: 1.35;
-            white-space: pre-wrap;
-            word-break: break-word;
+
+        /* 우려사항 셀 */
+        .concern-row {
+            grid-column: span 5;
+            min-height: 28px !important;
+            height: auto !important;
+            padding: 0;
         }
-        .concern-cell textarea:focus {
-            outline: 1px solid #60a5fa;
+        .concern-visible {
+            display: none;   /* 처음에는 숨김 상태 */
         }
 
         /* ===== GoJS 다이어그램 오버레이 (표 위에 겹침) ===== */
         #diagramOverlay{
             position:absolute;
-            /* 이 영역은 수집~파기 5열 부분 전체 덮도록 계산해서 JS에서 리사이즈 */
             left:0;
             top:0;
             right:0;
@@ -268,7 +352,6 @@
             height:auto;
             overflow:visible;
         }
-
         .piiPanelHeader{
             background:var(--col-header);
             border-bottom:1px solid var(--grid);
@@ -280,7 +363,6 @@
             padding:10px 8px;
             line-height:1.4;
         }
-
         #piiListScroll{
             flex:1 1 auto;
             padding:8px;
@@ -289,7 +371,6 @@
             background:#fff;
             overflow:visible;
         }
-
         .piiRow{
             border-bottom:1px dashed var(--grid);
             padding:8px 6px;
@@ -298,8 +379,9 @@
             align-items:stretch;
             gap:6px;
         }
-        .piiRow:last-child{ border-bottom:none; }
-
+        .piiRow:last-child{ 
+            border-bottom:none; 
+        }
         .pii-bullet{
             flex:0 0 auto;
             font-size:20px;
@@ -308,12 +390,10 @@
             text-align:center;
             line-height:1.4;
         }
-
         .pii-textwrap{
             flex:1 1 auto;
             width:100%;
         }
-
         .pii-textwrap textarea{
             width:100%;
             min-height:0px;
@@ -332,24 +412,8 @@
             outline:1px solid #60a5fa;
         }
 
-        /* modelBox 아래 */
-        #modelBox{
-            width:100%;
-            height:180px;
-            margin-top:10px;
-            font-size:16px;
-            line-height:1.4;
-            font-family:ui-monospace,Consolas,monospace;
-            border:1px solid var(--border);
-            border-radius:6px;
-            padding:8px;
-        }
-
         /* 캡쳐 모드일 때 제외할 요소 숨기기 */
         .capture-mode #paletteCol,
-        .capture-mode #modelBox{
-            display: none !important;
-        }
         /* 한 줄 유지 + 콘텐츠 전체 폭으로 확장 */
         .capture-mode .frame {
             width: max-content !important;
@@ -379,22 +443,19 @@
 <body>
 <div class="page">
     <div class="toolbar">
-        <button id="fetchBtn" title="저장된 흐름표에서 흐름도를 제작하여 불러옵니다">흐름표에서 불러오기</button>
-        <button id="saveBtn" title="현재 화면의 정보를 DB에 저장합니다">저장</button>
-        <button id="loadBtn" title="저장된 정보를 불러옵니다">불러오기</button>
-        <button id="clearDiagramBtn" title="화면의 흐름도를 비웁니다">흐름도 비우기</button>
-        <button id="addRowBtn" title="처리 개인정보가 하나 추가됩니다">처리 개인정보 추가</button>
-        <button id="delRowBtn" title="마지막 처리 개인정보가 하나 삭제됩니다">처리 개인정보 삭제</button>
-
-        <button id="CocernToggleBtn">
-            <span class="label">우려사항: 보이기</span>
-        </button>
-        <button id="linkStyleToggleBtn" title="실선/점선 전환">링크: 실선</button>
-        <button id="linkColorToggleBtn" title="검정/빨강 전환">링크: 검정</button>
-
-        <button id="editModeToggleBtn">
+        <button id="fetchBtn" class="btn btn-primary" title="저장된 흐름표에서 흐름도를 초기화하여 불러옵니다">흐름표에서 불러오기</button>
+        <button id="clearDiagramBtn" class="btn btn-danger" title="화면의 처리흐름을 삭제합니다">처리흐름 삭제</button>
+        <button id="clearDescBtn" class="btn btn-danger" title="단계 설명을 모두 삭제합니다">설명 삭제</button>
+        <button id="delRowBtn" class="btn btn-danger" title="마지막 처리 개인정보가 하나 삭제됩니다">처리 개인정보 항목 삭제</button>
+        <button id="addRowBtn" class="btn btn-positive" title="처리 개인정보가 하나 추가됩니다">처리 개인정보 항목 추가</button>
+        <button id="linkStyleToggleBtn" class="btn btn-neutral" title="실선/점선 전환">링크: 실선</button>
+        <button id="linkColorToggleBtn" class="btn btn-neutral" title="검정/빨강 전환">링크: 검정</button>
+        <button id="editModeToggleBtn" class="btn btn-neutral-strong">
             <span class="icon" aria-hidden="true">🖱️</span>
-            <span class="label">흐름도 편집 모드</span>
+            <span class="label">편집 모드: 흐름도</span>
+        </button>
+        <button id="CocernToggleBtn" class="btn btn-toggle-amb">
+            <span class="label">우려사항: 있음</span>
         </button>
     </div>
 
@@ -422,11 +483,11 @@
                     <div id="tableGrid">
                         <!-- Row 1: 처리흐름 -->
                         <div class="cell rowlabel" data-rowtype="flow">처리흐름</div>
-                        <div class="cell flowcell" data-col="collect"><textarea></textarea></div>
-                        <div class="cell flowcell" data-col="retain"><textarea></textarea></div>
-                        <div class="cell flowcell" data-col="use"><textarea></textarea></div>
-                        <div class="cell flowcell" data-col="provide"><textarea></textarea></div>
-                        <div class="cell flowcell" data-col="discard"><textarea></textarea></div>
+                        <div class="cell flow-row" data-col="collect"><textarea></textarea></div>
+                        <div class="cell flow-row" data-col="retain"><textarea></textarea></div>
+                        <div class="cell flow-row" data-col="use"><textarea></textarea></div>
+                        <div class="cell flow-row" data-col="provide"><textarea></textarea></div>
+                        <div class="cell flow-row" data-col="discard"><textarea></textarea></div>
 
                         <!-- Row 2: 단계 설명 -->
                         <div class="cell rowlabel" data-rowtype="desc">설명</div>
@@ -437,8 +498,8 @@
                         <div class="cell desc-row autosize-target" data-phase="discard"><textarea class="desc-discard"></textarea></div>
 
                         <!-- === Row 3: 우려사항 === -->
-                        <div class="cell rowlabel concern-label concern-row">우려사항</div>
-                        <div class="cell concern-cell concern-row" data-col="concern"><textarea class="concern-text"></textarea></div>
+                        <div class="cell rowlabel concern-visible">우려사항</div>
+                        <div class="cell concern-row concern-visible" data-col="concern"><textarea class="concern-text"></textarea></div>
                     </div>
 
                     <!-- 다이어그램은 표 위에 겹친다 -->
@@ -455,8 +516,6 @@
             </div>
         </div> <!-- /main-row -->
     </div> <!-- /frame -->
-
-    <textarea id="modelBox" placeholder="저장을 누르면 현재 흐름도가 JSON 형태로 저장됩니다."></textarea>
 </div>
 
 <script>
@@ -476,8 +535,7 @@
         const gridWrap = document.getElementById('gridWrap');
         const gridRect = gridWrap.getBoundingClientRect();
 
-        // overlay는 "수집~파기" 5열 위에만 올려야 하므로
-        // overlay의 left는 leftW 만큼 우측으로 밀려야 함
+        // overlay는 "수집~파기" 5열 위에만 올려야 하므로 overlay의 left는 leftW 만큼 우측으로 밀려야 함
         const offsetLeft = leftW;
         const overlayW   = colW * 5;
         const overlayH   = gridRect.height;
@@ -501,17 +559,36 @@
         autosizeAllTextareas();
     }
 
-    /* desc textarea 자동 높이 */
+    // 원하는 한 줄 높이(px)
+    const BASE_LINE_PX = 30;
+
     function autosizeAllTextareas(){
         document.querySelectorAll('.cell textarea').forEach(ta=>{
             ta.style.overflow = 'hidden';
             ta.style.minHeight = '0px';
-            ta.style.height = 'auto';
-            ta.style.height = ta.scrollHeight + 'px';
 
             const cell = ta.closest('.cell');
-            if (cell){
-                const min = Math.max(ta.scrollHeight, 32);  // 최소 높이 보장
+
+            // 1) 우선 모두 "한 줄" 높이로 맞춰 놓고
+            ta.style.height = BASE_LINE_PX + 'px';
+
+            let h = BASE_LINE_PX;
+
+            if (ta.value) {
+                // 2) 한 줄 높이에서 실제 필요한 높이를 다시 측정
+                const needed = ta.scrollHeight;
+
+                // 한 줄 높이보다 많이 필요하면(줄바꿈/자동줄바꿈) 그때만 늘림
+                if (needed > BASE_LINE_PX + 2) {
+                    h = needed;
+                }
+            }
+
+            ta.style.height = h + 'px';
+
+            // 3) 셀 높이 동기화 (처리흐름 행은 GoJS 높이 함수가 따로 관리)
+            if (cell && !cell.classList.contains('flow-row')) {
+                const min = Math.max(h, 28);  // 최소 1줄 + 약간의 여유
                 cell.style.minHeight = min + 'px';
                 cell.style.height = 'auto';
             }
@@ -939,7 +1016,7 @@
                 { text:"DB(오프라인)", category:"database_offline" },
                 { text:"파기(온라인)", category:"discard" },
                 { text:"파기(오프라인)", category:"discard_offline" },
-                { text:"우려사항/암호화 메모", category:"memobox" },
+                { text:"우려사항 메모", category:"memobox" },
                 { text:"", category:"star" },
                 { text:"", category:"circleNumber" }
             ])
@@ -963,6 +1040,7 @@
                     "position",
                     go.Point.stringify(myDiagram.position)
                 );
+                scheduleAutosave();
             }
         });
         myDiagram.addDiagramListener("InitialLayoutCompleted", e => {
@@ -997,7 +1075,7 @@
         document.documentElement.style.setProperty('--cell-min-h', `${targetH}px`);
 
         // 실제 셀 스타일도 강제로 갱신
-        document.querySelectorAll('.flowcell, .cell.rowlabel[data-rowtype="flow"]').forEach(el => {
+        document.querySelectorAll('.flow-row, .cell.rowlabel[data-rowtype="flow"]').forEach(el => {
             el.style.minHeight = `${targetH}px`;
             el.style.height = `${targetH}px`;
         });
@@ -1073,7 +1151,9 @@
         return rows.map(r=>{
             const ta  = r.querySelector('textarea');
             const div = r.querySelector('.pii-text');
-            return ta ? ta.value : (div ? div.innerText : "");
+            if (ta) return ta.value;
+            if (div) return div.innerHTML;   // bold 포함해서 저장
+            return "";
         });
     }
     function formatPIIItem(item){
@@ -1088,7 +1168,7 @@
     }
 
     function renderPIIFromJSON(arrInput){
-        const arr = Array.isArray(arrInput) ? arrInput : (window.piiArr || []);  // ★ 추가
+        const arr = Array.isArray(arrInput) ? arrInput : (window.piiArr || []);
         const list = document.getElementById('piiListScroll');
         list.innerHTML = "";
 
@@ -1101,14 +1181,17 @@
             const row = document.createElement("div");
             row.className = "piiRow";
             row.innerHTML = `
-      <div class="pii-bullet">${numToCircle(i + 1)}</div>
-      <div class="pii-textwrap">
-        <div class="pii-text">${formatPIIItem(item)}</div>
-      </div>
-    `;
+                <div class="pii-bullet">${numToCircle(i + 1)}</div>
+                <div class="pii-textwrap">
+                    <div class="pii-text">${formatPIIItem(item)}</div>
+                </div>
+            `;
+            const textDiv = row.querySelector(".pii-text");
+            if (textDiv) {
+                textDiv.contentEditable = "true";
+            }
             list.appendChild(row);
         });
-
         renumberPIIRows();
     }
 
@@ -1178,7 +1261,73 @@
         if (typeof resizeOverlay === "function") resizeOverlay();
     }
 
-    /* ========= fetch/save/load ========= */
+    // ========= 우려사항 get/set =========
+    function getConcernText() {
+        const ta = document.querySelector(".concern-text");
+        return ta ? ta.value : "";
+    }
+    function setConcernText(val) {
+        const ta = document.querySelector(".concern-text");
+        if (!ta) return;
+        ta.value = val || "";
+        // 높이 자동 조정
+        if (typeof autosizeAllTextareas === "function") {
+            autosizeAllTextareas();
+        }
+    }
+
+    // ========= 화면 상태 -> combined 공통 빌더 & 자동 저장 =========
+    let suppressAutosave = false;
+    let autosaveTimer = null;
+
+    // 현재 화면 상태를 combined 형식으로 수집
+    function buildCombinedFromCurrentScreen() {
+        if (!myDiagram) return null;
+
+        // 링크 재계산
+        rerouteAllLinks(myDiagram);
+
+        const diagramJSON = JSON.parse(myDiagram.model.toJson());
+        const piiArray    = getPIIArrayFromPanel();
+        const descOut = {
+            "수집": document.querySelector(".desc-collect")?.value || "",
+            "보유": document.querySelector(".desc-retain")?.value || "",
+            "이용": document.querySelector(".desc-use")?.value || "",
+            "제공": document.querySelector(".desc-provide")?.value || "",
+            "파기": document.querySelector(".desc-discard")?.value || ""
+        };
+        const concernText = getConcernText();
+
+        return {
+            diagram: diagramJSON,
+            pii: piiArray,
+            description: descOut,
+            concern: concernText
+        };
+    }
+    // derived 자동 저장 (debounce)
+    function scheduleAutosave() {
+        if (suppressAutosave) return;
+        if (!companyId || !taskId) return;
+
+        if (autosaveTimer) clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(async () => {
+            try {
+                const combined = buildCombinedFromCurrentScreen();
+                if (!combined) return;
+                await saveCombinedToDB(combined);
+                console.log("derived 자동 저장 완료");
+            } catch (e) {
+                console.warn("derived 자동 저장 실패:", e);
+            }
+        }, 1000); // 1초 동안 입력 없으면 저장
+    }
+    function cancelAutosaveTimer() {
+        if (autosaveTimer) {
+            clearTimeout(autosaveTimer);
+            autosaveTimer = null;
+        }
+    }
 
     // ===== Backend API base URL helper =====
     function getAPIBase() {
@@ -1341,59 +1490,93 @@
 
     // combined 객체를 화면에 반영(제목/다이어그램/PII/설명)하는 공통 함수
     async function applyCombinedToScreen(combined){
-        const diagram  = combined?.diagram;
-        const pii      = combined?.pii;
-        const desc     = combined?.description;
+        cancelAutosaveTimer(); // 이전에 걸려 있던 자동저장 타이머는 취소
+        suppressAutosave = true;
+        try{
+            const diagram  = combined?.diagram;
+            const pii      = combined?.pii;
+            const desc     = combined?.description;
+            const concern  = combined?.concern;
 
-        // 파란 타이틀바: 모델에 없으면 DB에서 taskName 조회
-        let flowTitle = (diagram && diagram.modelData && diagram.modelData.flowTitle) || "";
-        if (!flowTitle) {
-            try { flowTitle = await fetchTaskNameFromDB(); } catch {}
-        }
-        const bar = document.getElementById('flowTitleBar');
-        if (bar) bar.textContent = `업무명 : ${flowTitle || "미정"}`;
+            // 파란 타이틀바: 모델에 없으면 DB에서 taskName 조회
+            let flowTitle = (diagram && diagram.modelData && diagram.modelData.flowTitle) || "";
+            if (!flowTitle) {
+                try { flowTitle = await fetchTaskNameFromDB(); } catch {}
+            }
+            const bar = document.getElementById('flowTitleBar');
+            if (bar) bar.textContent = `업무명 : ${flowTitle || "미정"}`;
 
-        // 다이어그램
-        if (diagram){
-            const normalized = normalizeDiagram(diagram);
-            myDiagram.model = go.Model.fromJson(normalized);
+            // 다이어그램
+            if (diagram){
+                const normalized = normalizeDiagram(diagram);
+                myDiagram.model = go.Model.fromJson(normalized);
 
-            // 로드 직후 1회: 재라우팅 + 링크병합
-            (function kickRerouteAndMergeOnce(diagram){
-                diagram.links.each(l => l.invalidateRoute());
-                const once = () => {
-                    diagram.removeDiagramListener("ViewportBoundsChanged", once);
+                // 로드 직후 1회: 재라우팅 + 링크병합
+                (function kickRerouteAndMergeOnce(diagram){
                     diagram.links.each(l => l.invalidateRoute());
-                    diagram.layoutDiagram(true);
-                    rerouteAllLinks(diagram);
-                    mergeLinksByColor(diagram);
-                    diagram.updateAllTargetBindings();
-                };
-                diagram.addDiagramListener("ViewportBoundsChanged", once);
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
+                    const once = () => {
+                        diagram.removeDiagramListener("ViewportBoundsChanged", once);
                         diagram.links.each(l => l.invalidateRoute());
                         diagram.layoutDiagram(true);
                         rerouteAllLinks(diagram);
                         mergeLinksByColor(diagram);
                         diagram.updateAllTargetBindings();
+                    };
+                    diagram.addDiagramListener("ViewportBoundsChanged", once);
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            diagram.links.each(l => l.invalidateRoute());
+                            diagram.layoutDiagram(true);
+                            rerouteAllLinks(diagram);
+                            mergeLinksByColor(diagram);
+                            diagram.updateAllTargetBindings();
+                        });
                     });
-                });
-            })(myDiagram);
-        }
+                })(myDiagram);
+            }
 
-        // PII
-        if (Array.isArray(pii)) {
-            renderPIIFromJSON(pii);
+            // 처리 개인정보 반영하기
+            if (Array.isArray(pii)) {
+                renderPIIFromJSON(pii);
+            }
+            // 설명 반영하기
+            fillDescriptions(desc || {});
+            // 우려사항 반영하기
+            setConcernText(combined?.concern || "");
+        } finally {
+            suppressAutosave = false;
         }
+    }
 
-        // 설명
-        fillDescriptions(desc || {});
+    // derived에 의미 있는 내용이 있는지 확인
+    function hasMeaningfulContent(combined) {
+        if (!combined) return false;
+        if (combined.diagram && Array.isArray(combined.diagram.nodeDataArray) && combined.diagram.nodeDataArray.length) return true;
+        if (Array.isArray(combined.pii) && combined.pii.length) return true;
+        if (combined.description && typeof combined.description === "object") {
+            if (Object.values(combined.description).some(v => v && String(v).trim().length > 0)) return true;
+        }
+        if (combined.concern && String(combined.concern).trim().length > 0) return true;
+        return false;
+    }
+    // 최초 진입 시 derived가 있다면 자동으로 화면에 반영
+    async function tryInitialLoadFromDerived() {
+        try {
+            const combined = await fetchCombinedFromDB();
+            if (hasMeaningfulContent(combined)) {
+                await applyCombinedToScreen(combined);
+            } else {
+                console.log("초기 derived는 비어 있음, 렌더링 스킵");
+            }
+        } catch (e) {
+            // derived가 없거나(404 등) 기타 오류는 조용히 무시
+            console.log("초기 derived 로드 실패, 스킵:", e);
+        }
     }
 
     /* ========= 버튼/IO ========= */
     function hookIO(){
-        const box = document.getElementById('modelBox');
+        // const box = document.getElementById('modelBox'); (modelBox 삭제)
         // === 공통: 로드 직후 1회 강제 라우팅 & 병합 ===
         function kickRerouteAndMergeOnce(diagram){
             // 1) 즉시 한 번 가볍게 깨우기
@@ -1422,63 +1605,90 @@
             });
         }
 
-        // 1) '흐름도에서 불러오기' = 서버에서 build 실행 후 최신 derived 로드
+        // '흐름표에서 불러오기' = 서버에서 build 실행 후 흐름표 정보를 derived에 초기화
         document.getElementById('fetchBtn').onclick = async () => {
-            try{
-                await triggerBuildOnServer();                      // ★ build
-                const combined = await fetchCombinedFromDB();      // ★ 최신 derived
+            const ok = window.confirm(
+                "현재 화면을 흐름표 정보로 초기화합니다.\n계속하시겠습니까?"
+            );
+            if (!ok) return; // 사용자가 '아니오' 선택 시 아무것도 하지 않음
+
+            // 빌드/재렌더 하는 동안 자동저장 막기
+            suppressAutosave = true;
+            cancelAutosaveTimer();         
+            try {
+                await triggerBuildOnServer();                      // build
+                const combined = await fetchCombinedFromDB();      // 최신 derived
                 await applyCombinedToScreen(combined);
-            }catch(e){
+            } catch (e) {
                 console.error('흐름표에서 불러오기 실패:', e);
-                alert('흐름표에서 불러오기 실패 (DB 확인 필요)');
+                alert('흐름표에서 불러오기에 실패했습니다.\n흐름표 탭으로 이동하여 확인하세요.');
+            } finally {
+                suppressAutosave = false;
             }
         };
 
-        // 2) '저장' = 현재 화면 상태를 DB derived로 저장
+        /* '저장' = 현재 화면 상태를 DB derived로 저장 (현재 자동저장이 활성화되어 주석처리 함)
         document.getElementById('saveBtn').onclick = async () => {
-            try{
-                rerouteAllLinks(myDiagram);
-                const diagramJSON = JSON.parse(myDiagram.model.toJson());
-                const piiArray    = getPIIArrayFromPanel();
-                const descOut = {
-                    "수집": document.querySelector(".desc-collect")?.value || "",
-                    "보유": document.querySelector(".desc-retain")?.value || "",
-                    "이용": document.querySelector(".desc-use")?.value || "",
-                    "제공": document.querySelector(".desc-provide")?.value || "",
-                    "파기": document.querySelector(".desc-discard")?.value || ""
-                };
-                const combined = { diagram: diagramJSON, pii: piiArray, description: descOut };
+            try {
+                const combined = buildCombinedFromCurrentScreen();
+                if (!combined) return;
 
                 // 텍스트박스에도 넣고(기존 로직 유지)
                 box.value = JSON.stringify(combined, null, 2);
                 myDiagram.isModified = false;
 
-                // ★ 서버 저장
+                // 서버 저장
                 await saveCombinedToDB(combined);
                 alert('저장되었습니다.');
-            }catch(e){
+            } catch (e) {
                 console.error('저장 실패:', e);
-                alert('저장 실패 (서버 /api/derived 확인)');
+                alert('저장 실패 (서버 확인 바랍니다)');
             }
-        };
+        }; */
 
-        // 3) '불러오기' = DB에 저장된 derived 그대로 화면에 출력
+        /* '불러오기' = DB에 저장된 derived 그대로 화면에 출력 (현재 자동저장이 활성화되어 주석처리 함)
         document.getElementById('loadBtn').onclick = async () => {
             try{
-                const combined = await fetchCombinedFromDB();  // ★ 빌드 없이 가져옴
+                const combined = await fetchCombinedFromDB();  // 빌드 없이 가져옴
                 await applyCombinedToScreen(combined);
             }catch(e){
                 console.error('불러오기 실패:', e);
                 alert('불러오기 실패 (서버 /api/combined 확인)');
             }
-        };
+        }; */
 
-        // 흐름도 비우기 기능
+        // 처리흐름 삭제 기능
         const clearDiagramBtn = document.getElementById('clearDiagramBtn');
         if (clearDiagramBtn) {
             clearDiagramBtn.onclick = () => {
-                if (!confirm('흐름도를 모두 비울까요?')) return;
+                if (!confirm('처리흐름을 삭제합니다.\n계속하시겠습니까?')) return;
                 clearDiagram();
+            };
+        }
+
+        // 설명 삭제 기능
+        const clearDescBtn = document.getElementById('clearDescBtn');
+        if (clearDescBtn) {
+            clearDescBtn.onclick = () => {
+                const ok = window.confirm(
+                    '각 단계별 설명의 내용을 모두 삭제합니다.\n계속하시겠습니까?'
+                );
+                if (!ok) return;
+
+                // 설명 텍스트박스 모두 비우기
+                const descTextareas = document.querySelectorAll('.desc-row textarea');
+                descTextareas.forEach((ta) => {
+                    ta.value = '';
+                });
+
+                // 높이/레이아웃 갱신
+                if (typeof autosizeAllTextareas === 'function') {
+                    autosizeAllTextareas();
+                }
+                resizeOverlay?.();
+
+                // 자동저장 트리거
+                scheduleAutosave();
             };
         }
 
@@ -1499,27 +1709,53 @@
             };
         } */
 
-        // 우려사항 보이기/숨기기 토글
+        // 우려사항 있음/없음 토글
         function setConcernVisible(visible) {
-            const rows = document.querySelectorAll(".concern-row");
+            const rows = document.querySelectorAll(".concern-visible");
             rows.forEach(r => {
-                r.style.display = visible ? "block" : "none";
+                if (!visible) {
+                    r.style.display = "none";
+                } else {
+                    if (r.classList.contains("rowlabel")) {
+                        r.style.display = "flex";   // 가운데 정렬 유지
+                    } else {
+                        r.style.display = "block";
+                    }
+                }
             });
 
             const btn = document.getElementById("CocernToggleBtn");
             if (btn) {
                 const label = btn.querySelector(".label");
-                if (label) label.textContent = visible ? "우려사항: 숨기기" : "우려사항: 보이기";
+                if (label) label.textContent = visible ? "우려사항: 있음" : "우려사항: 없음";
+
+                // 우려사항 있음⇄없음 토글될 때 색 계열 변화
+                if (visible) {
+                    btn.style.background = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-on-bg');
+                    btn.style.borderColor = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-on-border');
+                    btn.style.color = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-on-text');
+                } else {
+                    btn.style.background = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-off-bg');
+                    btn.style.borderColor = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-off-border');
+                    btn.style.color = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-off-text');
+                }
             }
 
             autosizeAllTextareas();
             resizeOverlay();
         }
+
         // 초기 상태 → 숨김 유지
         setConcernVisible(false);
         // 버튼 연결
         document.getElementById("CocernToggleBtn").onclick = () => {
-            const row = document.querySelector(".concern-row");
+            const row = document.querySelector(".concern-visible");
             const isVisible = row && row.style.display !== "none";
             setConcernVisible(!isVisible);
         };
@@ -1538,15 +1774,19 @@
         }
         function refreshLinkButtonsUI(){
             if (styleBtn){
-                styleBtn.textContent = `링크: ${currentLinkStyle === 'solid' ? '실선' : '점선'}`;
+                const isDashed = currentLinkStyle === 'dashed';
+                styleBtn.textContent = `링크: ${isDashed ? '점선' : '실선'}`;
+                styleBtn.style.borderColor = '#111827';
+                styleBtn.style.borderStyle = isDashed ? "dashed" : "solid";
             }
             if (colorBtn){
                 const isRed = currentLinkColor === 'red';
                 colorBtn.textContent = `링크: ${isRed ? '빨강' : '검정'}`;
-                colorBtn.style.color = isRed ? 'red' : '';
-                colorBtn.style.borderColor = isRed ? 'red' : '';
-                colorBtn.style.fontWeight = isRed ? '700' : '400';
-                colorBtn.style.textDecoration = isRed ? 'underline' : 'none';
+                // 검정일 때는 검정, 빨강일 때는 빨강
+                const c = isRed ? 'red' : '#111827';
+                colorBtn.style.color = c;
+                colorBtn.style.borderColor = c;
+                colorBtn.style.fontWeight = isRed ? '700' : '500';
             }
         }
         if (styleBtn) styleBtn.onclick = () => {
@@ -1573,12 +1813,12 @@
             if (isDiagramEdit){
                 overlay.style.pointerEvents = 'auto';
                 icon.textContent = '🖱️';
-                label.textContent = '흐름도 편집 모드';
+                label.textContent = '편집 모드: 흐름도';
                 editBtn.setAttribute('aria-pressed','true');
             }else{
                 overlay.style.pointerEvents = 'none';
                 icon.textContent = '⌨️';
-                label.textContent = '텍스트 편집 모드';
+                label.textContent = '편집 모드: 텍스트';
                 editBtn.setAttribute('aria-pressed','false');
             }
         }
@@ -1625,16 +1865,7 @@
         }
         else if (data.type === "request-combined-json") {
             // 현재 화면 상태를 부모로 전달
-            const diagramJSON = JSON.parse(myDiagram.model.toJson());
-            const piiArray    = getPIIArrayFromPanel();
-            const descOut = {
-                "수집": document.querySelector(".desc-collect")?.value || "",
-                "보유": document.querySelector(".desc-retain")?.value || "",
-                "이용": document.querySelector(".desc-use")?.value || "",
-                "제공": document.querySelector(".desc-provide")?.value || "",
-                "파기": document.querySelector(".desc-discard")?.value || ""
-            };
-            const combined = { diagram: diagramJSON, pii: piiArray, description: descOut };
+            const combined = buildCombinedFromCurrentScreen();
             window.parent?.postMessage({ type: "combined-json", payload: combined }, "*");
         }
     });
@@ -1768,6 +1999,29 @@
 
         // PII 패널 초기행 하나 생성
         clearAllPIIRows();
+
+        // 설명/우려사항/PII textarea 변경 시 자동 저장
+        document.addEventListener("input", (ev) => {
+            if (suppressAutosave) return;
+            const target = ev.target;
+            if (!(target instanceof HTMLElement)) return;
+
+            const isTextArea = target instanceof HTMLTextAreaElement;
+            const isEditableDiv = target.isContentEditable;
+
+            if (!isTextArea && !isEditableDiv) return;
+
+            if (
+                target.closest(".desc-row") ||      // 단계 설명
+                target.closest(".concern-row") ||   // 우려사항
+                target.closest("#piiListScroll")    // 처리 개인정보(텍스트/label 모두)
+            ) {
+                scheduleAutosave();
+            }
+        });
+
+        // 탭 진입 시 derived 자동 로드 시도
+        tryInitialLoadFromDerived();
     });
 </script>
 </body>
