@@ -1,4 +1,5 @@
 import axios from "axios";
+import {PaginatedResponse} from "@/types/api.ts";
 
 // API 베이스 URL - 환경변수로 설정 (추후 실제 백엔드 URL로 변경)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
@@ -542,6 +543,7 @@ export const api = {
             },
         },
     },
+
     // 대시보드 통계 API
     dashboard: {
         getStats: async (companyId: string) => {
@@ -551,9 +553,37 @@ export const api = {
             return response.data;
         },
     },
+
     // AI 기능 (FastAPI)
     ai: {
         generateSheets: (body: { company_id: string; task_id: string; plain_text: string }) =>
         flowAxios.post('/api/ai/generate-sheets', body).then(res => res.data),
+    },
+
+    // 히스토리 로그 관련 API 추가
+    historyLogs: {
+        getAll: async (filters: any): Promise<PaginatedResponse<any>> => {
+            const response = await apiClient.get(`/api/history-logs`, {
+                params: filters
+            });
+            return response.data;
+        },
+
+        getById: async (id: string): Promise<any> => {
+            const response = await apiClient.get(`/api/history-logs/${id}`);
+            return response.data;
+        },
+
+        // 필터 옵션 조회 (드롭다운용)
+        getFilterOptions: async (companyId: string): Promise<{
+            areas: string[];
+            targetNames: string[];
+            changedByNames: string[];
+        }> => {
+            const response = await apiClient.get(`/api/history-logs/filter-options`, {
+                params: { companyId }
+            });
+            return response.data;
+        }
     },
 };

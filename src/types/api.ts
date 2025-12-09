@@ -125,3 +125,46 @@ export interface FileUploadResponse {
     fileSize: number;
     uploadedAt: string;
 }
+
+// 히스토리 로그 관련 타입 추가
+export interface HistoryLog {
+    _id: string;
+    companyId: string;
+    area: string;
+    field: string;
+    subField: string;
+    no: string;
+    item: string;
+    evaluationType: 'lifecycle' | 'technical' | 'security';
+    targetId: string;
+    targetName: string;
+    previousStatus: '이행' | '부분이행' | '미이행' | '해당없음';
+    newStatus: '이행' | '부분이행' | '미이행' | '해당없음';
+    previousEvidence: string;
+    newEvidence: string;
+    changedBy: {
+        accountId: string;
+        loginId: string;
+        name: string;
+    };
+    changedAt: string;
+    action?: {
+        plan: string;
+        department: string;
+        owner: string;
+        actionDate: string;
+    };
+}
+
+export interface HistoryLogFilters {
+    companyId: string;
+    area?: string;
+    no?: string;
+    targetName?: string;
+    previousStatus?: string;
+    changedByName?: string;
+    changedAtFrom?: string;
+    changedAtTo?: string;
+    page?: number;
+    pageSize?: number;
+}

@@ -14,7 +14,8 @@ import {
     Table,
     Users,
     Building2,
-    FileCheck
+    FileCheck,
+    History as HistoryIcon
 } from 'lucide-react';
 import {
     Sidebar,
@@ -85,6 +86,15 @@ const getMenuItems = (userRole?: string) => {
             ],
         }
     );
+
+    // 로그 기록 - 관리자만 표시
+    if (userRole === 'admin') {
+        items.push({
+            title: '로그 기록',
+            url: '/history-logs',
+            icon: HistoryIcon,
+        });
+    }
 
     return items;
 };
