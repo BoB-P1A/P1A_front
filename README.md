@@ -1,13 +1,13 @@
-📘 P1A Front — Open Source Release
+<h1>📘 P1A Front — Open Source Release</h1>
 
 본 프로젝트는 개인정보 영향평가(PIA) 자동화 플랫폼의 프론트엔드 모듈을 오픈소스로 제공하는 것입니다.
 중소기업·기관에서도 부담 없이 PIA 자동화를 구축하도록 돕고자 하며, 누구나 자유롭게 수정·배포할 수 있습니다.
 
-📝 License — Apache License 2.0
+<h2>📝 License — Apache License 2.0</h2>
 
 본 프로젝트는 Apache License 2.0을 따릅니다.
 
-✔️ 사용 시 주의사항
+<h2>✔️ 사용 시 주의사항</h2>
 
 상업적·비상업적 사용 모두 허용됩니다.
 
@@ -23,12 +23,10 @@ Apache 2.0 전문은 /LICENSE 파일 또는
 https://www.apache.org/licenses/LICENSE-2.0
  에서 확인할 수 있습니다.
 
-🚀 설치 및 실행 방법 (Windows / Linux)
+<h2>🚀 설치 및 실행 방법 (Windows / Linux)</h2>
 
-초보자도 따라할 수 있도록 가능한 한 상세히 설명합니다.
+<h3>1️⃣ 필수 프로그램 설치</h3>
 
-1️⃣ 사전 준비
-공통 준비 (Windows / Linux)
 1. Git 설치
 
 소스코드를 내려받기 위해 필요합니다.
@@ -68,14 +66,14 @@ LTS 버전 권장
 node -v
 npm -v
 
-2️⃣ 소스코드 다운로드
+<h3>2️⃣ 소스코드 다운로드</h3>
 
 터미널(CMD/PowerShell/Bash)에서 원하는 폴더로 이동 후:
 
 git clone https://github.com/BoB-P1A/P1A_front.git
 cd P1A_front
 
-3️⃣ 운영 시스템별 실행 방법
+<h3>3️⃣ 운영 시스템별 실행 방법</h3>
 🪟 Windows 환경에서 실행하기
 1. Docker Desktop 실행
 
@@ -128,7 +126,7 @@ npm run docker
 
 http://localhost:8080
 
-⚙️ 환경변수 설정
+<h2>⚙️ 환경변수 설정</h2>
 
 프로젝트는 실행 시 다음 환경변수를 참조할 수 있습니다:
 
@@ -148,7 +146,7 @@ Dockerfile 또는 docker-compose.yml
 VITE_API_BASE_URL=http://localhost:8081
 VITE_FLOW_API_BASE_URL=http://localhost:8000
 
-🤝 기여 가이드
+<h2>🤝 기여 가이드</h2>
 
 새로운 기능 추가 시 이슈(Issue) 먼저 등록
 
