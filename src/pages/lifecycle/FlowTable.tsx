@@ -381,7 +381,6 @@ export default function ProtectionFlowTable() {
                     }));
 
                 if (tasksList.length === 0) {
-                    toast({ title: '알림', description: '평가업무가 없습니다.' });
                     setLoading(false);
                     return;
                 }
@@ -809,9 +808,33 @@ export default function ProtectionFlowTable() {
         } finally {
             setAiLoadingTaskId(null);
         }
-    };    
+    };
 
-    return (
+    return tasks.length === 0 ? (
+        // 평가업무가 없을 때
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
+                <div className="flex gap-2">
+                    <Button onClick={handleExcelDownload} variant="outline" disabled={loading}>
+                        <Download className="mr-2 h-4 w-4" />
+                        엑셀 다운로드
+                    </Button>
+                    <Button onClick={handleSave} disabled={loading}>
+                        <Save className="mr-2 h-4 w-4" />
+                        저장
+                    </Button>
+                </div>
+            </div>
+            <Card>
+                <CardContent className="py-8">
+                    <p className="text-center text-muted-foreground">평가업무가 없습니다.</p>
+                </CardContent>
+            </Card>
+            <WarningDialog />
+        </div>
+    ) : (
+        // 평가업무가 있을 때
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-primary">개인정보 흐름표</h1>
