@@ -40,12 +40,24 @@ export default function ProtectionFlowChart() {
                 );
                 if (!r.ok) throw new Error(String(r.status));
                 const rows = await r.json();
-                const normalized = (rows ?? []).map((t: any) => ({
+                // taskName 이 없거나 공백뿐이거나, "(무제)" 인 업무는 제외
+                const normalized = (rows ?? [])
+                .filter((t: any) => {
+                    const name = (t.taskName ?? "").trim();
+                    // 실제 이름이 없는 애 + 서버에서 강제로 넣은 "(무제)" 둘 다 걸러버리기
+                    return name.length > 0 && name !== "(무제)";
+                })
+                .map((t: any) => ({
                     id: String(t.id),
-                    taskName: t.taskName || "(무제)",
+                    taskName: (t.taskName ?? "").trim(),
                 }));
+
+                if (normalized.length) {
+                setSelectedTaskId(normalized[0].id);
+                } else {
+                setSelectedTaskId(undefined);
+                }
                 setTasks(normalized);
-                if (normalized.length && !selectedTaskId) setSelectedTaskId(normalized[0].id);
 
             } catch (e) {
                 console.warn("FastAPI /api/tasks failed, fallback to team api:", e);
@@ -261,7 +273,8 @@ export default function ProtectionFlowChart() {
                 <div>
                     <h1 className="text-3xl font-bold text-primary">개인정보 흐름도</h1>
                     <p className="text-muted-foreground mt-2">
-                        처리업무별로 GoJS 편집기를 사용해 흐름도를 관리합니다.
+                        처리 업무별로 GoJS 편집기를 사용해 흐름도를 관리합니다.
+                        개체 중앙을 클릭 후 드래그 시 이동하며, 테두리를 클릭 후 드래그 시 링크가 생성됩니다.
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -276,7 +289,7 @@ export default function ProtectionFlowChart() {
                 <TabsList>
                     {tasks.map(t => (
                         <TabsTrigger key={t.id} value={t.id}>
-                            {t.taskName || "(무제)"}
+                            {t.taskName}
                         </TabsTrigger>
                     ))}
                 </TabsList>
@@ -284,13 +297,7 @@ export default function ProtectionFlowChart() {
                 {tasks.map(t => (
                     <TabsContent key={t.id} value={t.id}>
                         <Card className="shadow-pia-card">
-                            <CardHeader>
-                                {/* <CardTitle>
-                  GoJS 편집기 — {t.taskName || "(무제)"}{" "}
-                  <span className="text-xs text-muted-foreground">(id: {t.id})</span>
-                </CardTitle>*/}
-                            </CardHeader>
-                            <CardContent>
+                            <CardContent className="px-0 pb-0 pt-0">
                                 <div className="w-full" style={{ height: "calc(100vh - 300px)" }}>
                                     <iframe
                                         ref={iframeRef}
@@ -298,7 +305,10 @@ export default function ProtectionFlowChart() {
                                         title={`GoJS-Editor-${t.id}`}
                                         width="100%"
                                         height="100%"
-                                        style={{ border: "1px solid var(--border)", borderRadius: 8, background: "#fff" }}
+                                        style={{
+                                            border: "none",
+                                            display: "block",       // iframe 아래 여백 방지
+                                        }}
                                     />
                                 </div>
                             </CardContent>
