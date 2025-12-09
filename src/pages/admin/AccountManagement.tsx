@@ -297,7 +297,7 @@ export default function AccountManagement() {
                         </DialogHeader>
                         <div className="space-y-4">
                             <div>
-                                <Label htmlFor="company">기업 *</Label>
+                                <Label htmlFor="company">기업 <span className="text-red-500">*</span></Label>
                                 <select
                                     id="company"
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -313,7 +313,7 @@ export default function AccountManagement() {
                                 </select>
                             </div>
                             <div>
-                                <Label htmlFor="name">이름 *</Label>
+                                <Label htmlFor="name">이름 <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="name"
                                     placeholder="이름을 입력하세요"
@@ -322,7 +322,7 @@ export default function AccountManagement() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="loginId">아이디 *</Label>
+                                <Label htmlFor="loginId">아이디 <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="loginId"
                                     placeholder="아이디를 입력하세요"
@@ -332,7 +332,7 @@ export default function AccountManagement() {
                             </div>
                             <div>
                                 <Label htmlFor="password">
-                                    비밀번호 {editingAccount ? '(변경 시에만 입력)' : '*'}
+                                    비밀번호 {editingAccount ? '(변경 시에만 입력)' : <span className="text-red-500">*</span>}
                                 </Label>
                                 <Input
                                     id="password"
@@ -343,7 +343,7 @@ export default function AccountManagement() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="role">역할 *</Label>
+                                <Label htmlFor="role">역할 <span className="text-red-500">*</span></Label>
                                 <Select
                                     key={`role-${selectKey}`}
                                     value={formData.role}

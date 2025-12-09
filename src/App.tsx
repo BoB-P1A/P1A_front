@@ -32,6 +32,7 @@ import SecurityReport from "./pages/security/Report";
 import AccountManagement from "./pages/admin/AccountManagement";
 import CompanyManagement from "./pages/admin/CompanyManagement";
 import Dashboard from "./pages/Dashboard";
+import HistoryLogs from "@/pages/HistoryLogs.tsx";
 
 const queryClient = new QueryClient();
 
@@ -81,8 +82,14 @@ const App = () => (
               <Route path="security/improvement-plan" element={<SecurityImprovementPlan />} />
               <Route path="security/action-plan" element={<SecurityActionPlan />} />
               <Route path="security/report" element={<SecurityReport />} />
-              
+
               {/* 관리자 페이지 (관리자만 접근 가능) */}
+              {/* 히스토리 로그 */}
+              <Route path="history-logs" element={
+                  <ProtectedRoute requiredRole="admin">
+                      <HistoryLogs />
+                  </ProtectedRoute>
+              } />
               <Route path="admin/accounts" element={
                 <ProtectedRoute requiredRole="admin">
                   <AccountManagement />
