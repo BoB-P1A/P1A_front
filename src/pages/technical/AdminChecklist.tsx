@@ -1,5 +1,11 @@
 
 import { useState, useEffect } from "react";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -47,6 +53,7 @@ interface TechnicalItem {
     subField: string;
     no: string;
     item: string;
+    description: string;
     status: "이행" | "부분이행" | "미이행" | "해당없음" | null;
     evidence: string;
     files: FileAttachment[];
@@ -134,6 +141,7 @@ export default function TechnicalAdminChecklist() {
                         subField: evalItem.subField,
                         no: evalItem.no,
                         item: evalItem.item,
+                        description: evalItem.description || "",
                         status: saved?.status ?? null,
                         evidence: saved?.evidence ?? "",
                         files: saved?.files ?? [],
@@ -544,6 +552,19 @@ export default function TechnicalAdminChecklist() {
                               <div>
                                 <Label className="font-semibold">평가항목</Label>
                                 <p className="mt-1 text-sm">{item.item}</p>
+                                {item.description && (
+                                    <Collapsible className="mt-2">
+                                        <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+                                            <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                                            <span>상세 설명 보기</span>
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent className="mt-2">
+                                            <div className="p-3 bg-muted/50 rounded-md text-sm whitespace-pre-wrap">
+                                                {item.description}
+                                            </div>
+                                        </CollapsibleContent>
+                                    </Collapsible>
+                                )}
                               </div>
 
                               <div>
