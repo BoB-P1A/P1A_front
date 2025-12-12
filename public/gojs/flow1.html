@@ -448,10 +448,12 @@
         <button id="clearDescBtn" class="btn btn-danger" title="단계 설명을 모두 삭제합니다">설명 삭제</button>
         <button id="delRowBtn" class="btn btn-danger" title="마지막 처리 개인정보 항목이 하나 삭제됩니다">처리 개인정보 항목 삭제</button>
         <button id="addRowBtn" class="btn btn-positive" title="처리 개인정보 항목이 하나 추가됩니다">처리 개인정보 항목 추가</button>
+        <button id="nodeColorBtn" class="btn btn-neutral" title="선택한 개체의 색상을 선택합니다">개체 색 선택</button>
+        <button id="nodeBorderColorBtn" class="btn btn-neutral" title="선택한 개체의 테두리 색상을 선택합니다">테두리 색 선택</button>
+        <button id="nodeTextColorBtn" class="btn btn-neutral" title="선택한 개체의 글자 색상을 선택합니다">글자 색 선택</button>
         <button id="linkStyleToggleBtn" class="btn btn-neutral" title="링크의 선 모양이 변경됩니다">링크: 실선</button>
         <button id="linkColorToggleBtn" class="btn btn-neutral" title="링크의 선 색깔이 변경됩니다">링크: 검정</button>
         <button id="editModeToggleBtn" class="btn btn-neutral-strong">
-            <span class="icon" aria-hidden="true">🖱️</span>
             <span class="label">편집 모드: 흐름도</span>
         </button>
         <button id="CocernToggleBtn" class="btn btn-toggle-amb">
@@ -517,6 +519,27 @@
         </div> <!-- /main-row -->
     </div> <!-- /frame -->
 </div>
+
+<!-- ===== 개체 색상 선택용 컬러 피커 ===== -->
+<input
+  id="nodeColorInput"
+  type="color"
+  style="position: fixed; right: 12px; bottom: 12px; opacity: 0; width: 1px; height: 1px; pointer-events: none;"
+/>
+<!-- ===== 개체 테두리 색상 선택용 컬러 피커 ===== -->
+<input
+  id="nodeBorderColorInput"
+  type="color"
+  style="position: fixed; right: 12px; bottom: 12px; opacity: 0; width: 1px; height: 1px; border: 0; padding: 0;
+    pointer-events: none; z-index: 999999;"
+/>
+<!-- ===== 글자 색상 선택용 컬러 피커 ===== -->
+<input
+  id="nodeTextColorInput"
+  type="color"
+  style="position: fixed; right: 12px; bottom: 12px; opacity: 0; width: 1px; height: 1px; border: 0; padding: 0;
+    pointer-events: none; z-index: 999999;"
+/>
 
 <script>
     /* ====== GoJS 라이선스 ====== */
@@ -662,7 +685,10 @@
                     fromLinkable: true, toLinkable: true,
                     fromLinkableDuplicates: true, toLinkableDuplicates: true,
                     fromSpot: go.Spot.AllSides, toSpot: go.Spot.AllSides // 면 전체
-                }, shapeOpts)
+                }, shapeOpts),
+                // 데이터에 fill/stroke가 있으면 그걸 사용
+                new go.Binding("fill", "fill").makeTwoWay(),
+                new go.Binding("stroke", "stroke").makeTwoWay()
             ),
             $(go.Panel, "Vertical",
                 { margin: new go.Margin(8, 8, 8, 8), defaultAlignment: go.Spot.Center },
@@ -676,12 +702,13 @@
                         margin: new go.Margin(0, 0, 0, 0),
                         overflow: go.TextOverflow.Ellipsis
                     }, textOpts),
-                    new go.Binding("text").makeTwoWay()
+                    new go.Binding("text").makeTwoWay(),
+                    new go.Binding("stroke", "textStroke").makeTwoWay()
                 )
             )
         );
     }
-    // ★ 5각 별 커스텀 도형 등록
+    // 5각 별 커스텀 도형 등록
     go.Shape.defineFigureGenerator("Star5", function(shape, w, h) {
     const geo = new go.Geometry();
     const fig = new go.PathFigure(w * 0.5, 0, true);
@@ -711,6 +738,37 @@
     });
 
     let myDiagram, myPalette;
+
+    // 개체 색 선택 전역 함수
+    function setSelectedNodesFillColor(hex){
+        if (!myDiagram || !hex) return;
+        myDiagram.model.commit(m => {
+            myDiagram.selection.each(part => {
+            if (!(part instanceof go.Node)) return;
+                m.setDataProperty(part.data, "fill", hex);
+            });
+        }, "set-selected-nodes-fill");
+    }
+    // 개체 테두리 색 선택 전역 함수
+    function setSelectedNodesBorderColor(hex){
+    if (!myDiagram || !hex) return;
+        myDiagram.model.commit(m => {
+            myDiagram.selection.each(part => {
+            if (!(part instanceof go.Node)) return;
+                m.setDataProperty(part.data, "stroke", hex);
+            });
+        }, "set-selected-nodes-border-color");
+    }
+    // 글자 색 선택 전역 함수
+    function setSelectedNodesTextColor(hex){
+        if (!myDiagram || !hex) return;
+        myDiagram.model.commit(m => {
+            myDiagram.selection.each(part => {
+            if (!(part instanceof go.Node)) return;
+                m.setDataProperty(part.data, "textStroke", hex);
+            });
+        }, "set-selected-nodes-text-color");
+    }
 
     function initDiagram(){
         resizeOverlay();
@@ -830,7 +888,9 @@
                     fromLinkableDuplicates: false,
                     toLinkableDuplicates: false,
                     cursor: "move"
-                }
+                },
+                new go.Binding("fill", "fill").makeTwoWay(),
+                new go.Binding("stroke", "stroke").makeTwoWay()
             ),
             $(go.TextBlock,
                 {
@@ -842,7 +902,8 @@
                     wrap: go.Wrap.Fit,
                     width: NaN,           // Panel Auto 임으로 자동 크기
                 },
-                new go.Binding("text").makeTwoWay()
+                new go.Binding("text").makeTwoWay(),
+                new go.Binding("stroke", "textStroke").makeTwoWay()
             )
             )
         )
@@ -899,7 +960,9 @@
                     toLinkableDuplicates: false,
                     width: 24,
                     height: 24
-                }
+                },
+                new go.Binding("fill", "fill").makeTwoWay(),
+                new go.Binding("stroke", "stroke").makeTwoWay()
             ),
             // 앞에 오는 텍스트(숫자) – editable 유지
             $(go.TextBlock,
@@ -913,7 +976,8 @@
                     stroke: "#b91c1c", // 글자 색 빨강
                     overflow: go.TextOverflow.Ellipsis
                 },
-                new go.Binding("text").makeTwoWay()
+                new go.Binding("text").makeTwoWay(),
+                new go.Binding("stroke", "textStroke").makeTwoWay()
             )
             )
         )
@@ -1037,16 +1101,27 @@
             myDiagram.model.linkFromPortIdProperty = "fromPort";
             myDiagram.model.linkToPortIdProperty   = "toPort";
         }
+
+        function scheduleAutosaveAfterUndo() {
+            const tryLater = () => {
+                if (myDiagram?.undoManager?.isUndoingRedoing) return setTimeout(tryLater, 10);
+                scheduleAutosave({ force: true });
+            };
+            tryLater();
+        }
         myDiagram.addModelChangedListener(e => {
-            if (e.isTransactionFinished) {
-                myDiagram.model.setDataProperty(
-                    myDiagram.model.modelData,
-                    "position",
-                    go.Point.stringify(myDiagram.position)
-                );
-                scheduleAutosave();
+            if (!e.isTransactionFinished) return;
+
+            // Undo/Redo 중이었던 트랜잭션이면(=Ctrl+Z/Ctrl+Y 포함)
+            if (myDiagram?.undoManager?.isUndoingRedoing) {
+                scheduleAutosaveAfterUndo();
+                return;
             }
+
+            // 일반 사용자 편집
+            scheduleAutosave();
         });
+
         myDiagram.addDiagramListener("InitialLayoutCompleted", e => {
             const pos = myDiagram.model.modelData.position;
             if (pos) myDiagram.position = go.Point.parse(pos);
@@ -1288,9 +1363,6 @@
     function buildCombinedFromCurrentScreen() {
         if (!myDiagram) return null;
 
-        // 링크 재계산
-        rerouteAllLinks(myDiagram);
-
         const diagramJSON = JSON.parse(myDiagram.model.toJson());
         const piiArray    = getPIIArrayFromPanel();
         const descOut = {
@@ -1310,19 +1382,24 @@
         };
     }
     // derived 자동 저장 (debounce)
-    function scheduleAutosave() {
+    function scheduleAutosave(opts = {}) {
+        const force = opts.force === true;
         if (suppressAutosave) return;
         if (!companyId || !taskId) return;
+        if (!force && myDiagram?.undoManager?.isUndoingRedoing) return; // 일반 편집은 Undo/Redo 중 예약 안 함
 
         if (autosaveTimer) clearTimeout(autosaveTimer);
         autosaveTimer = setTimeout(async () => {
             try {
+                myDiagram.skipsUndoManager = true; // autosave 중 모델 변경이 있더라도 Undo에 남기지 않음
                 const combined = buildCombinedFromCurrentScreen();
                 if (!combined) return;
                 await saveCombinedToDB(combined);
                 console.log("derived 자동 저장 완료");
             } catch (e) {
                 console.warn("derived 자동 저장 실패:", e);
+            } finally {
+                if (myDiagram) myDiagram.skipsUndoManager = false;
             }
         }, 1000); // 1초 동안 입력 없으면 저장
     }
@@ -1484,12 +1561,9 @@
     }
 
     function rerouteAllLinks(diagram){
-        diagram.model.commit(m => {
-            diagram.links.each(l => {
-                m.setDataProperty(l.data, "points", undefined);  // 다음 틱에 경로 재계산
-                l.invalidateRoute();
-            });
-        }, "reroute-all");
+        // 모델은 건드리지 말고 "렌더링 경로"만 다시 계산시키기
+        diagram.links.each(l => l.invalidateRoute());
+        diagram.requestUpdate();
     }
 
     // combined 객체를 화면에 반영(제목/다이어그램/PII/설명)하는 공통 함수
@@ -1723,56 +1797,83 @@
             };
         } */
 
-        // 우려사항 있음/없음 토글
-        function setConcernVisible(visible) {
-            const rows = document.querySelectorAll(".concern-visible");
-            rows.forEach(r => {
-                if (!visible) {
-                    r.style.display = "none";
-                } else {
-                    if (r.classList.contains("rowlabel")) {
-                        r.style.display = "flex";   // 가운데 정렬 유지
-                    } else {
-                        r.style.display = "block";
-                    }
-                }
-            });
-
-            const btn = document.getElementById("CocernToggleBtn");
-            if (btn) {
-                const label = btn.querySelector(".label");
-                if (label) label.textContent = visible ? "우려사항: 있음" : "우려사항: 없음";
-
-                // 우려사항 있음⇄없음 토글될 때 색 계열 변화
-                if (visible) {
-                    btn.style.background = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--btn-toggle-on-bg');
-                    btn.style.borderColor = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--btn-toggle-on-border');
-                    btn.style.color = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--btn-toggle-on-text');
-                } else {
-                    btn.style.background = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--btn-toggle-off-bg');
-                    btn.style.borderColor = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--btn-toggle-off-border');
-                    btn.style.color = getComputedStyle(document.documentElement)
-                        .getPropertyValue('--btn-toggle-off-text');
-                }
-            }
-
-            autosizeAllTextareas();
-            resizeOverlay();
+        // 개체 색 선택
+        const nodeColorBtn = document.getElementById("nodeColorBtn");
+        const colorInput = document.getElementById("nodeColorInput");
+        
+        function refreshNodeColorBtn(){  // 선택 상태에 따라 버튼 활성/비활성
+            if (!nodeColorBtn) return;
+            const hasNodeSelected = myDiagram && myDiagram.selection.any(p => p instanceof go.Node);
+            nodeColorBtn.disabled = !hasNodeSelected;
+        }
+        myDiagram.addDiagramListener("ChangedSelection", refreshNodeColorBtn);
+        refreshNodeColorBtn();
+        if (nodeColorBtn && colorInput) {  // 버튼 클릭 -> 컬러피커 열기 -> 선택 노드들에 적용
+            nodeColorBtn.onclick = () => {
+                const firstNode = myDiagram.selection.first();
+                if (!(firstNode instanceof go.Node)) return;
+                // 현재 선택된 첫 노드의 색을 기본값으로
+                colorInput.value = (firstNode.data && firstNode.data.fill) || "#ffffff";
+                // onchange는 매번 덮어써서 중복 방지
+                colorInput.onchange = () => {
+                    setSelectedNodesFillColor(colorInput.value);
+                };
+                colorInput.click();
+            };
         }
 
-        // 초기 상태 → 숨김 유지
-        setConcernVisible(false);
-        // 버튼 연결
-        document.getElementById("CocernToggleBtn").onclick = () => {
-            const row = document.querySelector(".concern-visible");
-            const isVisible = row && row.style.display !== "none";
-            setConcernVisible(!isVisible);
-        };
+        // 개체 테두리 색 선택
+        const nodeBorderColorBtn = document.getElementById("nodeBorderColorBtn");
+        const borderColorInput  = document.getElementById("nodeBorderColorInput");
+
+        function refreshBorderColorBtn(){
+            if (!nodeBorderColorBtn) return;
+            const hasNodeSelected = myDiagram && myDiagram.selection.any(p => p instanceof go.Node);
+            nodeBorderColorBtn.disabled = !hasNodeSelected;
+        }
+        myDiagram.addDiagramListener("ChangedSelection", () => {
+            refreshBorderColorBtn();
+        });
+        refreshBorderColorBtn();
+        if (nodeBorderColorBtn && borderColorInput) {
+            nodeBorderColorBtn.onclick = () => {
+                const firstNode = myDiagram.selection.first();
+                if (!(firstNode instanceof go.Node)) return;
+                // 현재 테두리 색을 기본값으로
+                borderColorInput.value = (firstNode.data && firstNode.data.stroke) || "#374151";
+                borderColorInput.onchange = () => {
+                    setSelectedNodesBorderColor(borderColorInput.value);
+                };
+                borderColorInput.click();
+            };
+        }
+
+        // 글자 색 선택
+        const nodeTextColorBtn = document.getElementById("nodeTextColorBtn");
+        const textColorInput = document.getElementById("nodeTextColorInput");
+
+        function refreshTextColorBtn(){
+            if (!nodeTextColorBtn) return;
+            const hasNodeSelected = myDiagram && myDiagram.selection.any(p => p instanceof go.Node);
+            nodeTextColorBtn.disabled = !hasNodeSelected;
+        }
+        myDiagram.addDiagramListener("ChangedSelection", () => {
+            refreshTextColorBtn();
+            // 기존 노드 fill 버튼 refreshNodeColorBtn도 이미 달아놨으면 같이 호출해도 됨
+        });
+        refreshTextColorBtn();
+        if (nodeTextColorBtn && textColorInput) {
+            nodeTextColorBtn.onclick = () => {
+                const firstNode = myDiagram.selection.first();
+                if (!(firstNode instanceof go.Node)) return;
+                textColorInput.value = (firstNode.data && firstNode.data.textStroke) || "#111827";
+                textColorInput.onchange = () => {
+                    setSelectedNodesTextColor(textColorInput.value);
+                };
+                textColorInput.click();
+            };
+        }
+
 
         // 링크 스타일/색상 토글
         const styleBtn = document.getElementById('linkStyleToggleBtn');
@@ -1820,18 +1921,15 @@
         const editBtn = document.getElementById('editModeToggleBtn');
         function setEditMode(isDiagramEdit){
             const overlay = document.getElementById('diagramOverlay');
-            const icon  = editBtn?.querySelector('.icon');
             const label = editBtn?.querySelector('.label');
-            if (!overlay || !icon || !label) return;
+            if (!overlay || !label) return;
 
             if (isDiagramEdit){
                 overlay.style.pointerEvents = 'auto';
-                icon.textContent = '🖱️';
                 label.textContent = '편집 모드: 흐름도';
                 editBtn.setAttribute('aria-pressed','true');
             }else{
                 overlay.style.pointerEvents = 'none';
-                icon.textContent = '⌨️';
                 label.textContent = '편집 모드: 텍스트';
                 editBtn.setAttribute('aria-pressed','false');
             }
@@ -1843,6 +1941,56 @@
         });
         setEditMode(true);
     }
+
+        // 우려사항 있음/없음 토글
+        function setConcernVisible(visible) {
+            const rows = document.querySelectorAll(".concern-visible");
+            rows.forEach(r => {
+                if (!visible) {
+                    r.style.display = "none";
+                } else {
+                    if (r.classList.contains("rowlabel")) {
+                        r.style.display = "flex";   // 가운데 정렬 유지
+                    } else {
+                        r.style.display = "block";
+                    }
+                }
+            });
+
+            const btn = document.getElementById("CocernToggleBtn");
+            if (btn) {
+                const label = btn.querySelector(".label");
+                if (label) label.textContent = visible ? "우려사항: 있음" : "우려사항: 없음";
+
+                // 우려사항 있음⇄없음 토글될 때 색 계열 변화
+                if (visible) {
+                    btn.style.background = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-on-bg');
+                    btn.style.borderColor = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-on-border');
+                    btn.style.color = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-on-text');
+                } else {
+                    btn.style.background = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-off-bg');
+                    btn.style.borderColor = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-off-border');
+                    btn.style.color = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--btn-toggle-off-text');
+                }
+            }
+
+            autosizeAllTextareas();
+            resizeOverlay();
+        }
+        // 초기 상태 → 숨김 유지
+        setConcernVisible(false);
+        // 버튼 연결
+        document.getElementById("CocernToggleBtn").onclick = () => {
+            const row = document.querySelector(".concern-visible");
+            const isVisible = row && row.style.display !== "none";
+            setConcernVisible(!isVisible);
+        };
 
     /* ========= 기타 유틸 ========= */
     function clearDiagram(){
