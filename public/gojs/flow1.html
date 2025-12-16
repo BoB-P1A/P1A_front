@@ -59,11 +59,11 @@
 
 
             /* 우려사항 토글용 */
-            --btn-toggle-on-bg: #f5f3ff;   /* 있음: 보라 계열 */
+            --btn-toggle-on-bg: #f5f3ff;   /* 보임: 보라 계열 */
             --btn-toggle-on-border: #a855f7;
             --btn-toggle-on-text: #6d28d9;
 
-            --btn-toggle-off-bg: #fffbeb;  /* 없음: 주황 계열 */
+            --btn-toggle-off-bg: #fffbeb;  /* 숨김: 주황 계열 */
             --btn-toggle-off-border: #f97316;
             --btn-toggle-off-text: #9a3412;
         }
@@ -165,7 +165,7 @@
             font-weight:600;
         }
 
-        /* 우려사항: 갈팡질팡 색 (JS에서 on/off 상태에 따라 색 바꿔줌) */
+        /* 우려사항: 색 (JS에서 on/off 상태에 따라 색 바꿔줌) */
         .btn.btn-toggle-amb{
             background:var(--btn-toggle-on-bg);
             border-color:var(--btn-toggle-on-border);
@@ -464,7 +464,7 @@
             <span class="label">편집 모드: 흐름도</span>
         </button>
         <button id="CocernToggleBtn" class="btn btn-toggle-amb">
-            <span class="label">우려사항: 있음</span>
+            <span class="label">우려사항: 보임</span>
         </button>
     </div>
 
@@ -1628,6 +1628,9 @@
             fillDescriptions(desc || {});
             // 우려사항 반영하기
             setConcernText(combined?.concern || "");
+            // 우려사항이 존재하면 자동으로 보임 처리
+            const hasConcern = combined?.concern && String(combined.concern).trim().length > 0;
+            if (hasConcern) setConcernVisible(true);
         } finally {
             suppressAutosave = false;
         }
@@ -1946,7 +1949,7 @@
         setEditMode(true);
     }
 
-        // 우려사항 있음/없음 토글
+        // 우려사항 보임/숨김 토글
         function setConcernVisible(visible) {
             const rows = document.querySelectorAll(".concern-visible");
             rows.forEach(r => {
@@ -1964,9 +1967,9 @@
             const btn = document.getElementById("CocernToggleBtn");
             if (btn) {
                 const label = btn.querySelector(".label");
-                if (label) label.textContent = visible ? "우려사항: 있음" : "우려사항: 없음";
+                if (label) label.textContent = visible ? "우려사항: 보임" : "우려사항: 숨김";
 
-                // 우려사항 있음⇄없음 토글될 때 색 계열 변화
+                // 우려사항 보임⇄숨김 토글될 때 색 계열 변화
                 if (visible) {
                     btn.style.background = getComputedStyle(document.documentElement)
                         .getPropertyValue('--btn-toggle-on-bg');
