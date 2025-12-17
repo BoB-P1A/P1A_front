@@ -1091,7 +1091,7 @@
                 { text:"DB(오프라인)", category:"database_offline" },
                 { text:"파기(온라인)", category:"discard" },
                 { text:"파기(오프라인)", category:"discard_offline" },
-                { text:"우려사항 메모", category:"memobox" },
+                { text:"메모장", category:"memobox" },
                 { text:"", category:"star" },
                 { text:"", category:"circleNumber" }
             ])
@@ -1573,6 +1573,45 @@
         diagram.requestUpdate();
     }
 
+    // 우려사항을 star로 표기하기
+    function applyConcernStars(concernNodeKeys){
+        if (!myDiagram) return;
+        const keys = Array.isArray(concernNodeKeys) ? concernNodeKeys : [];
+        myDiagram.model.commit(m => {
+            // 1) 기존 자동 스타 제거(중복 방지)
+            const toRemove = [];
+            (m.nodeDataArray || []).forEach(nd => {
+                if (nd && nd._isConcernStar) toRemove.push(nd);
+            });
+            toRemove.forEach(nd => m.removeNodeData(nd));
+
+            if (!keys.length) return;
+
+            // 2) 새 스타 추가
+            keys.forEach(targetKey => {
+                const node = myDiagram.findNodeForKey(targetKey);
+                if (!node) return;
+
+                // node.data.loc는 "x y" 문자열 형태
+                const p = go.Point.parse(node.data.loc || "0 0");
+
+                // 좌상단에 살짝 여백 두고 배치
+                const starLoc = new go.Point(p.x - 8, p.y - 20);
+
+                // key 충돌 방지: 음수 key로 생성
+                const starKey = "star-" + targetKey;
+
+                m.addNodeData({
+                    key: starKey,
+                    category: "star",
+                    loc: go.Point.stringify(starLoc),
+                    _isConcernStar: true,
+                    _targetKey: targetKey
+                });
+            });
+        }, "apply-concern-stars");
+    }
+
     // combined 객체를 화면에 반영(제목/다이어그램/PII/설명)하는 공통 함수
     async function applyCombinedToScreen(combined){
         cancelAutosaveTimer(); // 이전에 걸려 있던 자동저장 타이머는 취소
@@ -1595,6 +1634,7 @@
             if (diagram){
                 const normalized = normalizeDiagram(diagram);
                 myDiagram.model = go.Model.fromJson(normalized);
+                applyConcernStars(combined?.concern_node_keys);
 
                 // 로드 직후 1회: 재라우팅 + 링크병합
                 (function kickRerouteAndMergeOnce(diagram){
