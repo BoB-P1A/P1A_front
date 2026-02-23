@@ -2,6 +2,12 @@
 
 본 프로젝트는 개인정보 영향평가(PIA) 자동화 플랫폼을 제공합니다.
 
+<h2>🎬 시연 영상</h2>
+
+[![P1A 시연영상](https://img.youtube.com/vi/5krxS0KycJc/0.jpg)](https://youtu.be/5krxS0KycJc)
+
+> 클릭하면 YouTube에서 시연 영상을 확인할 수 있습니다.
+
 <h2>📝 License — Apache License 2.0</h2>
 
 본 프로젝트는 Apache License 2.0을 따릅니다.
